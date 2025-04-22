@@ -1,34 +1,48 @@
-# Menggunakan image resmi PHP sebagai base image
 FROM php:8.3-fpm
 
-# Install dependencies yang diperlukan
+# Install system dependencies
 RUN apt-get update && apt-get install -y \
-    libpng-dev \
-    libjpeg-dev \
-    libfreetype6-dev \
-    zip \
     git \
-    libicu-dev \
-    libzip-dev \
+    curl \
+    libpng-dev \
+    libonig-dev \
     libxml2-dev \
-    && docker-php-ext-configure gd --with-freetype --with-jpeg \
-    && docker-php-ext-install gd pdo pdo_mysql intl zip \
-    && docker-php-ext-enable intl zip
+    libzip-dev \
+    zip \
+    unzip
+
+# Clear cache
+RUN apt-get clean && rm -rf /var/lib/apt/lists/*
+
+# Install PHP extensions
+RUN docker-php-ext-install pdo_mysql mbstring exif pcntl bcmath gd zip
+
+# Get latest Composer
+COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 
 # Set working directory
-WORKDIR /var/www
+WORKDIR /var/www/html
 
-# Copy project Laravel ke dalam container
-COPY . .
+# Copy existing application directory contents
+COPY . /var/www/html
 
-# Install Composer
-RUN curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer
+# Copy custom php.ini if needed
+COPY docker/php/php.ini /usr/local/etc/php/conf.d/custom.ini
 
-# Install dependencies project Laravel
-RUN composer install
+# Create storage and bootstrap/cache directories if they don't exist
+RUN mkdir -p /var/www/html/storage/app/public \
+    /var/www/html/storage/framework/cache/data \
+    /var/www/html/storage/framework/sessions \
+    /var/www/html/storage/framework/views \
+    /var/www/html/storage/logs \
+    /var/www/html/bootstrap/cache
 
-# Set permission agar folder storage dan bootstrap cache bisa diakses
-RUN chown -R www-data:www-data /var/www/storage /var/www/bootstrap/cache
+# Set file permissions
+RUN chown -R www-data:www-data /var/www/html
+RUN chmod -R 755 /var/www/html/storage /var/www/html/bootstrap/cache
 
+# Expose port 9000
 EXPOSE 9000
+
+# Start PHP-FPM
 CMD ["php-fpm"]

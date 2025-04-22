@@ -1,0 +1,39 @@
+# Ignore the node_modules directory
+node_modules
+
+# Ignore the vendor directory
+vendor
+
+# Ignore the .env file
+.env
+
+# Ignore the storage directory
+storage
+
+# Ignore the logs directory
+storage/logs
+
+# Ignore the cache directory
+storage/framework/cache
+
+# Ignore the sessions directory
+storage/framework/sessions
+
+# Ignore the views directory
+storage/framework/views
+
+# Ignore the public directory if it contains compiled assets
+public/hot
+public/storage
+
+# Ignore the .idea directory (if using JetBrains IDEs)
+.idea
+
+# Ignore the .vscode directory (if using Visual Studio Code)
+.vscode
+
+# Ignore the .DS_Store file (macOS)
+.DS_Store
+
+# Ignore the Thumbs.db file (Windows)
+Thumbs.db
