@@ -23,44 +23,86 @@ class UserResource extends Resource
     {
         return $form
             ->schema([
-            Forms\Components\TextInput::make('name')
-            ->label('Name')
-            ->required()
-            ->maxLength(255),
-            
-            Forms\Components\TextInput::make('email')
-            ->label('Email')
-            ->required()
-            ->email()
-            ->maxLength(255),
+                Forms\Components\TextInput::make('name')
+                    ->label('Name')
+                    ->required()
+                    ->maxLength(255),
 
-            Forms\Components\TextInput::make('password')
-            ->label('Password')
-            ->required()
-            ->password()
-            ->minLength(8)
-            ->maxLength(255)
-            ->dehydrateStateUsing(fn (string $state): string => bcrypt($state)),
+                Forms\Components\TextInput::make('department')
+                    ->label('Department')
+                    ->maxLength(255),
+
+                Forms\Components\TextInput::make('position')
+                    ->label('Position')
+                    ->maxLength(255),
+
+                Forms\Components\TextInput::make('phone')
+                    ->label('Phone Number')
+                    ->tel()
+                    ->maxLength(20),
+
+                Forms\Components\TextInput::make('email')
+                    ->label('Email')
+                    ->required()
+                    ->email()
+                    ->maxLength(255),
+
+                Forms\Components\TextInput::make('password')
+                    ->label('Password')
+                    ->required()
+                    ->password()
+                    ->minLength(5)
+                    ->maxLength(255)
+                    ->dehydrateStateUsing(fn(string $state): string => bcrypt($state)),
+
+                Forms\Components\Radio::make('role')
+                    ->label('Role')
+                    ->options([
+                        'admin' => 'Admin',
+                        'supervisor' => 'Supervisor',
+                        'staff' => 'Staff',
+                    ])
+                    ->default('staff')
+                    ->required(),
             ]);
     }
 
     public static function table(Table $table): Table
     {
         return $table
-        ->columns([
-            Tables\Columns\TextColumn::make('name')
-                ->label('Name')
-                ->sortable()
-                ->searchable(),
-            Tables\Columns\TextColumn::make('email')
-                ->label('Email')
-                ->sortable()
-                ->searchable(),
-            Tables\Columns\TextColumn::make('created_at')
-                ->label('Created At')
-                ->dateTime()
-                ->sortable(),
-        ])
+            ->columns([
+                Tables\Columns\TextColumn::make('name')
+                    ->label('Name')
+                    ->sortable()
+                    ->searchable(),
+
+                Tables\Columns\TextColumn::make('contact')
+                    ->label('Contact')
+                    ->getStateUsing(function ($record) {
+                        return "{$record->email}<br>{$record->phone}";
+                    })
+                    ->html() // Enable HTML rendering for line breaks
+                    ->sortable()
+                    ->searchable(),
+
+                Tables\Columns\TextColumn::make('Position')
+                    ->label('Position')
+                    ->getStateUsing(function ($record) {
+                        return "{$record->department}<br>{$record->position}";
+                    })
+                    ->html() // Enable HTML rendering for line breaks
+                    ->sortable()
+                    ->searchable(),
+
+                Tables\Columns\TextColumn::make('role')
+                    ->label('Role')
+                    ->sortable()
+                    ->searchable(),
+                Tables\Columns\TextColumn::make('created_at')
+                    ->label('Created At')
+                    ->dateTime()
+                    ->sortable(),
+            ])
             ->filters([
                 //
             ])
