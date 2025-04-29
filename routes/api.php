@@ -1,11 +1,12 @@
 <?php
 
+use App\Helpers\ApiResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/user', function (Request $request) {
-    return $request->user();
+    return ApiResponse::format(true, 200, 'User data retrieved successfully.', $request->user());
 })->middleware('auth:sanctum');
 
 Route::post('login', function (Request $request) {
@@ -14,8 +15,11 @@ Route::post('login', function (Request $request) {
     if (Auth::attempt($credentials)) {
         $user = Auth::user();
         $token = $user->createToken('quanta-hris')->plainTextToken;
-        return response()->json(['token' => $token]);
+
+        // Menggunakan helper ApiResponse untuk login berhasil
+        return ApiResponse::format(true, 200, 'Login successful', ['token' => $token]);
     }
 
-    return response()->json(['error' => 'Unauthorized'], 401);
+    // Menggunakan helper ApiResponse untuk login gagal
+    return ApiResponse::format(false, 401, 'Unauthorized', null);
 });
