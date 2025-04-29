@@ -63,6 +63,7 @@ class UserResource extends Resource
                         'staff' => 'Staff',
                     ])
                     ->default('staff')
+                    ->inline()
                     ->required(),
             ]);
     }

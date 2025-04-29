@@ -17,7 +17,6 @@ services:
     container_name: mysql-db
     ports:
       - "3309:3306"
-    restart: always
     environment:
       MYSQL_ROOT_PASSWORD: novrizal87
       MYSQL_DATABASE: quanta_hris
