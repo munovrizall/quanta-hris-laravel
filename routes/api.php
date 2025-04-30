@@ -2,6 +2,8 @@
 
 use App\Helpers\ApiResponse;
 use App\Http\Controllers\Api\AuthController;
+use App\Http\Controllers\Api\CompanyController;
+use App\Http\Controllers\Api\SiteController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
@@ -11,3 +13,14 @@ Route::get('/user', function (Request $request) {
 
 Route::post('login', [AuthController::class, 'login']);
 Route::post('logout', [AuthController::class, 'logout'])->middleware('auth:sanctum');
+
+
+Route::middleware('auth:sanctum')->group(function () {
+    // Company routes
+    Route::get('companies', [CompanyController::class, 'index']);
+    Route::get('company/{id}', [CompanyController::class, 'show']);
+
+    // Site routes
+    Route::get('sites', [SiteController::class, 'index']);
+    Route::get('site/{id}', [SiteController::class, 'show']);
+});
