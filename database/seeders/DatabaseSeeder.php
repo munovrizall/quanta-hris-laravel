@@ -44,5 +44,9 @@ class DatabaseSeeder extends Seeder
             'longitude' => '106.82471444171392',
             'radius_in_m' => '50',
         ]);
+
+        $this->call([
+            AttendanceSeeder::class,
+        ]);
     }
 }
