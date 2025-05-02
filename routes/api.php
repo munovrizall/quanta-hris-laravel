@@ -1,6 +1,7 @@
 <?php
 
 use App\Helpers\ApiResponse;
+use App\Http\Controllers\Api\AttendanceController;
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\CompanyController;
 use App\Http\Controllers\Api\SiteController;
@@ -23,4 +24,9 @@ Route::middleware('auth:sanctum')->group(function () {
     // Site routes
     Route::get('sites', [SiteController::class, 'index']);
     Route::get('site/{id}', [SiteController::class, 'show']);
+
+    // Attendance routes
+    Route::post('attendance/clock-in', [AttendanceController::class, 'clockIn']);
+    Route::post('attendance/clock-out', [AttendanceController::class,'clockOut']);
+    Route::get('attendance/is-clocked-in', [AttendanceController::class,'isClockedIn']);
 });
