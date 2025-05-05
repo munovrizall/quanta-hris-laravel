@@ -62,10 +62,15 @@ class PermissionResource extends Resource
     {
         return $table
             ->columns([
-                Tables\Columns\TextColumn::make('user.name')
-                    ->label('User ID')
-                    ->sortable()
+                Tables\Columns\TextColumn::make('Position')
+                    ->label('Employee Info')
+                    ->getStateUsing(function ($record) {
+                        return "<div>{$record->user->name}</div>
+                <small style='color: #6b7280; font-size: 0.75rem;'>{$record->user->department} • {$record->user->position}</small>";
+                    })
+                    ->html()
                     ->searchable(),
+
                 Tables\Columns\TextColumn::make('date_permission')
                     ->label('Date')
                     ->date(),
@@ -76,7 +81,9 @@ class PermissionResource extends Resource
                 Tables\Columns\ImageColumn::make('image')
                     ->label('Image')
                     ->size(40)
-                    ->disk('public'),
+                    ->disk('public')
+                    ->url(fn($state) => '/storage/' . $state)
+                    ->openUrlInNewTab(),
                 Tables\Columns\IconColumn::make('is_approved')
                     ->label('Approved')
                     ->boolean(),
