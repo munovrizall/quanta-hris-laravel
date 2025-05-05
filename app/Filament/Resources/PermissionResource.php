@@ -7,6 +7,7 @@ use App\Filament\Resources\PermissionResource\RelationManagers;
 use App\Models\Permission;
 use Filament\Forms;
 use Filament\Forms\Form;
+use Filament\Notifications\Notification;
 use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Table;
@@ -26,7 +27,34 @@ class PermissionResource extends Resource
     {
         return $form
             ->schema([
-                //
+                Forms\Components\Select::make('user_id')
+                    ->label('Employee')
+                    ->relationship('user', 'name')
+                    ->searchable()
+                    ->preload()
+                    ->required(),
+
+                Forms\Components\DatePicker::make('date_permission')
+                    ->label('Permission Date')
+                    ->required(),
+
+                Forms\Components\Textarea::make('reason')
+                    ->label('Reason')
+                    ->required()
+                    ->columnSpanFull(),
+
+                Forms\Components\FileUpload::make('image')
+                    ->label('Supporting Document')
+                    ->image()
+                    ->directory('permission-documents')
+                    ->visibility('public')
+                    ->maxSize(10240) // 10MB
+                    ->columnSpanFull(),
+
+                Forms\Components\Toggle::make('is_approved')
+                    ->label('Approve Permission')
+                    ->helperText('Toggle to approve or reject this permission request')
+                    ->default(false),
             ]);
     }
 
@@ -34,19 +62,44 @@ class PermissionResource extends Resource
     {
         return $table
             ->columns([
-                Tables\Columns\TextColumn::make('user.name')->label('User ID'),
-                Tables\Columns\TextColumn::make('date_permission')->label('Date')->date(),
-                Tables\Columns\TextColumn::make('reason')->label('Reason')->limit(30),
-                Tables\Columns\ImageColumn::make('image')->label('Image')->size(40),
+                Tables\Columns\TextColumn::make('user.name')
+                    ->label('User ID')
+                    ->sortable()
+                    ->searchable(),
+                Tables\Columns\TextColumn::make('date_permission')
+                    ->label('Date')
+                    ->date(),
+                Tables\Columns\TextColumn::make('reason')
+                    ->label('Reason')
+                    ->limit(30)
+                    ->searchable(),
+                Tables\Columns\ImageColumn::make('image')
+                    ->label('Image')
+                    ->size(40)
+                    ->disk('public'),
                 Tables\Columns\IconColumn::make('is_approved')
                     ->label('Approved')
                     ->boolean(),
             ])
+            ->defaultSort('date_permission', 'desc')
             ->filters([
                 //
             ])
             ->actions([
-                Tables\Actions\EditAction::make(),
+                Tables\Actions\Action::make('approve')
+                    ->label('Approve')
+                    ->icon('heroicon-o-check-circle')
+                    ->color('success')
+                    ->visible(fn(Permission $record): bool => !$record->is_approved)
+                    ->action(function (Permission $record): void {
+                        $record->is_approved = true;
+                        $record->save();
+                        Notification::make()
+                            ->title('Permission approved')
+                            ->success()
+                            ->send();
+                    }),
+                Tables\Actions\DeleteAction::make(),
             ])
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([
