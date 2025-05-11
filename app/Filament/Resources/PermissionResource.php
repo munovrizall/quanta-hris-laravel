@@ -22,6 +22,16 @@ class PermissionResource extends Resource
 
     protected static ?string $navigationGroup = 'Attendance Management';
 
+     public static function getNavigationBadge(): ?string
+     {
+         return static::getModel()::where('approval_status', 'pending')->count() ?: null;
+     }
+ 
+     public static function getNavigationBadgeColor(): ?string
+     {
+         return static::getModel()::where('approval_status', 'pending')->count() > 0 ? 'warning' : null;
+     }
+ 
 
     public static function form(Form $form): Form
     {
@@ -131,7 +141,6 @@ class PermissionResource extends Resource
                             ->success()
                             ->send();
                     }),
-                Tables\Actions\DeleteAction::make(),
             ])
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([
