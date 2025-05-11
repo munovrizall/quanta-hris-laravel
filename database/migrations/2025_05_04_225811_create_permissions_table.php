@@ -16,7 +16,7 @@ return new class extends Migration {
             $table->date('date_permission');
             $table->text('reason');
             $table->string('image')->nullable();
-            $table->boolean('is_approved')->default(false);
+            $table->enum('approval_status', ['pending', 'approved', 'rejected'])->default('pending');
             $table->timestamps();
         });
     }

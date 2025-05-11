@@ -51,10 +51,8 @@ class PermissionResource extends Resource
                     ->maxSize(10240) // 10MB
                     ->columnSpanFull(),
 
-                Forms\Components\Toggle::make('is_approved')
-                    ->label('Approve Permission')
-                    ->helperText('Toggle to approve or reject this permission request')
-                    ->default(false),
+                Forms\Components\Hidden::make('approval_status')
+                    ->default('Pending'),
             ]);
     }
 
@@ -84,9 +82,25 @@ class PermissionResource extends Resource
                     ->disk('public')
                     ->url(fn($state) => '/storage/' . $state)
                     ->openUrlInNewTab(),
-                Tables\Columns\IconColumn::make('is_approved')
-                    ->label('Approved')
-                    ->boolean(),
+                Tables\Columns\TextColumn::make('approval_status')
+                    ->label('Status')
+                    ->badge()
+                    ->formatStateUsing(function ($state) {
+                        return match (strtolower((string) $state)) {
+                            'pending', null, 0 => 'Pending',
+                            'approved' => 'Approved',
+                            'rejected' => 'Rejected',
+                            default => 'Unknown',
+                        };
+                    })
+                    ->color(function ($state) {
+                        return match ($state) {
+                            null, 'pending' => 'warning',
+                            'approved' => 'success',
+                            'rejected' => 'danger',
+                            default => 'secondary',
+                        };
+                    }),
             ])
             ->defaultSort('date_permission', 'desc')
             ->filters([
@@ -97,12 +111,23 @@ class PermissionResource extends Resource
                     ->label('Approve')
                     ->icon('heroicon-o-check-circle')
                     ->color('success')
-                    ->visible(fn(Permission $record): bool => !$record->is_approved)
                     ->action(function (Permission $record): void {
-                        $record->is_approved = true;
+                        $record->approval_status = 'approved';
                         $record->save();
                         Notification::make()
                             ->title('Permission approved')
+                            ->success()
+                            ->send();
+                    }),
+                Tables\Actions\Action::make('reject')
+                    ->label('Reject')
+                    ->icon('heroicon-o-x-circle')
+                    ->color('danger')
+                    ->action(function (Permission $record): void {
+                        $record->approval_status = 'rejected';
+                        $record->save();
+                        Notification::make()
+                            ->title('Permission Rejected')
                             ->success()
                             ->send();
                     }),

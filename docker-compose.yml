@@ -42,6 +42,17 @@ services:
     depends_on:
       - app
 
+  adminer:
+    image: adminer:latest
+    container_name: hris-adminer
+    restart: always
+    ports:
+      - "8085:8080"
+    depends_on:
+      - db
+    networks:
+      - laravel-network
+
 networks:
   laravel-network:
     driver: bridge

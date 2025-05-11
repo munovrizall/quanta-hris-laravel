@@ -14,7 +14,7 @@ class Permission extends Model
         'date_permission',
         'reason',
         'image',
-        'is_approved'
+        'approval_status'
     ];
 
     public function user()
