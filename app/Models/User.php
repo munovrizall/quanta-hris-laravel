@@ -27,7 +27,9 @@ class User extends Authenticatable
         'position',
         'department',
         'face_embedding',
-        'image_url'
+        'image_url',
+        'date_of_joining',
+        'is_active',
     ];
 
     /**

@@ -41,6 +41,7 @@ class AdminPanelProvider extends PanelProvider
             ->widgets([
                 StatsOverview::class,
             ])
+            ->favicon(asset('favicon.ico'))
             ->middleware([
                 EncryptCookies::class,
                 AddQueuedCookiesToResponse::class,
