@@ -14,19 +14,35 @@ class AttendanceController extends Controller
         $request->validate([
             'latitude' => 'required',
             'longitude' => 'required',
+            'time_in' => 'sometimes|date_format:H:i:s',
         ]);
 
+        $user = $request->user();
+        $currentDate = date('Y-m-d');
+        $timeIn = $request->input('time_in', date('H:i:s'));
+
+        // Get the user's company and its time_in value
+        $company = \App\Models\Company::find($user->company_id);
+
+        // Check if user is late
+        $isLate = false;
+        if ($company) {
+            $companyTimeIn = $company->time_in;
+            $isLate = $timeIn > $companyTimeIn;
+        }
+
         $attendance = new Attendance;
-        $attendance->user_id = $request->user()->id;
-        $attendance->date = date('Y-m-d');
-        $attendance->time_in = date('H:i:s');
+        $attendance->user_id = $user->id;
+        $attendance->date = $currentDate;
+        $attendance->time_in = $timeIn;
         $attendance->latlon_in = $request->latitude . ',' . $request->longitude;
+        $attendance->is_late = $isLate;
         $attendance->save();
 
         return ApiResponse::format(
             true,
             201,
-            'Clock in successful.',
+            'Clock in successful.' . ($isLate ? ' You are late today.' : ''),
             $attendance
         );
     }

@@ -17,6 +17,9 @@ class Attendance extends Model
         "time_out",
         "latlon_in",
         "latlon_out",
+        "hours_worked",
+        "is_late",
+        "is_overtime"
     ];
 
     public function user()
