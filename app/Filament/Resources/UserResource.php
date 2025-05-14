@@ -76,6 +76,11 @@ class UserResource extends Resource
     {
         return $table
             ->columns([
+                Tables\Columns\TextColumn::make('company.name')
+                    ->label('Company')
+                    ->sortable()
+                    ->searchable(),
+
                 Tables\Columns\TextColumn::make('name')
                     ->label('Name')
                     ->sortable()
@@ -103,10 +108,6 @@ class UserResource extends Resource
                     ->label('Role')
                     ->sortable()
                     ->searchable(),
-                Tables\Columns\TextColumn::make('created_at')
-                    ->label('Created At')
-                    ->dateTime()
-                    ->sortable(),
             ])
             ->filters([
                 //

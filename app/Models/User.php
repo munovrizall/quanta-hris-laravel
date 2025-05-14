@@ -55,6 +55,10 @@ class User extends Authenticatable
         ];
     }
 
+    public function company(){
+        return $this->belongsTo(Company::class);
+    }
+    
     public function attendances()
     {
         return $this->hasMany(Attendance::class);

@@ -17,6 +17,10 @@ class Company extends Model
         "time_out"
     ];
 
+    public function user(){
+        return $this->hasOne(User::class);
+    }
+    
     public function sites()
     {
         return $this->hasMany(Site::class);
