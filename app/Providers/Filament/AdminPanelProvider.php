@@ -28,6 +28,7 @@ class AdminPanelProvider extends PanelProvider
             ->id('admin')
             ->path('admin')
             ->login()
+            ->brandName('Quanta HRIS')
             ->font('Poppins')
             ->colors([
                 'primary' => Color::Cyan,
