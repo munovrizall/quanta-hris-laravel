@@ -21,7 +21,7 @@ class PermissionFactory extends Factory
             'date_permission' => $this->faker->date(),
             'reason' => $this->faker->sentence(),
             'image' => $this->faker->imageUrl(),
-            'is_approved' => $this->faker->boolean(),
+            'approval_status' => $this->faker->randomElement(['Pending', 'Approved', 'Rejected']),
         ];
     }
 }

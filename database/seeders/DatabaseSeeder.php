@@ -16,17 +16,7 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
-        User::factory(10)->create();
 
-        User::factory()->create([
-            'name' => 'Administrator',
-            'email' => 'admin@email.com',
-            'password' => Hash::make('admin'),
-            'position' => 'Administrator',
-            'department' => 'Operational',
-            'phone' => '085155414564',
-            'role' => 'admin',
-        ]);
 
         Company::create([
             'name' => 'PT. Quanta Teknik Gemilang',
@@ -34,6 +24,19 @@ class DatabaseSeeder extends Seeder
             'phone' => '02150919091',
             'time_in' => '09:00',
             'time_out' => '17:00',
+        ]);
+
+        User::factory(10)->create();
+
+        User::factory()->create([
+            'company_id' => 1,
+            'name' => 'Administrator',
+            'email' => 'admin@email.com',
+            'password' => Hash::make('admin'),
+            'position' => 'Administrator',
+            'department' => 'Operational',
+            'phone' => '085155414564',
+            'role' => 'admin',
         ]);
 
         Site::create([
