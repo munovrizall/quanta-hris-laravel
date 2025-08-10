@@ -10,13 +10,10 @@ return new class extends Migration {
      */
     public function up(): void
     {
-        Schema::create('companies', function (Blueprint $table) {
-            $table->id();
-            $table->string('name');
-            $table->string('email');
-            $table->string('phone');
-            $table->string('time_in');
-            $table->string('time_out');
+        Schema::create('roles', function (Blueprint $table) {
+            $table->string('role_id', 3)->primary();
+            $table->string('role_name', 50)->unique();
+            $table->string('guard_name', 50)->default('web');
             $table->timestamps();
         });
     }
@@ -26,6 +23,6 @@ return new class extends Migration {
      */
     public function down(): void
     {
-        Schema::dropIfExists('companies');
+        Schema::dropIfExists('roles');
     }
 };

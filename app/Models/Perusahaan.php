@@ -1,0 +1,35 @@
+<?php
+
+namespace App\Models;
+
+use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Model;
+
+class Perusahaan extends Model
+{
+  use HasFactory;
+
+  protected $table = 'perusahaan';
+  protected $primaryKey = 'perusahaan_id';
+  public $incrementing = false;
+  protected $keyType = 'string';
+
+  protected $fillable = [
+    'perusahaan_id',
+    'nama_perusahaan',
+    'email',
+    'nomor_telepon',
+    'jam_masuk',
+    'jam_pulang'
+  ];
+
+  public function karyawan()
+  {
+    return $this->hasMany(Karyawan::class, 'perusahaan_id', 'perusahaan_id');
+  }
+
+  public function cabang()
+  {
+    return $this->hasMany(Cabang::class, 'perusahaan_id', 'perusahaan_id');
+  }
+}
