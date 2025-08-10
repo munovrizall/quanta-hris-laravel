@@ -54,11 +54,17 @@ return new class extends Migration {
 
         Schema::create('sessions', function (Blueprint $table) {
             $table->string('id')->primary();
-            $table->foreignId('user_id')->nullable()->index();
+
+            // UBAH baris foreignId() menjadi string() yang sesuai dengan karyawan_id
+            $table->string('user_id', 5)->nullable()->index();
+
             $table->string('ip_address', 45)->nullable();
             $table->text('user_agent')->nullable();
             $table->longText('payload');
             $table->integer('last_activity')->index();
+
+            // Opsional tetapi sangat direkomendasikan: Tambahkan foreign key constraint
+            $table->foreign('user_id')->references('karyawan_id')->on('karyawan')->onDelete('cascade');
         });
     }
 

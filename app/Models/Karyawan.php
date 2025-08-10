@@ -2,11 +2,14 @@
 
 namespace App\Models;
 
+use Filament\Panel;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Foundation\Auth\User as Authenticable;
+use Filament\Models\Contracts\HasName;
+use Filament\Models\Contracts\FilamentUser;
 
-class Karyawan extends Authenticable
+class Karyawan extends Authenticable implements FilamentUser, HasName
 {
   use HasFactory;
 
@@ -50,6 +53,17 @@ class Karyawan extends Authenticable
     'gaji_pokok' => 'decimal:2',
     'face_embedding' => 'array',
   ];
+
+  public function canAccessPanel(Panel $panel): bool
+  {
+    // Contoh: Hanya izinkan karyawan dengan role 'Admin' atau 'Manager HRD'
+    return true;
+  }
+
+  public function getFilamentName(): string
+  {
+    return $this->nama_lengkap;
+  }
 
   // Relasi BelongsTo
   public function role()
