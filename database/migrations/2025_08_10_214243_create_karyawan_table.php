@@ -12,7 +12,6 @@ return new class extends Migration {
     {
         Schema::create('karyawan', function (Blueprint $table) {
             $table->string('karyawan_id', 5)->primary();
-            $table->string('role_id', 3);
             $table->string('perusahaan_id', 5);
             $table->string('golongan_ptkp_id', 3)->nullable();
             $table->string('nik', 20)->unique();
@@ -41,7 +40,6 @@ return new class extends Migration {
             $table->text('face_embedding')->nullable();
             $table->timestamps();
 
-            $table->foreign('role_id')->references('role_id')->on('roles');
             $table->foreign('perusahaan_id')->references('perusahaan_id')->on('perusahaan');
             $table->foreign('golongan_ptkp_id')->references('golongan_ptkp_id')->on('golongan_ptkp');
             $table->softDeletes();

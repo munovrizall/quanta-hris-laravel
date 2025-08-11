@@ -14,14 +14,13 @@ class DatabaseSeeder extends Seeder
         // Urutan pemanggilan sangat penting untuk menjaga integritas relasi
         $this->call([
             // 1. Buat data master yang tidak memiliki dependensi
-            RoleSeeder::class,
             GolonganPtkpSeeder::class,
             
             // 2. Buat data perusahaan, cabang, dan semua karyawan terkait
             PerusahaanKaryawanSeeder::class,
             
             // 3. Buat data transaksional yang bergantung pada karyawan
-            TransaksiSeeder::class,
+            // TransaksiSeeder::class,
         ]);
     }
 }

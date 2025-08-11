@@ -2,7 +2,6 @@
 
 namespace App\Filament\Widgets;
 
-use App\Models\User;
 use App\Models\Company;
 use App\Models\Karyawan;
 use App\Models\Perusahaan;

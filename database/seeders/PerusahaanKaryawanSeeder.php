@@ -45,15 +45,12 @@ class PerusahaanKaryawanSeeder extends Seeder
             'radius_lokasi' => 150, // 150 meter
         ]);
 
-        // 3. Ambil data master yang sudah ada
-        $roleManager = Role::where('role_name', 'Manager HRD')->first();
-        $roleStaff = Role::where('role_name', 'Staff')->first();
+        // 3. Ambil data master yang sudah ada=
         $ptkp = GolonganPtkp::first();
 
         // 4. Buat 1 Karyawan Manajer
         Karyawan::create([
             'karyawan_id' => 'K0001',
-            'role_id' => $roleManager->role_id,
             'perusahaan_id' => $perusahaan->perusahaan_id,
             'golongan_ptkp_id' => $ptkp->golongan_ptkp_id,
             'nik' => '3171010101800001',
@@ -77,7 +74,6 @@ class PerusahaanKaryawanSeeder extends Seeder
         for ($i = 2; $i <= 21; $i++) {
             Karyawan::factory()->create([
                 'karyawan_id' => 'K' . str_pad($i, 4, '0', STR_PAD_LEFT),
-                'role_id' => $roleStaff->role_id,
                 'perusahaan_id' => $perusahaan->perusahaan_id,
                 'golongan_ptkp_id' => GolonganPtkp::all()->random()->golongan_ptkp_id,
                 // 'cabang_id' -> Asumsi karyawan bisa berada di salah satu cabang

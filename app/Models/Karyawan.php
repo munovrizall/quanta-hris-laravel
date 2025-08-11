@@ -9,10 +9,11 @@ use Illuminate\Foundation\Auth\User as Authenticable;
 use Filament\Models\Contracts\HasName;
 use Filament\Models\Contracts\FilamentUser;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Spatie\Permission\Traits\HasRoles;
 
 class Karyawan extends Authenticable implements FilamentUser, HasName
 {
-  use HasFactory, SoftDeletes;
+  use HasFactory, SoftDeletes, HasRoles;
 
   protected $table = 'karyawan';
   protected $primaryKey = 'karyawan_id';
@@ -59,8 +60,8 @@ class Karyawan extends Authenticable implements FilamentUser, HasName
 
   public function canAccessPanel(Panel $panel): bool
   {
-    // Contoh: Hanya izinkan karyawan dengan role 'Admin' atau 'Manager HRD'
-    return true;
+    // Izinkan super admin atau user dengan permission tertentu
+    return $this->hasRole('super_admin') || $this->can('view_any_role');
   }
 
   public function getFilamentName(): string
