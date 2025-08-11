@@ -8,10 +8,11 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Foundation\Auth\User as Authenticable;
 use Filament\Models\Contracts\HasName;
 use Filament\Models\Contracts\FilamentUser;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Karyawan extends Authenticable implements FilamentUser, HasName
 {
-  use HasFactory;
+  use HasFactory, SoftDeletes;
 
   protected $table = 'karyawan';
   protected $primaryKey = 'karyawan_id';
@@ -25,6 +26,8 @@ class Karyawan extends Authenticable implements FilamentUser, HasName
     'golongan_ptkp_id',
     'nik',
     'nama_lengkap',
+    'email',
+    'password',
     'tanggal_lahir',
     'jenis_kelamin',
     'alamat',

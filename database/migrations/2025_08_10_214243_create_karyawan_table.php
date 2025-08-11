@@ -14,29 +14,29 @@ return new class extends Migration {
             $table->string('karyawan_id', 5)->primary();
             $table->string('role_id', 3);
             $table->string('perusahaan_id', 5);
-            $table->string('golongan_ptkp_id', 3);
+            $table->string('golongan_ptkp_id', 3)->nullable();
             $table->string('nik', 20)->unique();
             $table->string('nama_lengkap', 255);
             $table->date('tanggal_lahir');
             $table->enum('jenis_kelamin', ['Laki-laki', 'Perempuan']);
             $table->text('alamat');
-            $table->string('nomor_telepon', 20);
+            $table->string('nomor_telepon', 20)->nullable();
             $table->string('email')->unique();
             $table->timestamp('email_verified_at')->nullable();
             $table->string('password');
             $table->rememberToken();
-            $table->string('jabatan', 100);
-            $table->string('departemen', 100);
+            $table->string('jabatan', 100)->nullable();
+            $table->string('departemen', 100)->nullable();
             $table->enum('status_kepegawaian', [
                 'Tetap',
                 'Kontrak',
                 'Magang',
                 'Freelance'
-            ]);
-            $table->date('tanggal_mulai_bekerja');
-            $table->decimal('gaji_pokok', 15, 2);
-            $table->string('nomor_rekening', 50);
-            $table->string('nama_pemilik_rekening', 255);
+            ])->nullable();
+            $table->date('tanggal_mulai_bekerja')->nullable();
+            $table->decimal('gaji_pokok', 15, 2)->nullable();
+            $table->string('nomor_rekening', 50)->nullable();
+            $table->string('nama_pemilik_rekening', 255)->nullable();
             $table->string('nomor_bpjs_kesehatan', 50)->nullable();
             $table->text('face_embedding')->nullable();
             $table->timestamps();
@@ -44,6 +44,7 @@ return new class extends Migration {
             $table->foreign('role_id')->references('role_id')->on('roles');
             $table->foreign('perusahaan_id')->references('perusahaan_id')->on('perusahaan');
             $table->foreign('golongan_ptkp_id')->references('golongan_ptkp_id')->on('golongan_ptkp');
+            $table->softDeletes();
         });
 
         Schema::create('password_reset_tokens', function (Blueprint $table) {

@@ -8,6 +8,7 @@ use Filament\Forms;
 use Filament\Forms\Form;
 use Filament\Resources\Resource;
 use Filament\Tables;
+use Filament\Tables\Filters\TrashedFilter;
 use Filament\Tables\Table;
 use Illuminate\Support\Facades\Hash;
 
@@ -18,7 +19,7 @@ class KaryawanResource extends Resource
     protected static ?string $navigationIcon = 'heroicon-o-user-group';
 
     protected static ?string $navigationGroup = 'Manajemen Karyawan';
-    
+
     protected static ?string $navigationLabel = 'Data Karyawan';
 
     public static function form(Form $form): Form
@@ -31,8 +32,9 @@ class KaryawanResource extends Resource
                             ->label('ID Karyawan')
                             ->required()
                             ->maxLength(5)
-                            ->disabledOn('edit')
-                            ->default(fn () => 'K' . str_pad(Karyawan::count() + 1, 4, '0', STR_PAD_LEFT)),
+                            ->disabled()
+                            ->dehydrated() 
+                            ->default(fn() => 'K' . str_pad(Karyawan::count() + 1, 4, '0', STR_PAD_LEFT)),
                         Forms\Components\TextInput::make('nama_lengkap')
                             ->required()
                             ->maxLength(255),
@@ -48,7 +50,7 @@ class KaryawanResource extends Resource
                             ->maxLength(255),
                         Forms\Components\TextInput::make('nomor_telepon')
                             ->tel()
-                            ->maxLength(20),
+                            ->maxLength(20), // nullable
                         Forms\Components\DatePicker::make('tanggal_lahir')
                             ->required(),
                         Forms\Components\Select::make('jenis_kelamin')
@@ -58,6 +60,7 @@ class KaryawanResource extends Resource
                             ])
                             ->required(),
                         Forms\Components\Textarea::make('alamat')
+                            ->required()
                             ->columnSpanFull(),
                     ])->columns(2),
 
@@ -74,46 +77,42 @@ class KaryawanResource extends Resource
                             ->preload()
                             ->required(),
                         Forms\Components\TextInput::make('jabatan')
-                            ->required(),
+                            ->maxLength(100), // nullable
                         Forms\Components\TextInput::make('departemen')
-                            ->required(),
+                            ->maxLength(100), // nullable
                         Forms\Components\Select::make('status_kepegawaian')
                             ->options([
                                 'Tetap' => 'Karyawan Tetap',
                                 'Kontrak' => 'Kontrak',
                                 'Magang' => 'Magang',
                                 'Freelance' => 'Freelance'
-                            ])
-                            ->required(),
-                        Forms\Components\DatePicker::make('tanggal_mulai_bekerja')
-                            ->required(),
+                            ]), // nullable
+                        Forms\Components\DatePicker::make('tanggal_mulai_bekerja'), // nullable
                     ])->columns(2),
-                
+
                 Forms\Components\Section::make('Informasi Finansial & BPJS')
                     ->schema([
                         Forms\Components\Select::make('golongan_ptkp_id')
                             ->relationship('golonganPtkp', 'nama_golongan_ptkp')
-                            ->label('Golongan PTKP')
-                            ->required(),
+                            ->label('Golongan PTKP'), // nullable
                         Forms\Components\TextInput::make('gaji_pokok')
-                            ->required()
                             ->numeric()
-                            ->prefix('Rp'),
+                            ->prefix('Rp'), // nullable
                         Forms\Components\TextInput::make('nomor_rekening')
-                            ->maxLength(50),
+                            ->maxLength(50), // nullable
                         Forms\Components\TextInput::make('nama_pemilik_rekening')
-                            ->maxLength(255),
+                            ->maxLength(255), // nullable
                         Forms\Components\TextInput::make('nomor_bpjs_kesehatan')
-                            ->maxLength(50),
+                            ->maxLength(50), // nullable
                     ])->columns(2),
-                
+
                 Forms\Components\Section::make('Autentikasi')
                     ->schema([
                         Forms\Components\TextInput::make('password')
                             ->password()
-                            ->dehydrateStateUsing(fn (string $state): string => Hash::make($state))
-                            ->dehydrated(fn (?string $state): bool => filled($state))
-                            ->required(fn (string $operation): bool => $operation === 'create')
+                            ->dehydrateStateUsing(fn(string $state): string => Hash::make($state))
+                            ->dehydrated(fn(?string $state): bool => filled($state))
+                            ->required(fn(string $operation): bool => $operation === 'create')
                             ->minLength(8)
                             ->maxLength(255),
                     ]),
@@ -143,12 +142,17 @@ class KaryawanResource extends Resource
                 Tables\Columns\TextColumn::make('status_kepegawaian')
                     ->badge(),
             ])
+            ->defaultSort('karyawan_id', 'desc')
             ->filters([
-                //
+                TrashedFilter::make(),
             ])
             ->actions([
                 Tables\Actions\EditAction::make(),
                 Tables\Actions\ViewAction::make(),
+                Tables\Actions\DeleteAction::make()
+                    ->successNotificationTitle('Karyawan berhasil dihapus')
+                    ->color('danger')
+                    ->requiresConfirmation(),
             ])
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([
@@ -172,4 +176,4 @@ class KaryawanResource extends Resource
             'edit' => Pages\EditKaryawan::route('/{record}/edit'),
         ];
     }
-}   
+}
