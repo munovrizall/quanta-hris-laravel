@@ -52,6 +52,16 @@ services:
     networks:
       - laravel-network
 
+  phpmyadmin:
+    image: phpmyadmin:latest
+    container_name: hris-phpmyadmin
+    ports:
+      - "8087:80"
+    depends_on:
+      - db
+    networks:
+      - laravel-network
+      
 networks:
   laravel-network:
     driver: bridge
