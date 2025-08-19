@@ -22,9 +22,8 @@ return [
 
     'super_admin' => [
         'enabled' => true,
-        'name' => 'super_admin',
-        'define_via_gate' => false,
-        'intercept_gate' => 'before', // after
+        'name' => 'Admin', // Ubah dari 'super-admin' ke 'Admin'
+        'define_via' => 'array', // atau 'closure'
     ],
 
     'panel_user' => [
@@ -66,18 +65,22 @@ return [
     ],
 
     'exclude' => [
-        'enabled' => true,
+    'enabled' => true,
 
-        'pages' => [
-            'Dashboard',
-        ],
-
-        'widgets' => [
-            'AccountWidget', 'FilamentInfoWidget',
-        ],
-
-        'resources' => [],
+    'pages' => [
+        'Dashboard',
     ],
+
+    'widgets' => [
+        'AccountWidget', 
+        'FilamentInfoWidget',
+    ],
+
+    'resources' => [
+        'RoleResource', // Exclude default RoleResource
+        'PermissionResource', // Exclude default PermissionResource jika ada
+    ],
+],
 
     'discovery' => [
         'discover_all_resources' => false,
