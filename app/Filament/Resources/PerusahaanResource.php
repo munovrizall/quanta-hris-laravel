@@ -33,29 +33,35 @@ class PerusahaanResource extends Resource
                     ->label('Nama Perusahaan')
                     ->required()
                     ->maxLength(255)
+                    ->autocomplete(false)
                     ->columnSpanFull(),
 
                 Forms\Components\TextInput::make('email')
                     ->label('Email')
                     ->email()
                     ->required()
+                    ->autocomplete(false)
                     ->maxLength(255),
 
                 Forms\Components\TextInput::make('nomor_telepon')
                     ->label('Nomor Telepon')
                     ->tel()
                     ->required()
+                    ->autocomplete(false)
+
                     ->maxLength(20),
 
                 Forms\Components\TimePicker::make('jam_masuk')
                     ->label('Jam Masuk Kerja')
                     ->required()
-                    ->default('09:00'),
+                    ->default('09:00')
+                    ->seconds(false),
 
                 Forms\Components\TimePicker::make('jam_pulang')
                     ->label('Jam Pulang Kerja')
                     ->required()
-                    ->default('17:00'),
+                    ->default('17:00')
+                    ->seconds(false),
             ]);
     }
 
@@ -107,6 +113,12 @@ class PerusahaanResource extends Resource
                     ->badge()
                     ->color('info'),
 
+                Tables\Columns\TextColumn::make('deleted_at')
+                    ->label('Dihapus')
+                    ->dateTime()
+                    ->sortable()
+                    ->toggleable(isToggledHiddenByDefault: true),
+
                 Tables\Columns\TextColumn::make('created_at')
                     ->label('Dibuat')
                     ->dateTime()
@@ -128,6 +140,17 @@ class PerusahaanResource extends Resource
                 Tables\Filters\Filter::make('has_branches')
                     ->label('Memiliki Cabang')
                     ->query(fn(Builder $query): Builder => $query->has('cabang')),
+
+                Tables\Filters\TrashedFilter::make()
+                    ->label('Status')
+                    ->placeholder('-- Pilih Status --')
+                    ->trueLabel('Dihapus')
+                    ->falseLabel('Aktif')
+                    ->queries(
+                        true: fn(Builder $query) => $query->onlyTrashed(),
+                        false: fn(Builder $query) => $query->withoutTrashed(),
+                        blank: fn(Builder $query) => $query->withoutTrashed(),
+                    ),
             ])
             ->actions([
                 Tables\Actions\EditAction::make()
@@ -136,15 +159,38 @@ class PerusahaanResource extends Resource
                     ->label('Hapus')
                     ->requiresConfirmation()
                     ->modalHeading('Hapus Perusahaan')
-                    ->modalDescription('Apakah Anda yakin ingin menghapus perusahaan ini? Tindakan ini tidak dapat dibatalkan dan akan mempengaruhi semua karyawan dan cabang terkait.')
+                    ->modalDescription('Apakah Anda yakin ingin menghapus perusahaan ini? Data akan diarsipkan dan dapat dipulihkan kembali.')
                     ->modalSubmitActionLabel('Ya, hapus'),
+                Tables\Actions\RestoreAction::make()
+                    ->label('Pulihkan')
+                    ->color('success'),
+                Tables\Actions\ForceDeleteAction::make()
+                    ->label('Hapus Permanen')
+                    ->requiresConfirmation()
+                    ->modalHeading('Hapus Permanen')
+                    ->modalDescription('Apakah Anda yakin ingin menghapus permanen? Tindakan ini tidak dapat dibatalkan!')
+                    ->modalSubmitActionLabel('Ya, hapus permanen')
+                    ->color('danger'),
             ])
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([
                     Tables\Actions\DeleteBulkAction::make()
                         ->label('Hapus Terpilih')
                         ->requiresConfirmation(),
+                    Tables\Actions\RestoreBulkAction::make()
+                        ->label('Pulihkan Terpilih'),
+                    Tables\Actions\ForceDeleteBulkAction::make()
+                        ->label('Hapus Permanen Terpilih')
+                        ->requiresConfirmation(),
                 ]),
+            ]);
+    }
+
+    public static function getEloquentQuery(): Builder
+    {
+        return parent::getEloquentQuery()
+            ->withoutGlobalScopes([
+                SoftDeletingScope::class,
             ]);
     }
 

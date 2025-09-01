@@ -17,18 +17,15 @@ class CreatePerusahaan extends CreateRecord
 
     protected function mutateFormDataBeforeCreate(array $data): array
     {
-        // Auto generate perusahaan_id
-        $lastPerusahaan = Perusahaan::orderBy('perusahaan_id', 'desc')->first();
+        // Cari ID tertinggi yang pernah digunakan (termasuk soft deleted)
+        $allIds = Perusahaan::withTrashed()
+            ->pluck('perusahaan_id')
+            ->map(function ($id) {
+                return intval(substr($id, 1)); // Ambil angka dari P0001 -> 1
+            })
+            ->max();
 
-        if ($lastPerusahaan) {
-            // Ambil nomor dari ID terakhir (misal P0001 -> 1)
-            $lastNumber = intval(substr($lastPerusahaan->perusahaan_id, 1));
-            $nextNumber = $lastNumber + 1;
-        } else {
-            $nextNumber = 1;
-        }
-
-        // Format menjadi P0001, P0002, dst
+        $nextNumber = ($allIds ?? 0) + 1;
         $data['perusahaan_id'] = 'P' . str_pad($nextNumber, 4, '0', STR_PAD_LEFT);
 
         return $data;
