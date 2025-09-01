@@ -2,8 +2,9 @@
 
 namespace App\Filament\Resources;
 
-use App\Filament\Resources\PerusahaanResource\Pages;
-use App\Filament\Resources\PerusahaanResource\RelationManagers;
+use App\Filament\Resources\CabangResource\Pages;
+use App\Filament\Resources\CabangResource\RelationManagers;
+use App\Models\Cabang;
 use App\Models\Perusahaan;
 use Filament\Forms;
 use Filament\Forms\Form;
@@ -13,55 +14,71 @@ use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
 
-class PerusahaanResource extends Resource
+class CabangResource extends Resource
 {
-    protected static ?string $model = Perusahaan::class;
+    protected static ?string $model = Cabang::class;
 
-    protected static ?string $navigationIcon = 'heroicon-o-building-office';
+    protected static ?string $navigationIcon = 'heroicon-o-map-pin';
 
     protected static ?string $navigationGroup = 'Data Master';
 
-    protected static ?int $navigationSort = 1;
+    protected static ?int $navigationSort = 2;
 
     public static function form(Form $form): Form
     {
         return $form
             ->schema([
-                Forms\Components\Hidden::make('perusahaan_id'),
+                Forms\Components\Hidden::make('cabang_id'),
 
-                Forms\Components\TextInput::make('nama_perusahaan')
-                    ->label('Nama Perusahaan')
+                Forms\Components\Select::make('perusahaan_id')
+                    ->label('Perusahaan')
+                    ->relationship('perusahaan', 'nama_perusahaan')
+                    ->searchable()
+                    ->preload()
+                    ->required()
+                    ->columnSpanFull(),
+
+                Forms\Components\TextInput::make('nama_cabang')
+                    ->label('Nama Cabang')
                     ->required()
                     ->maxLength(255)
                     ->autocomplete(false)
                     ->columnSpanFull(),
 
-                Forms\Components\TextInput::make('email')
-                    ->label('Email')
-                    ->email()
+                Forms\Components\Textarea::make('alamat')
+                    ->label('Alamat')
                     ->required()
+                    ->rows(3)
                     ->autocomplete(false)
-                    ->maxLength(255),
+                    ->columnSpanFull(),
 
-                Forms\Components\TextInput::make('nomor_telepon')
-                    ->label('Nomor Telepon')
-                    ->tel()
+                Forms\Components\Grid::make(2)
+                    ->schema([
+                        Forms\Components\TextInput::make('latitude')
+                            ->label('Latitude')
+                            ->numeric()
+                            ->step('any')
+                            ->required()
+                            ->autocomplete(false)
+                            ->placeholder('-6.2088'),
+
+                        Forms\Components\TextInput::make('longitude')
+                            ->label('Longitude')
+                            ->numeric()
+                            ->step('any')
+                            ->required()
+                            ->autocomplete(false)
+                            ->placeholder('106.8456'),
+                    ]),
+
+                Forms\Components\TextInput::make('radius_lokasi')
+                    ->label('Radius Lokasi (meter)')
+                    ->numeric()
                     ->required()
+                    ->default(100)
+                    ->suffix('meter')
                     ->autocomplete(false)
-
-                    ->maxLength(20),
-
-                Forms\Components\TimePicker::make('jam_masuk')
-                    ->label('Jam Masuk Kerja')
-                    ->required()
-                    ->default('09:00')
-                    ->seconds(false),
-
-                Forms\Components\TimePicker::make('jam_pulang')
-                    ->label('Jam Pulang Kerja')
-                    ->required()
-                    ->default('17:00')
-                    ->seconds(false),
+                    ->minValue(1),
             ]);
     }
 
@@ -69,55 +86,45 @@ class PerusahaanResource extends Resource
     {
         return $table
             ->columns([
-                Tables\Columns\TextColumn::make('perusahaan_id')
+                Tables\Columns\TextColumn::make('cabang_id')
                     ->label('ID')
                     ->searchable()
                     ->sortable()
                     ->badge()
                     ->color('primary'),
 
-                Tables\Columns\TextColumn::make('nama_perusahaan')
-                    ->label('Nama Perusahaan')
+                Tables\Columns\TextColumn::make('perusahaan.nama_perusahaan')
+                    ->label('Perusahaan')
+                    ->searchable()
+                    ->sortable()
+                    ->badge()
+                    ->color('success'),
+
+                Tables\Columns\TextColumn::make('nama_cabang')
+                    ->label('Nama Cabang')
                     ->searchable()
                     ->sortable()
                     ->weight('bold'),
 
-                Tables\Columns\TextColumn::make('kontak')
-                    ->label('Kontak')
-                    ->getStateUsing(function ($record) {
-                        return "<div style='font-weight: 500;'>{$record->email}</div>
-                        <small style='color: #6b7280; font-size: 0.75rem;'>{$record->nomor_telepon}</small>";
+                Tables\Columns\TextColumn::make('alamat')
+                    ->label('Alamat')
+                    ->limit(20)
+                    ->tooltip(function (Tables\Columns\TextColumn $column): ?string {
+                        $state = $column->getState();
+                        return strlen($state) > 20 ? $state : null;
                     })
-                    ->html()
-                    ->searchable(['email', 'nomor_telepon']),
+                    ->searchable(),
 
-                Tables\Columns\TextColumn::make('jam_operasional')
-                    ->label('Jam Operasional')
+                Tables\Columns\TextColumn::make('koordinat')
+                    ->label('Koordinat')
                     ->getStateUsing(function ($record) {
                         return "<div style='font-size: 0.875rem;'>
-                        <span style='color: #22c55e;'>{$record->jam_masuk}</span> - 
-                        <span style='color: #f43f5e;'>{$record->jam_pulang}</span>
+                        <div>Lat: {$record->latitude}</div>
+                        <div>Lng: {$record->longitude}</div>
+                        <div>Radius: {$record->radius_lokasi} m</div>
                         </div>";
                     })
                     ->html(),
-
-                Tables\Columns\TextColumn::make('karyawan_count')
-                    ->label('Karyawan')
-                    ->counts('karyawan')
-                    ->badge()
-                    ->color('success'),
-
-                Tables\Columns\TextColumn::make('cabang_count')
-                    ->label('Cabang')
-                    ->counts('cabang')
-                    ->badge()
-                    ->color('info'),
-
-                Tables\Columns\TextColumn::make('deleted_at')
-                    ->label('Dihapus')
-                    ->dateTime()
-                    ->sortable()
-                    ->toggleable(isToggledHiddenByDefault: true),
 
                 Tables\Columns\TextColumn::make('created_at')
                     ->label('Dibuat')
@@ -130,16 +137,20 @@ class PerusahaanResource extends Resource
                     ->dateTime()
                     ->sortable()
                     ->toggleable(isToggledHiddenByDefault: true),
+
+                Tables\Columns\TextColumn::make('deleted_at')
+                    ->label('Dihapus')
+                    ->dateTime()
+                    ->sortable()
+                    ->toggleable(isToggledHiddenByDefault: true),
             ])
             ->defaultSort('created_at', 'desc')
             ->filters([
-                Tables\Filters\Filter::make('has_employees')
-                    ->label('Memiliki Karyawan')
-                    ->query(fn(Builder $query): Builder => $query->has('karyawan')),
-
-                Tables\Filters\Filter::make('has_branches')
-                    ->label('Memiliki Cabang')
-                    ->query(fn(Builder $query): Builder => $query->has('cabang')),
+                Tables\Filters\SelectFilter::make('perusahaan_id')
+                    ->label('Perusahaan')
+                    ->relationship('perusahaan', 'nama_perusahaan')
+                    ->searchable()
+                    ->preload(),
 
                 Tables\Filters\TrashedFilter::make()
                     ->label('Status')
@@ -160,8 +171,8 @@ class PerusahaanResource extends Resource
                 Tables\Actions\DeleteAction::make()
                     ->label('Hapus')
                     ->requiresConfirmation()
-                    ->modalHeading('Hapus Perusahaan')
-                    ->modalDescription('Apakah Anda yakin ingin menghapus perusahaan ini? Data akan diarsipkan dan dapat dipulihkan kembali.')
+                    ->modalHeading('Hapus Cabang')
+                    ->modalDescription('Apakah Anda yakin ingin menghapus cabang ini? Data akan diarsipkan dan dapat dipulihkan kembali.')
                     ->modalSubmitActionLabel('Ya, hapus'),
                 Tables\Actions\RestoreAction::make()
                     ->label('Pulihkan')
@@ -206,10 +217,10 @@ class PerusahaanResource extends Resource
     public static function getPages(): array
     {
         return [
-            'index' => Pages\ListPerusahaans::route('/'),
-            'create' => Pages\CreatePerusahaan::route('/create'),
-            'view' => Pages\ViewPerusahaan::route('/{record}'),
-            'edit' => Pages\EditPerusahaan::route('/{record}/edit'),
+            'index' => Pages\ListCabangs::route('/'),
+            'create' => Pages\CreateCabang::route('/create'),
+            'view' => Pages\ViewCabang::route('/{record}'),
+            'edit' => Pages\EditCabang::route('/{record}/edit'),
         ];
     }
 }
