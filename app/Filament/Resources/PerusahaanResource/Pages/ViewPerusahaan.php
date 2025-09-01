@@ -16,7 +16,7 @@ class ViewPerusahaan extends ViewRecord
   {
     return [
       Actions\EditAction::make()
-        ->label('Edit'),
+        ->label('Ubah'),
     ];
   }
 

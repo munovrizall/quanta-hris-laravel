@@ -13,7 +13,9 @@ class ListPerusahaans extends ListRecords
     protected function getHeaderActions(): array
     {
         return [
-            Actions\CreateAction::make(),
+            Actions\CreateAction::make()
+                ->label('Tambah Perusahaan')
+                ->icon('heroicon-o-plus'),
         ];
     }
 }
