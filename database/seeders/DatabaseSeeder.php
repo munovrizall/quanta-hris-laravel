@@ -13,6 +13,9 @@ class DatabaseSeeder extends Seeder
     {
         // Urutan pemanggilan sangat penting untuk menjaga integritas relasi
         $this->call([
+
+            PermissionSeeder::class,
+            
             // 1. Buat data master yang tidak memiliki dependensi
             GolonganPtkpSeeder::class,
             
