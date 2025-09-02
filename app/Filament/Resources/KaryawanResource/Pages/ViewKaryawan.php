@@ -50,7 +50,7 @@ class ViewKaryawan extends ViewRecord
                         Infolists\Components\TextEntry::make('jenis_kelamin')
                             ->label('Jenis Kelamin')
                             ->badge()
-                            ->color(fn (string $state): string => match ($state) {
+                            ->color(fn(string $state): string => match ($state) {
                                 'Laki-laki' => 'blue',
                                 'Perempuan' => 'pink',
                                 default => 'gray',
@@ -74,7 +74,7 @@ class ViewKaryawan extends ViewRecord
                         Infolists\Components\TextEntry::make('role.name')
                             ->label('Role')
                             ->badge()
-                            ->color('purple')
+                            ->color(fn($record) => $record->role_color)
                             ->default('-'),
                         Infolists\Components\TextEntry::make('jabatan')
                             ->label('Jabatan')
@@ -85,7 +85,7 @@ class ViewKaryawan extends ViewRecord
                         Infolists\Components\TextEntry::make('status_kepegawaian')
                             ->label('Status Kepegawaian')
                             ->badge()
-                            ->color(fn (?string $state): string => match ($state) {
+                            ->color(fn(?string $state): string => match ($state) {
                                 'Tetap' => 'success',
                                 'Kontrak' => 'warning',
                                 'Magang' => 'info',
@@ -102,7 +102,7 @@ class ViewKaryawan extends ViewRecord
                             ->label('Gaji Pokok')
                             ->money('IDR')
                             ->default('-'),
-                        Infolists\Components\TextEntry::make('golonganPtkp.kode_ptkp')
+                        Infolists\Components\TextEntry::make('golonganPtkp.nama_golongan_ptkp')
                             ->label('Golongan PTKP')
                             ->badge()
                             ->color('info')
@@ -128,7 +128,7 @@ class ViewKaryawan extends ViewRecord
                     ->schema([
                         Infolists\Components\TextEntry::make('absensi_count')
                             ->label('Total Absensi')
-                            ->getStateUsing(fn ($record) => $record->absensi()->count())
+                            ->getStateUsing(fn($record) => $record->absensi()->count())
                             ->badge()
                             ->color('warning'),
                         Infolists\Components\TextEntry::make('created_at')

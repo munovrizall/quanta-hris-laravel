@@ -195,7 +195,7 @@ class KaryawanResource extends Resource
                 Tables\Columns\TextColumn::make('role.name')
                     ->label('Role')
                     ->badge()
-                    ->color('purple')
+                    ->color(fn($record) => $record->role_color)
                     ->default('-'),
 
                 Tables\Columns\TextColumn::make('tanggal_mulai_bekerja')

@@ -8,6 +8,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Foundation\Auth\User as Authenticable;
 use Filament\Models\Contracts\HasName;
 use Filament\Models\Contracts\FilamentUser;
+use Illuminate\Contracts\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Spatie\Permission\Traits\HasRoles;
 
@@ -66,7 +67,7 @@ class Karyawan extends Authenticable implements FilamentUser, HasName
 
   public function isSuperAdmin(): bool
   {
-    return $this->role_id === 'R0001' || $this->hasRole('Admin');
+    return $this->role_id === 'R01' || $this->hasRole('Admin');
   }
 
   public function getFilamentName(): string
@@ -95,5 +96,26 @@ class Karyawan extends Authenticable implements FilamentUser, HasName
   {
     return $this->hasMany(Absensi::class, 'karyawan_id', 'karyawan_id');
   }
-  //... (relasi hasMany lainnya seperti cuti, izin, lembur, slipGaji)
+
+  public static function getEloquentQuery(): Builder
+  {
+    return parent::getEloquentQuery()->with('role');
+  }
+
+  public function getRoleColorAttribute(): string
+  {
+    if (!$this->role)
+      return 'secondary';
+
+    return match (strtolower($this->role->name)) {
+      'admin' => 'admin',
+      'staff hrd' => 'hr',
+      'manager hrd' => 'manager',
+      'manager finance' => 'finance',
+      'account payment' => 'finance',
+      'ceo' => 'ceo',
+      'karyawan' => 'karyawan',
+      default => 'secondary',
+    };
+  }
 }
