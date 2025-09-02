@@ -64,6 +64,7 @@ class AdminPanelProvider extends PanelProvider
                 Authenticate::class,
             ])
             ->navigationGroups([
+                'Manajemen Absensi',
                 'Data Master',
                 'Keamanan',
             ])
