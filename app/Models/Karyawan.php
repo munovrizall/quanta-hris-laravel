@@ -61,7 +61,7 @@ class Karyawan extends Authenticable implements FilamentUser, HasName
   public function canAccessPanel(Panel $panel): bool
   {
     // Gunakan role_id langsung untuk pengecekan
-    return $this->role_id === 'R0001' || $this->role?->name === 'Admin';
+    return $this->role_id === 'R01' || $this->role?->name === 'Admin';
   }
 
   public function isSuperAdmin(): bool

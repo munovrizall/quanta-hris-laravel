@@ -14,12 +14,6 @@ class PerusahaanKaryawanSeeder extends Seeder
 {
     public function run(): void
     {
-        // 1. Buat Role Admin terlebih dahulu
-        $adminRole = Role::create([
-            'role_id' => 'R0001',
-            'name' => 'Admin',
-            'guard_name' => 'web',
-        ]);
 
         // 2. Buat permissions untuk Role resource jika belum ada
         $permissions = [
@@ -37,23 +31,6 @@ class PerusahaanKaryawanSeeder extends Seeder
                 ['permission_id' => $permission['permission_id']]
             );
         }
-
-        // 3. Assign permissions ke Admin role menggunakan nama permission
-        $adminRole->givePermissionTo([
-            'view_any_role',
-            'view_role',
-            'create_role',
-            'update_role',
-            'delete_role',
-            'delete_any_role'
-        ]);
-
-        // 4. Buat Role Staff
-        Role::create([
-            'role_id' => 'R0002',
-            'name' => 'Staff',
-            'guard_name' => 'web',
-        ]);
 
         // 5. Buat Perusahaan
         $perusahaan = Perusahaan::create([
@@ -109,7 +86,7 @@ class PerusahaanKaryawanSeeder extends Seeder
             'gaji_pokok' => 15000000,
             'nomor_rekening' => '1234567890',
             'nama_pemilik_rekening' => 'Budi Santoso',
-            'role_id' => 'R0001',
+            'role_id' => 'R01',
         ]);
 
         // Assign role Admin ke karyawan menggunakan Spatie Permission
@@ -124,13 +101,13 @@ class PerusahaanKaryawanSeeder extends Seeder
                 'karyawan_id' => 'K' . str_pad($i, 4, '0', STR_PAD_LEFT),
                 'perusahaan_id' => $perusahaan->perusahaan_id,
                 'golongan_ptkp_id' => GolonganPtkp::all()->random()->golongan_ptkp_id,
-                'role_id' => 'R0002', // Assign role staff
+                'role_id' => 'R07', // Assign role Karyawan
                 // Anda bisa menambahkan cabang_id jika ada kolom tersebut
                 // 'cabang_id' => $cabangId,
             ]);
 
-            // Assign role Staff ke karyawan staff
-            $staffKaryawan->assignRole('Staff');
+            // Assign role Karyawan ke karyawan staff
+            $staffKaryawan->assignRole('Karyawan');
         }
     }
 }

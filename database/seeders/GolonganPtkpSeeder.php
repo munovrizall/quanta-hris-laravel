@@ -13,11 +13,11 @@ class GolonganPtkpSeeder extends Seeder
     public function run(): void
     {
         $golongan = [
-            ['golongan_ptkp_id' => 'TK0', 'nama_golongan_ptkp' => 'TK/0'],
-            ['golongan_ptkp_id' => 'K0', 'nama_golongan_ptkp' => 'K/0'],
-            ['golongan_ptkp_id' => 'K1', 'nama_golongan_ptkp' => 'K/1'],
-            ['golongan_ptkp_id' => 'K2', 'nama_golongan_ptkp' => 'K/2'],
-            ['golongan_ptkp_id' => 'K3', 'nama_golongan_ptkp' => 'K/3'],
+            ['golongan_ptkp_id' => 'G01', 'nama_golongan_ptkp' => 'TK/0'],
+            ['golongan_ptkp_id' => 'G02', 'nama_golongan_ptkp' => 'K/0'],
+            ['golongan_ptkp_id' => 'G03', 'nama_golongan_ptkp' => 'K/1'],
+            ['golongan_ptkp_id' => 'G04', 'nama_golongan_ptkp' => 'K/2'],
+            ['golongan_ptkp_id' => 'G05', 'nama_golongan_ptkp' => 'K/3'],
         ];
 
         foreach ($golongan as $data) {

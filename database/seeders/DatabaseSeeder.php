@@ -15,6 +15,7 @@ class DatabaseSeeder extends Seeder
         $this->call([
 
             PermissionSeeder::class,
+            RoleSeeder::class,
             
             // 1. Buat data master yang tidak memiliki dependensi
             GolonganPtkpSeeder::class,

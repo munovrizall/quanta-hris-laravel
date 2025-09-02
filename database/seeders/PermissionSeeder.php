@@ -4,9 +4,7 @@ namespace Database\Seeders;
 
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
-use Illuminate\Support\Facades\DB;
 use App\Models\Permission;
-use App\Models\Role;
 
 class PermissionSeeder extends Seeder
 {
@@ -84,27 +82,7 @@ class PermissionSeeder extends Seeder
       );
     }
 
-    // Create or get admin role with custom ID
-    $adminRole = Role::updateOrCreate(
-      ['name' => 'admin', 'guard_name' => 'web'],
-      ['role_id' => 'R0001']
-    );
-
-    // Clear existing role permissions
-    DB::table('role_has_permissions')->where('role_id', 'R0001')->delete();
-
-    // Get all created permissions
-    $allPermissions = Permission::whereIn('name', $permissions)->get();
-
-    // Insert role permissions manually
-    foreach ($allPermissions as $permission) {
-      DB::table('role_has_permissions')->updateOrInsert([
-        'role_id' => 'R0001',
-        'permission_id' => $permission->permission_id
-      ]);
-    }
-
-    $this->command->info('Permissions created and assigned to admin role successfully!');
+    $this->command->info('Permissions created successfully!');
     $this->command->info('Total permissions created: ' . count($permissions));
   }
 }

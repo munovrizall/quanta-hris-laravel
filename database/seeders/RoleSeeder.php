@@ -1,0 +1,199 @@
+<?php
+
+namespace Database\Seeders;
+
+use Illuminate\Database\Console\Seeds\WithoutModelEvents;
+use Illuminate\Database\Seeder;
+use Illuminate\Support\Facades\DB;
+use App\Models\Role;
+use App\Models\Permission;
+
+class RoleSeeder extends Seeder
+{
+  /**
+   * Run the database seeds.
+   */
+  public function run(): void
+  {
+    // Define roles with their custom IDs
+    $roles = [
+      ['role_id' => 'R01', 'name' => 'Admin'],
+      ['role_id' => 'R02', 'name' => 'Staff HRD'],
+      ['role_id' => 'R03', 'name' => 'Manager HRD'],
+      ['role_id' => 'R04', 'name' => 'Manager Finance'],
+      ['role_id' => 'R05', 'name' => 'Account Payment'],
+      ['role_id' => 'R06', 'name' => 'CEO'],
+      ['role_id' => 'R07', 'name' => 'Karyawan'],
+    ];
+
+    // Create roles
+    foreach ($roles as $roleData) {
+      Role::updateOrCreate(
+        ['name' => $roleData['name'], 'guard_name' => 'web'],
+        ['role_id' => $roleData['role_id']]
+      );
+    }
+
+    // Assign permissions to roles
+    $this->assignPermissions();
+
+    $this->command->info('Roles created successfully!');
+    $this->command->info('Total roles created: ' . count($roles));
+  }
+
+  /**
+   * Assign permissions to roles
+   */
+  private function assignPermissions(): void
+  {
+    // Get all permissions
+    $allPermissions = Permission::all();
+
+    // Admin gets all permissions
+    $adminRole = Role::where('name', 'Admin')->first();
+    if ($adminRole) {
+      DB::table('role_has_permissions')->where('role_id', $adminRole->role_id)->delete();
+      foreach ($allPermissions as $permission) {
+        DB::table('role_has_permissions')->updateOrInsert([
+          'role_id' => $adminRole->role_id,
+          'permission_id' => $permission->permission_id
+        ]);
+      }
+    }
+
+    // CEO gets most permissions (except some admin-specific ones)
+    $ceoRole = Role::where('name', 'CEO')->first();
+    if ($ceoRole) {
+      $ceoPermissions = $allPermissions->whereNotIn('name', [
+        'create_role',
+        'update_role',
+        'delete_role',
+        'delete_any_role',
+        'force_delete_role',
+        'force_delete_any_role'
+      ]);
+
+      DB::table('role_has_permissions')->where('role_id', $ceoRole->role_id)->delete();
+      foreach ($ceoPermissions as $permission) {
+        DB::table('role_has_permissions')->updateOrInsert([
+          'role_id' => $ceoRole->role_id,
+          'permission_id' => $permission->permission_id
+        ]);
+      }
+    }
+
+    // Manager HRD permissions
+    $managerHRDRole = Role::where('name', 'Manager HRD')->first();
+    if ($managerHRDRole) {
+      $managerHRDPermissions = $allPermissions->whereIn('name', [
+        'view_any_karyawan',
+        'view_karyawan',
+        'create_karyawan',
+        'update_karyawan',
+        'delete_karyawan',
+        'restore_karyawan',
+        'view_any_cabang',
+        'view_cabang',
+        'create_cabang',
+        'update_cabang',
+        'view_any_perusahaan',
+        'view_perusahaan',
+        'view_any_role',
+        'view_role'
+      ]);
+
+      DB::table('role_has_permissions')->where('role_id', $managerHRDRole->role_id)->delete();
+      foreach ($managerHRDPermissions as $permission) {
+        DB::table('role_has_permissions')->updateOrInsert([
+          'role_id' => $managerHRDRole->role_id,
+          'permission_id' => $permission->permission_id
+        ]);
+      }
+    }
+
+    // Staff HRD permissions
+    $staffHRDRole = Role::where('name', 'Staff HRD')->first();
+    if ($staffHRDRole) {
+      $staffHRDPermissions = $allPermissions->whereIn('name', [
+        'view_any_karyawan',
+        'view_karyawan',
+        'create_karyawan',
+        'update_karyawan',
+        'view_any_cabang',
+        'view_cabang',
+        'view_any_perusahaan',
+        'view_perusahaan',
+        'view_any_role',
+        'view_role'
+      ]);
+
+      DB::table('role_has_permissions')->where('role_id', $staffHRDRole->role_id)->delete();
+      foreach ($staffHRDPermissions as $permission) {
+        DB::table('role_has_permissions')->updateOrInsert([
+          'role_id' => $staffHRDRole->role_id,
+          'permission_id' => $permission->permission_id
+        ]);
+      }
+    }
+
+    // Manager Finance permissions
+    $managerFinanceRole = Role::where('name', 'Manager Finance')->first();
+    if ($managerFinanceRole) {
+      $managerFinancePermissions = $allPermissions->whereIn('name', [
+        'view_any_karyawan',
+        'view_karyawan',
+        'view_any_cabang',
+        'view_cabang',
+        'view_any_perusahaan',
+        'view_perusahaan'
+      ]);
+
+      DB::table('role_has_permissions')->where('role_id', $managerFinanceRole->role_id)->delete();
+      foreach ($managerFinancePermissions as $permission) {
+        DB::table('role_has_permissions')->updateOrInsert([
+          'role_id' => $managerFinanceRole->role_id,
+          'permission_id' => $permission->permission_id
+        ]);
+      }
+    }
+
+    // Account Payment permissions
+    $accountPaymentRole = Role::where('name', 'Account Payment')->first();
+    if ($accountPaymentRole) {
+      $accountPaymentPermissions = $allPermissions->whereIn('name', [
+        'view_any_karyawan',
+        'view_karyawan',
+        'view_any_cabang',
+        'view_cabang'
+      ]);
+
+      DB::table('role_has_permissions')->where('role_id', $accountPaymentRole->role_id)->delete();
+      foreach ($accountPaymentPermissions as $permission) {
+        DB::table('role_has_permissions')->updateOrInsert([
+          'role_id' => $accountPaymentRole->role_id,
+          'permission_id' => $permission->permission_id
+        ]);
+      }
+    }
+
+    // Karyawan permissions (basic view only)
+    $karyawanRole = Role::where('name', 'Karyawan')->first();
+    if ($karyawanRole) {
+      $karyawanPermissions = $allPermissions->whereIn('name', [
+        'view_karyawan',
+        'view_cabang',
+        'view_perusahaan'
+      ]);
+
+      DB::table('role_has_permissions')->where('role_id', $karyawanRole->role_id)->delete();
+      foreach ($karyawanPermissions as $permission) {
+        DB::table('role_has_permissions')->updateOrInsert([
+          'role_id' => $karyawanRole->role_id,
+          'permission_id' => $permission->permission_id
+        ]);
+      }
+    }
+
+    $this->command->info('Permissions assigned to roles successfully!');
+  }
+}
