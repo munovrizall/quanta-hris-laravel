@@ -108,7 +108,7 @@ class KaryawanResource extends Resource
 
                         Forms\Components\Select::make('golongan_ptkp_id')
                             ->label('Golongan PTKP')
-                            ->relationship('golonganPtkp', 'kode_ptkp')
+                            ->relationship('golonganPtkp', 'nama_golongan_ptkp')
                             ->searchable()
                             ->preload(),
 

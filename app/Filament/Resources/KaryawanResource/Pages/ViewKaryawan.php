@@ -20,7 +20,7 @@ class ViewKaryawan extends ViewRecord
     {
         return [
             Actions\EditAction::make()
-                ->label('Edit'),
+                ->label('Ubah'),
         ];
     }
 
@@ -97,7 +97,7 @@ class ViewKaryawan extends ViewRecord
                             ->label('Tanggal Mulai Bekerja')
                             ->date()
                             ->icon('heroicon-m-calendar')
-                            ->default('-'),
+                            ->placeholder('-'),
                         Infolists\Components\TextEntry::make('gaji_pokok')
                             ->label('Gaji Pokok')
                             ->money('IDR')
