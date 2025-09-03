@@ -70,6 +70,20 @@ class PermissionSeeder extends Seeder
       'restore_any_perusahaan',
       'replicate_perusahaan',
       'reorder_perusahaan',
+
+      // Absensi permissions
+      'view_any_absensi',
+      'view_absensi',
+      'create_absensi',
+      'update_absensi',
+      'delete_absensi',
+      'delete_any_absensi',
+      'force_delete_absensi',
+      'force_delete_any_absensi',
+      'restore_absensi',
+      'restore_any_absensi',
+      'replicate_absensi',
+      'reorder_absensi',
     ];
 
     // Create permissions with custom ID format
