@@ -24,7 +24,7 @@ class DatabaseSeeder extends Seeder
             PerusahaanKaryawanSeeder::class,
             
             // 3. Buat data transaksional yang bergantung pada karyawan
-            // TransaksiSeeder::class,
+            AbsensiSeeder::class,
         ]);
     }
 }
