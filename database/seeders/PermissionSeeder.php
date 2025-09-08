@@ -84,6 +84,20 @@ class PermissionSeeder extends Seeder
       'restore_any_absensi',
       'replicate_absensi',
       'reorder_absensi',
+
+      // Lembur permissions
+      'view_any_lembur',
+      'view_lembur',
+      'create_lembur',
+      'update_lembur',
+      'delete_lembur',
+      'delete_any_lembur',
+      'force_delete_lembur',
+      'force_delete_any_lembur',
+      'restore_lembur',
+      'restore_any_lembur',
+      'replicate_lembur',
+      'reorder_lembur',
     ];
 
     // Create permissions with custom ID format
