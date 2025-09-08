@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -59,5 +60,18 @@ class Cuti extends Model
     public function approver(): BelongsTo
     {
         return $this->belongsTo(Karyawan::class, 'approver_id', 'karyawan_id');
+    }
+
+    /**
+     * Accessor untuk menghitung durasi cuti
+     */
+    public function getDurasiCutiAttribute(): int
+    {
+        if ($this->tanggal_mulai && $this->tanggal_selesai) {
+            $start = Carbon::parse($this->tanggal_mulai);
+            $end = Carbon::parse($this->tanggal_selesai);
+            return $start->diffInDays($end) + 1;
+        }
+        return 0;
     }
 }

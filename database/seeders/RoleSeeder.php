@@ -82,24 +82,49 @@ class RoleSeeder extends Seeder
       }
     }
 
-    // Manager HRD permissions
+    // Manager HRD permissions (termasuk lembur dan cuti)
     $managerHRDRole = Role::where('name', 'Manager HRD')->first();
     if ($managerHRDRole) {
       $managerHRDPermissions = $allPermissions->whereIn('name', [
+        // Karyawan permissions
         'view_any_karyawan',
         'view_karyawan',
         'create_karyawan',
         'update_karyawan',
         'delete_karyawan',
         'restore_karyawan',
+        // Cabang permissions
         'view_any_cabang',
         'view_cabang',
         'create_cabang',
         'update_cabang',
+        // Perusahaan permissions
         'view_any_perusahaan',
         'view_perusahaan',
+        // Role permissions
         'view_any_role',
-        'view_role'
+        'view_role',
+        // Absensi permissions
+        'view_any_absensi',
+        'view_absensi',
+        'create_absensi',
+        'update_absensi',
+        'delete_absensi',
+        'restore_absensi',
+        // Lembur permissions
+        'view_any_lembur',
+        'view_lembur',
+        'create_lembur',
+        'update_lembur',
+        'delete_lembur',
+        'restore_lembur',
+        // Cuti permissions
+        'view_any_cuti',
+        'view_cuti',
+        'create_cuti',
+        'update_cuti',
+        'delete_cuti',
+        'restore_cuti'
       ]);
 
       DB::table('role_has_permissions')->where('role_id', $managerHRDRole->role_id)->delete();
@@ -111,20 +136,39 @@ class RoleSeeder extends Seeder
       }
     }
 
-    // Staff HRD permissions
+    // Staff HRD permissions (termasuk lembur dan cuti)
     $staffHRDRole = Role::where('name', 'Staff HRD')->first();
     if ($staffHRDRole) {
       $staffHRDPermissions = $allPermissions->whereIn('name', [
+        // Karyawan permissions
         'view_any_karyawan',
         'view_karyawan',
         'create_karyawan',
         'update_karyawan',
+        // Cabang permissions
         'view_any_cabang',
         'view_cabang',
+        // Perusahaan permissions
         'view_any_perusahaan',
         'view_perusahaan',
+        // Role permissions
         'view_any_role',
-        'view_role'
+        'view_role',
+        // Absensi permissions
+        'view_any_absensi',
+        'view_absensi',
+        'create_absensi',
+        'update_absensi',
+        // Lembur permissions
+        'view_any_lembur',
+        'view_lembur',
+        'create_lembur',
+        'update_lembur',
+        // Cuti permissions
+        'view_any_cuti',
+        'view_cuti',
+        'create_cuti',
+        'update_cuti'
       ]);
 
       DB::table('role_has_permissions')->where('role_id', $staffHRDRole->role_id)->delete();
@@ -136,7 +180,7 @@ class RoleSeeder extends Seeder
       }
     }
 
-    // Manager Finance permissions
+    // Manager Finance permissions (bisa lihat lembur dan cuti untuk payroll)
     $managerFinanceRole = Role::where('name', 'Manager Finance')->first();
     if ($managerFinanceRole) {
       $managerFinancePermissions = $allPermissions->whereIn('name', [
@@ -145,7 +189,13 @@ class RoleSeeder extends Seeder
         'view_any_cabang',
         'view_cabang',
         'view_any_perusahaan',
-        'view_perusahaan'
+        'view_perusahaan',
+        'view_any_absensi',
+        'view_absensi',
+        'view_any_lembur',
+        'view_lembur',
+        'view_any_cuti',
+        'view_cuti'
       ]);
 
       DB::table('role_has_permissions')->where('role_id', $managerFinanceRole->role_id)->delete();
@@ -164,7 +214,13 @@ class RoleSeeder extends Seeder
         'view_any_karyawan',
         'view_karyawan',
         'view_any_cabang',
-        'view_cabang'
+        'view_cabang',
+        'view_any_absensi',
+        'view_absensi',
+        'view_any_lembur',
+        'view_lembur',
+        'view_any_cuti',
+        'view_cuti'
       ]);
 
       DB::table('role_has_permissions')->where('role_id', $accountPaymentRole->role_id)->delete();
@@ -176,13 +232,22 @@ class RoleSeeder extends Seeder
       }
     }
 
-    // Karyawan permissions (basic view only)
+    // Karyawan permissions (bisa manage absensi, lembur, dan cuti sendiri)
     $karyawanRole = Role::where('name', 'Karyawan')->first();
     if ($karyawanRole) {
       $karyawanPermissions = $allPermissions->whereIn('name', [
         'view_karyawan',
         'view_cabang',
-        'view_perusahaan'
+        'view_perusahaan',
+        'view_absensi',
+        'create_absensi',
+        'update_absensi',
+        'view_lembur',
+        'create_lembur',
+        'update_lembur',
+        'view_cuti',
+        'create_cuti',
+        'update_cuti'
       ]);
 
       DB::table('role_has_permissions')->where('role_id', $karyawanRole->role_id)->delete();
