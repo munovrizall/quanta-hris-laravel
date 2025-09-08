@@ -122,6 +122,13 @@ class LemburResource extends Resource
                             })
                             ->searchable()
                             ->visible(fn(callable $get) => in_array($get('status_lembur'), ['Disetujui', 'Ditolak'])),
+                        Forms\Components\DateTimePicker::make('processed_at')
+                            ->label('Waktu Persetujuan')
+                            ->visible(fn(callable $get) => in_array($get('status_lembur'), ['Disetujui', 'Ditolak']))
+                            ->required(fn(callable $get) => in_array($get('status_lembur'), ['Disetujui', 'Ditolak']))
+                            ->helperText('Otomatis terisi saat mengubah status. Anda dapat mengubahnya secara manual.')
+                            ->seconds(false)
+                            ->default(fn(callable $get) => $get('status_lembur') !== 'Diajukan' ? now() : null),
                         Forms\Components\DateTimePicker::make('processed_at') // Changed from approved_at
                             ->label('Waktu Persetujuan')
                             ->visible(fn(callable $get) => $get('status_lembur') === 'Disetujui'),
