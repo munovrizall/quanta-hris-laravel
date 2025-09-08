@@ -23,7 +23,7 @@ class KaryawanResource extends Resource
 
     protected static ?string $navigationIcon = 'heroicon-o-users';
 
-    protected static ?string $navigationGroup = 'Manajemen Absensi';
+    protected static ?string $navigationGroup = 'Data Master';
 
     protected static ?int $navigationSort = 3;
 
