@@ -29,6 +29,7 @@ class DatabaseSeeder extends Seeder
             // 4. Buat data lembur dan cuti (bergantung pada karyawan dan absensi)
             LemburSeeder::class,
             CutiSeeder::class,
+            IzinSeeder::class,
         ]);
     }
 }
