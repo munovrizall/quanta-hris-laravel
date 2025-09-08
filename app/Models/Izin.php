@@ -31,8 +31,8 @@ class Izin extends Model
         'dokumen_pendukung',
         'status_izin',
         'alasan_penolakan',
-        'approved_by',
-        'approved_at',
+        'approver_id',
+        'processed_at',
     ];
 
     /**
@@ -41,7 +41,7 @@ class Izin extends Model
     protected $casts = [
         'tanggal_mulai' => 'date',
         'tanggal_selesai' => 'date',
-        'approved_at' => 'datetime',
+        'processed_at' => 'datetime',
     ];
 
     /**
@@ -57,6 +57,6 @@ class Izin extends Model
      */
     public function approver(): BelongsTo
     {
-        return $this->belongsTo(Karyawan::class, 'approved_by', 'karyawan_id');
+        return $this->belongsTo(Karyawan::class, 'approver_id', 'karyawan_id');
     }
 }
