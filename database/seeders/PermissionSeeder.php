@@ -112,6 +112,20 @@ class PermissionSeeder extends Seeder
       'restore_any_cuti',
       'replicate_cuti',
       'reorder_cuti',
+
+      // Izin permissions
+      'view_any_izin',
+      'view_izin',
+      'create_izin',
+      'update_izin',
+      'delete_izin',
+      'delete_any_izin',
+      'force_delete_izin',
+      'force_delete_any_izin',
+      'restore_izin',
+      'restore_any_izin',
+      'replicate_izin',
+      'reorder_izin',
     ];
 
     // Create permissions with custom ID format

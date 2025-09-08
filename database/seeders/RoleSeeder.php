@@ -124,7 +124,14 @@ class RoleSeeder extends Seeder
         'create_cuti',
         'update_cuti',
         'delete_cuti',
-        'restore_cuti'
+        'restore_cuti',
+        // Izin permissions
+        'view_any_izin',
+        'view_izin',
+        'create_izin',
+        'update_izin',
+        'delete_izin',
+        'restore_izin'
       ]);
 
       DB::table('role_has_permissions')->where('role_id', $managerHRDRole->role_id)->delete();
@@ -168,7 +175,9 @@ class RoleSeeder extends Seeder
         'view_any_cuti',
         'view_cuti',
         'create_cuti',
-        'update_cuti'
+        'update_cuti',
+        // Izin permissions
+        'view_any_izin', 'view_izin', 'create_izin', 'update_izin'
       ]);
 
       DB::table('role_has_permissions')->where('role_id', $staffHRDRole->role_id)->delete();

@@ -2,13 +2,15 @@
 
 namespace App\Models;
 
+use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Izin extends Model
 {
-    use HasFactory;
+    use HasFactory, SoftDeletes;
 
     /**
      * Konfigurasi untuk Primary Key Kustom.
@@ -58,5 +60,18 @@ class Izin extends Model
     public function approver(): BelongsTo
     {
         return $this->belongsTo(Karyawan::class, 'approver_id', 'karyawan_id');
+    }
+
+    /**
+     * Accessor untuk menghitung durasi izin
+     */
+    public function getDurasiIzinAttribute(): int
+    {
+        if ($this->tanggal_mulai && $this->tanggal_selesai) {
+            $start = Carbon::parse($this->tanggal_mulai);
+            $end = Carbon::parse($this->tanggal_selesai);
+            return $start->diffInDays($end) + 1;
+        }
+        return 0;
     }
 }
