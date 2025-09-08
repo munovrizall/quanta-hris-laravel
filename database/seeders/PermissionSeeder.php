@@ -98,6 +98,20 @@ class PermissionSeeder extends Seeder
       'restore_any_lembur',
       'replicate_lembur',
       'reorder_lembur',
+
+      // Cuti permissions
+      'view_any_cuti',
+      'view_cuti',
+      'create_cuti',
+      'update_cuti',
+      'delete_cuti',
+      'delete_any_cuti',
+      'force_delete_cuti',
+      'force_delete_any_cuti',
+      'restore_cuti',
+      'restore_any_cuti',
+      'replicate_cuti',
+      'reorder_cuti',
     ];
 
     // Create permissions with custom ID format
