@@ -5,10 +5,11 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Lembur extends Model
 {
-    use HasFactory;
+    use HasFactory, SoftDeletes;
 
     /**
      * Konfigurasi untuk Primary Key Kustom.
@@ -65,5 +66,11 @@ class Lembur extends Model
     public function approver(): BelongsTo
     {
         return $this->belongsTo(Karyawan::class, 'approved_by', 'karyawan_id');
+    }
+
+    // Tambahkan accessor untuk formatted absensi
+    public function getFormattedAbsensiAttribute()
+    {
+        return $this->absensi_id . ' - ' . $this->tanggal_lembur . ' (' . $this->karyawan->nama_lengkap . ')';
     }
 }

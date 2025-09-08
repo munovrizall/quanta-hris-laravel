@@ -19,7 +19,7 @@ class AbsensiResource extends Resource
 {
     protected static ?string $model = Absensi::class;
 
-    protected static ?string $navigationIcon = 'heroicon-o-clock';
+    protected static ?string $navigationIcon = 'heroicon-o-clipboard-document-check';
 
     protected static ?string $navigationLabel = 'Absensi';
 
