@@ -280,7 +280,7 @@ class CutiResource extends Resource
                         ->label('Hapus Permanen Terpilih'),
                 ]),
             ])
-            ->defaultSort('tanggal_mulai', 'desc');
+            ->defaultSort('cuti_id', 'desc');
     }
 
     public static function getEloquentQuery(): Builder

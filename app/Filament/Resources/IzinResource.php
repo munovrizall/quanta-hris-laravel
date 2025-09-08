@@ -87,13 +87,13 @@ class IzinResource extends Resource
                             ->content(function (callable $get) {
                                 $tanggalMulai = $get('tanggal_mulai');
                                 $tanggalSelesai = $get('tanggal_selesai');
-                                
+
                                 if ($tanggalMulai && $tanggalSelesai) {
                                     $durasi = \Carbon\Carbon::parse($tanggalMulai)
                                         ->diffInDays(\Carbon\Carbon::parse($tanggalSelesai)) + 1;
                                     return $durasi . ' hari';
                                 }
-                                
+
                                 return 'Pilih tanggal mulai dan selesai';
                             })
                             ->columnSpan(1),
@@ -292,7 +292,7 @@ class IzinResource extends Resource
                         ->label('Hapus Permanen Terpilih'),
                 ]),
             ])
-            ->defaultSort('tanggal_mulai', 'desc');
+            ->defaultSort('izin_id', 'desc');
     }
 
     public static function getEloquentQuery(): Builder

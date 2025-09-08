@@ -208,7 +208,7 @@ class AbsensiResource extends Resource
                         ->label('Hapus Permanen Terpilih'),
                 ]),
             ])
-            ->defaultSort('tanggal', 'desc');
+            ->defaultSort('absensi_id', 'desc');
     }
 
     public static function getEloquentQuery(): Builder

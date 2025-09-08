@@ -131,7 +131,7 @@ class PerusahaanResource extends Resource
                     ->sortable()
                     ->toggleable(isToggledHiddenByDefault: true),
             ])
-            ->defaultSort('created_at', 'desc')
+            ->defaultSort('perusahaan_id', 'desc')
             ->filters([
                 Tables\Filters\Filter::make('has_employees')
                     ->label('Memiliki Karyawan')

@@ -228,7 +228,7 @@ class KaryawanResource extends Resource
                     ->sortable()
                     ->toggleable(isToggledHiddenByDefault: true),
             ])
-            ->defaultSort('created_at', 'desc')
+            ->defaultSort('karyawan_id', 'desc')
             ->filters([
                 Tables\Filters\SelectFilter::make('perusahaan_id')
                     ->label('Perusahaan')
