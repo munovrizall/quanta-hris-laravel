@@ -45,7 +45,6 @@ class LemburResource extends Resource
                                 // Reset absensi ketika karyawan berubah
                                 $set('absensi_id', null);
                             }),
-                        // Di LemburResource.php, bagian form schema
                         Forms\Components\Select::make('absensi_id')
                             ->label('Data Absensi')
                             ->options(function (callable $get) {
@@ -105,16 +104,16 @@ class LemburResource extends Resource
                             ->reactive()
                             ->afterStateUpdated(function (callable $set, $state) {
                                 if ($state === 'Disetujui') {
-                                    $set('approved_at', now());
+                                    $set('processed_at', now()); // Changed from approved_at
                                     $set('alasan_penolakan', null);
                                 } elseif ($state === 'Ditolak') {
-                                    $set('approved_at', null);
+                                    $set('processed_at', null); // Changed from approved_at
                                 } else {
-                                    $set('approved_at', null);
+                                    $set('processed_at', null); // Changed from approved_at
                                     $set('alasan_penolakan', null);
                                 }
                             }),
-                        Forms\Components\Select::make('approved_by')
+                        Forms\Components\Select::make('approver_id') // Changed from approved_by
                             ->label('Disetujui Oleh')
                             ->options(function () {
                                 return Karyawan::whereHas('role', function ($query) {
@@ -123,7 +122,7 @@ class LemburResource extends Resource
                             })
                             ->searchable()
                             ->visible(fn(callable $get) => in_array($get('status_lembur'), ['Disetujui', 'Ditolak'])),
-                        Forms\Components\DateTimePicker::make('approved_at')
+                        Forms\Components\DateTimePicker::make('processed_at') // Changed from approved_at
                             ->label('Waktu Persetujuan')
                             ->visible(fn(callable $get) => $get('status_lembur') === 'Disetujui'),
                         Forms\Components\Textarea::make('alasan_penolakan')
@@ -174,11 +173,11 @@ class LemburResource extends Resource
                         'Ditolak' => 'danger',
                         default => 'gray',
                     }),
-                Tables\Columns\TextColumn::make('approver.nama_lengkap')
+                Tables\Columns\TextColumn::make('approver.nama_lengkap') // Changed from approver.nama_lengkap
                     ->label('Disetujui Oleh')
                     ->placeholder('-')
                     ->toggleable(isToggledHiddenByDefault: true),
-                Tables\Columns\TextColumn::make('approved_at')
+                Tables\Columns\TextColumn::make('processed_at') // Changed from approved_at
                     ->label('Waktu Persetujuan')
                     ->dateTime()
                     ->placeholder('-')

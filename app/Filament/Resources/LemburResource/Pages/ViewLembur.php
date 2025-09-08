@@ -86,11 +86,11 @@ class ViewLembur extends ViewRecord
 
         Infolists\Components\Section::make('Informasi Persetujuan')
           ->schema([
-            Infolists\Components\TextEntry::make('approver.nama_lengkap')
-              ->label('Disetujui Oleh')
+            Infolists\Components\TextEntry::make('approver.nama_lengkap') // Tidak perlu diubah karena relasi sudah diupdate
+              ->label('Diproses Oleh')
               ->placeholder('Belum ada persetujuan'),
-            Infolists\Components\TextEntry::make('approved_at')
-              ->label('Waktu Persetujuan')
+            Infolists\Components\TextEntry::make('processed_at') // Changed from approved_at
+              ->label('Waktu Diproses')
               ->dateTime()
               ->placeholder('Belum disetujui')
               ->icon('heroicon-m-calendar'),

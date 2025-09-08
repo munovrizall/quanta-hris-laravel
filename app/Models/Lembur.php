@@ -32,8 +32,8 @@ class Lembur extends Model
         'dokumen_pendukung',
         'status_lembur',
         'alasan_penolakan',
-        'approved_by',
-        'approved_at',
+        'approver_id', // Changed from approved_by
+        'processed_at', // Changed from approved_at
     ];
 
     /**
@@ -41,7 +41,7 @@ class Lembur extends Model
      */
     protected $casts = [
         'tanggal_lembur' => 'date',
-        'approved_at' => 'datetime',
+        'processed_at' => 'datetime', // Changed from approved_at
     ];
 
     /**
@@ -65,12 +65,6 @@ class Lembur extends Model
      */
     public function approver(): BelongsTo
     {
-        return $this->belongsTo(Karyawan::class, 'approved_by', 'karyawan_id');
-    }
-
-    // Tambahkan accessor untuk formatted absensi
-    public function getFormattedAbsensiAttribute()
-    {
-        return $this->absensi_id . ' - ' . $this->tanggal_lembur . ' (' . $this->karyawan->nama_lengkap . ')';
+        return $this->belongsTo(Karyawan::class, 'approver_id', 'karyawan_id'); // Changed from approved_by
     }
 }
