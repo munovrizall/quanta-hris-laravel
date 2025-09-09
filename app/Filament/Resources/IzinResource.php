@@ -292,7 +292,7 @@ class IzinResource extends Resource
                         ->label('Hapus Permanen Terpilih'),
                 ]),
             ])
-            ->defaultSort('izin_id', 'desc');
+            ->defaultSort('created_at', 'desc');
     }
 
     public static function getEloquentQuery(): Builder

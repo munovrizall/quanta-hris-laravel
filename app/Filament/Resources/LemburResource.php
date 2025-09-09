@@ -245,7 +245,7 @@ class LemburResource extends Resource
                         ->label('Hapus Permanen Terpilih'),
                 ]),
             ])
-            ->defaultSort('lembur_id', 'desc');
+            ->defaultSort('created_at', 'desc');
     }
 
     public static function getEloquentQuery(): Builder
