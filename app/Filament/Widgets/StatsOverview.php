@@ -2,6 +2,7 @@
 
 namespace App\Filament\Widgets;
 
+use App\Models\Cabang;
 use App\Models\Company;
 use App\Models\Karyawan;
 use App\Models\Perusahaan;
@@ -15,20 +16,21 @@ class StatsOverview extends BaseWidget
   protected function getStats(): array
   {
     return [
-      Stat::make('Total Employees', Karyawan::count())
-        ->description('All registered employees')
+      Stat::make('', Karyawan::count())
+        ->description('Jumlah Karyawan')
         ->descriptionIcon('heroicon-m-user-group')
         ->color('primary'),
 
-      Stat::make('Total Clients', Perusahaan::count())
-        ->description('All registered companies')
+      Stat::make('', Cabang::count())
+        ->descriptionIcon('heroicon-m-map-pin')
+        ->description('Jumlah Cabang')
+        ->color('warning'),
+
+      Stat::make('', Perusahaan::count())
+        ->description('Jumlah Perusahaan')
         ->descriptionIcon('heroicon-m-building-office')
         ->color('success'),
 
-      // Stat::make('Pending Permissions', \App\Models\Permission::where('approval_status', 'pending')->count())
-      //   ->description('Requests waiting for approval')
-      //   ->descriptionIcon('heroicon-m-clipboard-document-check')
-      //   ->color('warning'),
     ];
   }
 }
