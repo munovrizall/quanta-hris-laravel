@@ -3,6 +3,7 @@
 namespace App\Providers\Filament;
 
 use App\Filament\Resources\RoleResource;
+use App\Filament\Widgets\ActivityOverview;
 use App\Filament\Widgets\StatsOverview;
 use BezhanSalleh\FilamentShield\FilamentShieldPlugin;
 use Filament\Http\Middleware\Authenticate;
@@ -44,6 +45,7 @@ class AdminPanelProvider extends PanelProvider
             ->discoverWidgets(in: app_path('Filament/Widgets'), for: 'App\\Filament\\Widgets')
             ->widgets([
                 StatsOverview::class,
+                ActivityOverview::class,
             ])
             ->favicon(asset('favicon.ico'))
             ->middleware([

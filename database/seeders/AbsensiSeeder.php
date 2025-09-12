@@ -29,8 +29,8 @@ class AbsensiSeeder extends Seeder
     }
 
     // Generate data untuk 25 hari kerja (sekitar 1 bulan)
-    $startDate = Carbon::now()->subDays(30);
-    $endDate = Carbon::now()->subDay();
+    $startDate = Carbon::now()->subDays(25);
+    $endDate = Carbon::now()->addDays(5); // Untuk generate data termasuk hari ini
 
     $absensiData = [];
     $counter = 1;
