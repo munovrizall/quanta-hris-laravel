@@ -19,7 +19,7 @@ class AbsensiSeeder extends Seeder
   {
     $faker = Faker::create('id_ID');
 
-    // Ambil semua karyawan (20 karyawan)
+    // Ambil semua karyawan (112 karyawan)
     $karyawans = Karyawan::all();
     $cabangs = Cabang::all();
 
@@ -28,18 +28,24 @@ class AbsensiSeeder extends Seeder
       return;
     }
 
-    // Generate data untuk 25 hari kerja (sekitar 1 bulan)
-    $startDate = Carbon::now()->subDays(25);
-    $endDate = Carbon::now()->addDays(5); // Untuk generate data termasuk hari ini
+    // Generate data untuk 2 bulan (60 hari) - akan menghasilkan sekitar 42-44 hari kerja per karyawan
+    $startDate = Carbon::now()->subDays(60);
+    $endDate = Carbon::now(); // Sampai hari ini
 
     $absensiData = [];
     $counter = 1;
+    $totalAbsensiGenerated = 0;
+
+    $this->command->info("Mulai generate data absensi untuk {$karyawans->count()} karyawan selama 2 bulan...");
 
     // Loop untuk setiap karyawan
-    foreach ($karyawans as $karyawan) {
+    foreach ($karyawans as $index => $karyawan) {
       $currentDate = $startDate->copy();
+      $absensiKaryawan = 0;
 
-      // Generate absensi untuk setiap hari kerja (Senin-Jumat)
+      $this->command->info("Processing karyawan " . ($index + 1) . "/" . $karyawans->count() . ": {$karyawan->nama_lengkap}");
+
+      // Generate absensi untuk setiap hari kerja (Senin-Jumat) selama 2 bulan
       while ($currentDate <= $endDate) {
         // Skip weekend (Sabtu dan Minggu)
         if ($currentDate->isWeekend()) {
@@ -47,31 +53,74 @@ class AbsensiSeeder extends Seeder
           continue;
         }
 
-        // 95% kemungkinan karyawan hadir
-        if ($faker->boolean(95)) {
+        // Skip jika karyawan belum mulai bekerja di tanggal tersebut
+        if ($currentDate->lt(Carbon::parse($karyawan->tanggal_mulai_bekerja))) {
+          $currentDate->addDay();
+          continue;
+        }
+
+        // Probabilitas kehadiran berdasarkan posisi/role
+        $attendanceProbability = $this->getAttendanceProbability($karyawan->jabatan);
+
+        if ($faker->boolean($attendanceProbability)) {
+          // Generate absensi hadir dengan variasi
           $absensiData[] = $this->generateAbsensiHadir($faker, $karyawan, $cabangs->random(), $currentDate, $counter);
+          $absensiKaryawan++;
           $counter++;
         } else {
-          // 5% kemungkinan tidak hadir (Alfa)
-          $absensiData[] = $this->generateAbsensiAlfa($faker, $karyawan, $cabangs->random(), $currentDate, $counter);
+          // Generate absensi tidak hadir (hanya Alfa sesuai enum database)
+          $absensiData[] = $this->generateAbsensiTidakHadir($faker, $karyawan, $cabangs->random(), $currentDate, $counter);
+          $absensiKaryawan++;
           $counter++;
         }
 
         $currentDate->addDay();
 
-        // Batasi maksimal 500 data
-        if ($counter > 500) {
+        // Safety limit untuk mencegah memory overflow
+        if ($counter > 10000) {
           break 2;
         }
       }
+
+      $totalAbsensiGenerated += $absensiKaryawan;
+      $this->command->info("- Generated {$absensiKaryawan} records for {$karyawan->nama_lengkap}");
     }
 
     // Insert data dalam batch untuk performa lebih baik
-    foreach (array_chunk($absensiData, 100) as $chunk) {
+    $this->command->info('Inserting data to database...');
+    $chunks = array_chunk($absensiData, 200);
+    $chunkCount = count($chunks);
+
+    foreach ($chunks as $index => $chunk) {
       Absensi::insert($chunk);
+      $this->command->info("Inserted batch " . ($index + 1) . "/" . $chunkCount);
     }
 
+    $this->command->info('=== SUMMARY ===');
     $this->command->info('Berhasil membuat ' . count($absensiData) . ' data absensi');
+    $this->command->info('Total karyawan: ' . $karyawans->count());
+    $this->command->info('Rata-rata absensi per karyawan: ' . round($totalAbsensiGenerated / $karyawans->count(), 1) . ' hari');
+    $this->command->info('Periode: ' . $startDate->format('d-m-Y') . ' sampai ' . $endDate->format('d-m-Y'));
+  }
+
+  /**
+   * Tentukan probabilitas kehadiran berdasarkan jabatan/posisi
+   */
+  private function getAttendanceProbability(string $jabatan): int
+  {
+    return match (true) {
+      // Management level - kehadiran tinggi
+      str_contains($jabatan, 'CEO') => 95,
+      str_contains($jabatan, 'Manager') => 93,
+      str_contains($jabatan, 'Administrator') => 92,
+
+      // Staff level - kehadiran sedang-tinggi
+      str_contains($jabatan, 'Staff') => 89,
+      str_contains($jabatan, 'Officer') => 88,
+
+      // Karyawan biasa - kehadiran normal
+      default => 85
+    };
   }
 
   /**
@@ -83,59 +132,71 @@ class AbsensiSeeder extends Seeder
     $jamMasukStandar = $date->copy()->setTime(9, 0, 0);
     $jamPulangStandar = $date->copy()->setTime(17, 0, 0);
 
-    // Generate waktu masuk (07:30 - 10:00)
-    $waktuMasuk = $date->copy()
-      ->setTime(
-        $faker->numberBetween(7, 9), // jam 7-9
-        $faker->numberBetween(0, 59), // menit
-        $faker->numberBetween(0, 59)  // detik
-      );
+    // Generate waktu masuk dengan variasi lebih realistis
+    // 60% tepat waktu, 25% sedikit terlambat (9:01-9:30), 15% terlambat (9:31-10:30)
+    $ketepataanWaktu = $faker->numberBetween(1, 100);
 
-    // Tentukan status masuk - HARUS sesuai dengan ENUM database
+    if ($ketepataanWaktu <= 60) {
+      // Tepat waktu atau lebih awal (7:30-9:00)
+      $waktuMasuk = $date->copy()->setTime(
+        $faker->numberBetween(7, 8),
+        $faker->numberBetween(30, 59),
+        $faker->numberBetween(0, 59)
+      );
+    } elseif ($ketepataanWaktu <= 85) {
+      // Sedikit terlambat (9:01-9:30)
+      $waktuMasuk = $date->copy()->setTime(9, $faker->numberBetween(1, 30), $faker->numberBetween(0, 59));
+    } else {
+      // Terlambat (9:31-10:30)
+      $waktuMasuk = $date->copy()->setTime(
+        $faker->numberBetween(9, 10),
+        $faker->numberBetween(31, 59),
+        $faker->numberBetween(0, 59)
+      );
+    }
+
+    // Status masuk berdasarkan waktu masuk
     $statusMasuk = $waktuMasuk->lte($jamMasukStandar) ? 'Tepat Waktu' : 'Telat';
 
-    // Hitung durasi telat jika terlambat
+    // Hitung durasi telat
     $durasiTelat = null;
     if ($statusMasuk === 'Telat') {
       $telat = $jamMasukStandar->diffInMinutes($waktuMasuk);
       $durasiTelat = sprintf('%02d:%02d:00', floor($telat / 60), $telat % 60);
     }
 
-    // Generate waktu pulang (85% pulang normal, 15% pulang cepat/lembur)
-    $probability = $faker->numberBetween(1, 100);
+    // Generate waktu pulang dengan variasi
+    $probabilityPulang = $faker->numberBetween(1, 100);
 
-    if ($probability <= 85) {
-      // Pulang normal (17:00 - 17:30)
-      $waktuPulang = $date->copy()
-        ->setTime(17, $faker->numberBetween(0, 30), $faker->numberBetween(0, 59));
-      $statusPulang = 'Tepat Waktu'; // Sesuai ENUM
+    if ($probabilityPulang <= 70) {
+      // Pulang normal (17:00 - 17:45)
+      $waktuPulang = $date->copy()->setTime(17, $faker->numberBetween(0, 45), $faker->numberBetween(0, 59));
+      $statusPulang = 'Tepat Waktu';
       $durasiPulangCepat = null;
-    } elseif ($probability <= 95) {
-      // Pulang cepat (15:00 - 16:59)
-      $waktuPulang = $date->copy()
-        ->setTime($faker->numberBetween(15, 16), $faker->numberBetween(0, 59), $faker->numberBetween(0, 59));
-      $statusPulang = 'Pulang Cepat'; // Sesuai ENUM
-
-      // Hitung durasi pulang cepat (jam standar - jam pulang aktual)
+    } elseif ($probabilityPulang <= 85) {
+      // Pulang cepat (15:00 - 16:59) - dengan izin atau keperluan
+      $waktuPulang = $date->copy()->setTime($faker->numberBetween(15, 16), $faker->numberBetween(0, 59), $faker->numberBetween(0, 59));
+      $statusPulang = 'Pulang Cepat';
       $pulangCepat = $waktuPulang->diffInMinutes($jamPulangStandar);
       $durasiPulangCepat = sprintf('%02d:%02d:00', floor($pulangCepat / 60), $pulangCepat % 60);
     } else {
-      // Lembur (17:31 - 20:00)
-      $waktuPulang = $date->copy()
-        ->setTime($faker->numberBetween(18, 20), $faker->numberBetween(0, 59), $faker->numberBetween(0, 59));
-      $statusPulang = 'Tepat Waktu'; // Sesuai ENUM
+      // Lembur (18:00 - 21:00)
+      $waktuPulang = $date->copy()->setTime($faker->numberBetween(18, 21), $faker->numberBetween(0, 59), $faker->numberBetween(0, 59));
+      $statusPulang = 'Tepat Waktu'; // Lembur masih dianggap tepat waktu
       $durasiPulangCepat = null;
     }
 
-    // Koordinat realistis untuk Jakarta dan sekitarnya
+    // Koordinat dengan variasi yang lebih realistis
     $koordinatMasuk = $this->generateKoordinat($faker, $cabang);
     $koordinatPulang = $this->generateKoordinat($faker, $cabang);
 
-    // Status absensi berdasarkan ketepatan waktu - HARUS sesuai dengan ENUM
-    if ($statusMasuk === 'Tepat Waktu' && ($statusPulang === 'Tepat Waktu' || $statusPulang === null)) {
+    // Status absensi keseluruhan berdasarkan enum database: 'Hadir','Tidak Tepat','Alfa'
+    if ($statusMasuk === 'Tepat Waktu') {
       $statusAbsensi = 'Hadir';
     } else {
-      $statusAbsensi = 'Tidak Tepat';
+      // Jika terlambat lebih dari 60 menit, dianggap tidak tepat
+      $menitTerlambat = $jamMasukStandar->diffInMinutes($waktuMasuk);
+      $statusAbsensi = $menitTerlambat > 60 ? 'Tidak Tepat' : 'Hadir';
     }
 
     return [
@@ -152,39 +213,54 @@ class AbsensiSeeder extends Seeder
       'koordinat_masuk' => $koordinatMasuk,
       'koordinat_pulang' => $koordinatPulang,
       'foto_masuk' => 'masuk_' . $faker->randomNumber(6) . '.jpg',
-      'foto_pulang' => $faker->boolean(90) ? 'pulang_' . $faker->randomNumber(6) . '.jpg' : null,
-      'status_absensi' => $statusAbsensi,
+      'foto_pulang' => $faker->boolean(95) ? 'pulang_' . $faker->randomNumber(6) . '.jpg' : null,
+      'status_absensi' => $statusAbsensi, // Hanya 'Hadir', 'Tidak Tepat', atau 'Alfa'
       'created_at' => $waktuMasuk,
       'updated_at' => $waktuPulang,
     ];
   }
 
   /**
-   * Generate data absensi untuk karyawan yang alfa
+   * Generate data absensi untuk karyawan yang tidak hadir (Alfa)
    */
-  private function generateAbsensiAlfa($faker, $karyawan, $cabang, $date, $counter): array
+  private function generateAbsensiTidakHadir($faker, $karyawan, $cabang, $date, $counter): array
   {
-    // Untuk data alfa, buat waktu dummy tapi tetap masuk akal
-    $dummyTime = $date->copy()->setTime(9, 0, 0);
+    // Untuk Alfa, buat seolah-olah karyawan "terdaftar" tapi tidak benar-benar masuk
+    // Gunakan waktu standar sebagai placeholder
+    $waktuStandarMasuk = $date->copy()->setTime(9, 0, 0);
+    $waktuStandarPulang = $date->copy()->setTime(17, 0, 0);
 
     return [
       'absensi_id' => 'AB' . str_pad($counter, 4, '0', STR_PAD_LEFT),
       'karyawan_id' => $karyawan->karyawan_id,
       'cabang_id' => $cabang->cabang_id,
       'tanggal' => $date->format('Y-m-d'),
-      'waktu_masuk' => $dummyTime->format('Y-m-d H:i:s'),
-      'waktu_pulang' => null,
-      'status_masuk' => null, // Set ke NULL untuk data alfa
-      'status_pulang' => null,
-      'durasi_telat' => null,
+
+      // Waktu placeholder - tidak NULL tapi menandakan tidak hadir
+      'waktu_masuk' => $waktuStandarMasuk->format('Y-m-d H:i:s'),
+      'waktu_pulang' => $waktuStandarPulang->format('Y-m-d H:i:s'),
+
+      // Status yang menunjukkan ketidakhadiran
+      'status_masuk' => 'Telat', // Anggap sangat telat
+      'status_pulang' => 'Tepat Waktu', // Status dummy
+
+      // Durasi yang ekstrem untuk menandakan alfa
+      'durasi_telat' => '08:00:00', // 8 jam = tidak masuk sama sekali
       'durasi_pulang_cepat' => null,
-      'koordinat_masuk' => '0,0',
-      'koordinat_pulang' => null,
-      'foto_masuk' => 'default.jpg',
-      'foto_pulang' => null,
-      'status_absensi' => 'Alfa', // Sesuai ENUM
-      'created_at' => $dummyTime,
-      'updated_at' => $dummyTime,
+
+      // Koordinat default (0,0) menandakan tidak ada lokasi
+      'koordinat_masuk' => '0.000000,0.000000',
+      'koordinat_pulang' => '0.000000,0.000000',
+
+      // Foto default untuk alfa
+      'foto_masuk' => 'no_photo_alfa.jpg',
+      'foto_pulang' => 'no_photo_alfa.jpg',
+
+      // Status utama: Alfa
+      'status_absensi' => 'Alfa',
+
+      'created_at' => $waktuStandarMasuk,
+      'updated_at' => $waktuStandarPulang,
     ];
   }
 
@@ -193,9 +269,11 @@ class AbsensiSeeder extends Seeder
    */
   private function generateKoordinat($faker, $cabang): string
   {
-    // Radius variasi koordinat (sekitar 100 meter)
-    $latVariation = $faker->randomFloat(6, -0.001, 0.001);
-    $lngVariation = $faker->randomFloat(6, -0.001, 0.001);
+    // Radius variasi koordinat berdasarkan radius lokasi cabang
+    $maxVariation = ($cabang->radius_lokasi / 111320); // Konversi meter ke derajat (aproksimasi)
+
+    $latVariation = $faker->randomFloat(6, -$maxVariation, $maxVariation);
+    $lngVariation = $faker->randomFloat(6, -$maxVariation, $maxVariation);
 
     $lat = $cabang->latitude + $latVariation;
     $lng = $cabang->longitude + $lngVariation;
