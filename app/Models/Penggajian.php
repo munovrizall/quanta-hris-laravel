@@ -4,12 +4,13 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Notifications\Notifiable;
 use Laravel\Sanctum\HasApiTokens;
 
 class Penggajian extends Model
 {
-  use HasFactory, Notifiable, HasApiTokens;
+  use HasFactory, Notifiable, HasApiTokens, SoftDeletes;
 
   protected $table = 'penggajian';
   protected $primaryKey = 'penggajian_id';
@@ -20,11 +21,16 @@ class Penggajian extends Model
     'penggajian_id',
     'periode_bulan',
     'periode_tahun',
-    'status_gaji',
+    'status_penggajian', // Sesuaikan dengan migration
     'verified_by',
     'approved_by',
     'processed_by',
     'catatan_penolakan_draf'
+  ];
+
+  protected $casts = [
+    'periode_bulan' => 'integer',
+    'periode_tahun' => 'integer',
   ];
 
   public function verifier()
@@ -45,5 +51,36 @@ class Penggajian extends Model
   public function slipGaji()
   {
     return $this->hasMany(SlipGaji::class, 'penggajian_id', 'penggajian_id');
+  }
+
+  // Helper methods
+  public function getPeriodeAttribute()
+  {
+    $namaBulan = [
+      1 => 'Januari',
+      2 => 'Februari',
+      3 => 'Maret',
+      4 => 'April',
+      5 => 'Mei',
+      6 => 'Juni',
+      7 => 'Juli',
+      8 => 'Agustus',
+      9 => 'September',
+      10 => 'Oktober',
+      11 => 'November',
+      12 => 'Desember'
+    ];
+
+    return $namaBulan[$this->periode_bulan] . ' ' . $this->periode_tahun;
+  }
+
+  public function getTotalKaryawanAttribute()
+  {
+    return $this->slipGaji()->count();
+  }
+
+  public function getTotalGajiAttribute()
+  {
+    return $this->slipGaji()->sum('total_gaji');
   }
 }
