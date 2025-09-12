@@ -186,15 +186,42 @@ class PenggajianResource extends Resource
                         default => 'heroicon-m-question-mark-circle',
                     }),
 
+                // Sementara comment dulu kolom yang bergantung pada slip_gaji
+                // Tables\Columns\TextColumn::make('total_karyawan')
+                //     ->label('Total Karyawan')
+                //     ->getStateUsing(fn(Penggajian $record): int => $record->slipGaji()->count())
+                //     ->alignCenter()
+                //     ->sortable(),
+
+                // Tables\Columns\TextColumn::make('total_gaji')
+                //     ->label('Total Gaji')
+                //     ->getStateUsing(fn(Penggajian $record): string => 'Rp ' . number_format($record->slipGaji()->sum('total_gaji'), 0, ',', '.'))
+                //     ->alignEnd()
+                //     ->weight(FontWeight::Bold)
+                //     ->color('success'),
+
+                // Temporary columns untuk menggantikan slip gaji dependency
                 Tables\Columns\TextColumn::make('total_karyawan')
                     ->label('Total Karyawan')
-                    ->getStateUsing(fn(Penggajian $record): int => $record->slipGaji()->count())
+                    ->getStateUsing(function (Penggajian $record): string {
+                        // Hitung berdasarkan jumlah karyawan yang aktif saat periode tersebut
+                        $totalKaryawan = \App\Models\Karyawan::whereDate('tanggal_mulai_bekerja', '<=', Carbon::create($record->periode_tahun, $record->periode_bulan)->endOfMonth())
+                            ->count();
+                        return (string) $totalKaryawan;
+                    })
                     ->alignCenter()
-                    ->sortable(),
+                    ->badge()
+                    ->color('info'),
 
-                Tables\Columns\TextColumn::make('total_gaji')
-                    ->label('Total Gaji')
-                    ->getStateUsing(fn(Penggajian $record): string => 'Rp ' . number_format($record->slipGaji()->sum('total_gaji'), 0, ',', '.'))
+                Tables\Columns\TextColumn::make('estimated_total')
+                    ->label('Estimasi Total Gaji')
+                    ->getStateUsing(function (Penggajian $record): string {
+                        // Estimasi berdasarkan total karyawan x gaji rata-rata
+                        $totalKaryawan = \App\Models\Karyawan::whereDate('tanggal_mulai_bekerja', '<=', Carbon::create($record->periode_tahun, $record->periode_bulan)->endOfMonth())->count();
+                        $averageSalary = 8000000; // Estimasi gaji rata-rata
+                        $estimatedTotal = $totalKaryawan * $averageSalary;
+                        return 'Rp ' . number_format($estimatedTotal, 0, ',', '.');
+                    })
                     ->alignEnd()
                     ->weight(FontWeight::Bold)
                     ->color('success'),

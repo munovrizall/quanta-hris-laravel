@@ -21,7 +21,7 @@ class Penggajian extends Model
     'penggajian_id',
     'periode_bulan',
     'periode_tahun',
-    'status_penggajian', // Sesuaikan dengan migration
+    'status_penggajian',
     'verified_by',
     'approved_by',
     'processed_by',
@@ -48,10 +48,11 @@ class Penggajian extends Model
     return $this->belongsTo(Karyawan::class, 'processed_by', 'karyawan_id');
   }
 
-  public function slipGaji()
-  {
-    return $this->hasMany(SlipGaji::class, 'penggajian_id', 'penggajian_id');
-  }
+  // Comment dulu relasi SlipGaji sampai tabel dibuat
+  // public function slipGaji()
+  // {
+  //     return $this->hasMany(SlipGaji::class, 'penggajian_id', 'penggajian_id');
+  // }
 
   // Helper methods
   public function getPeriodeAttribute()
@@ -74,13 +75,14 @@ class Penggajian extends Model
     return $namaBulan[$this->periode_bulan] . ' ' . $this->periode_tahun;
   }
 
-  public function getTotalKaryawanAttribute()
-  {
-    return $this->slipGaji()->count();
-  }
+  // Comment dulu methods yang bergantung pada SlipGaji
+  // public function getTotalKaryawanAttribute()
+  // {
+  //     return $this->slipGaji()->count();
+  // }
 
-  public function getTotalGajiAttribute()
-  {
-    return $this->slipGaji()->sum('total_gaji');
-  }
+  // public function getTotalGajiAttribute()
+  // {
+  //     return $this->slipGaji()->sum('total_gaji');
+  // }
 }
