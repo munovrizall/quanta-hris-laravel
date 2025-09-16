@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Services\Pph21Service;
 use Filament\Panel;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -37,6 +38,7 @@ class Karyawan extends Authenticable implements FilamentUser, HasName
     'jabatan',
     'departemen',
     'status_kepegawaian',
+    'status_pernikahan', // Tambahkan ini jika belum ada
     'tanggal_mulai_bekerja',
     'gaji_pokok',
     'nomor_rekening',
@@ -89,6 +91,12 @@ class Karyawan extends Authenticable implements FilamentUser, HasName
   public function golonganPtkp()
   {
     return $this->belongsTo(GolonganPtkp::class, 'golongan_ptkp_id', 'golongan_ptkp_id');
+  }
+
+  public function calculatePph21Deduction(): float
+  {
+    $pph21Service = new Pph21Service();
+    return $pph21Service->calculateMonthlyPph21Deduction($this);
   }
 
   // Relasi HasMany

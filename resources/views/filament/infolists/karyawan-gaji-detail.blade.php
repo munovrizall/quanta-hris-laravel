@@ -310,6 +310,71 @@
             color: rgb(134 239 172);
         }
 
+        /* Pagination Styles */
+        .pagination-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin-top: 2rem;
+            padding: 1rem;
+        }
+
+        .pagination {
+            display: flex;
+            gap: 0.5rem;
+            align-items: center;
+        }
+
+        .pagination a,
+        .pagination span {
+            padding: 0.5rem 0.75rem;
+            border: 1px solid rgb(229 231 235);
+            border-radius: 0.375rem;
+            text-decoration: none;
+            color: rgb(75 85 99);
+            font-size: 0.875rem;
+            font-weight: 500;
+            transition: all 0.2s;
+        }
+
+        .dark .pagination a,
+        .dark .pagination span {
+            border-color: rgb(75 85 99);
+            color: rgb(209 213 219);
+        }
+
+        .pagination a:hover {
+            background-color: rgb(249 250 251);
+            border-color: rgb(156 163 175);
+        }
+
+        .dark .pagination a:hover {
+            background-color: rgb(31 41 55);
+            border-color: rgb(156 163 175);
+        }
+
+        .pagination .current {
+            background-color: rgb(59 130 246);
+            color: white;
+            border-color: rgb(59 130 246);
+        }
+
+        .pagination .disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            pointer-events: none;
+        }
+
+        .pagination-info {
+            font-size: 0.875rem;
+            color: rgb(107 114 128);
+            margin-left: 1rem;
+        }
+
+        .dark .pagination-info {
+            color: rgb(156 163 175);
+        }
+
         /* Icons */
         .icon {
             width: 1rem;
@@ -377,28 +442,34 @@
                         <div class="salary-group">
                             <div class="salary-group-title">
                                 <svg class="icon" viewBox="0 0 20 20">
-                                    <path d="M8.433 7.418c.155-.103.346-.196.567-.267v1.698a2.305 2.305 0 01-.567-.267C8.07 8.34 8 8.114 8 8c0-.114.07-.34.433-.582zM11 12.849v-1.698c.22.071.412.164.567.267.364.243.433.468.433.582 0 .114-.07.34-.433.582a2.305 2.305 0 01-.567.267z"/>
-                                    <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-13a1 1 0 10-2 0v.092a4.535 4.535 0 00-1.676.662C6.602 6.234 6 7.009 6 8c0 .99.602 1.765 1.324 2.246.48.32 1.054.545 1.676.662v1.941c-.391-.127-.68-.317-.843-.504a1 1 0 10-1.51 1.31c.562.649 1.413 1.076 2.353 1.253V15a1 1 0 102 0v-.092a4.535 4.535 0 001.676-.662C13.398 13.766 14 12.991 14 12c0-.99-.602-1.765-1.324-2.246A4.535 4.535 0 0011 9.092V7.151c.391.127.68.317.843.504a1 1 0 101.511-1.31c-.563-.649-1.413-1.076-2.354-1.253V5z"/>
+                                    <path
+                                        d="M8.433 7.418c.155-.103.346-.196.567-.267v1.698a2.305 2.305 0 01-.567-.267C8.07 8.34 8 8.114 8 8c0-.114.07-.34.433-.582zM11 12.849v-1.698c.22.071.412.164.567.267.364.243.433.468.433.582 0 .114-.07.34-.433.582a2.305 2.305 0 01-.567.267z" />
+                                    <path fill-rule="evenodd"
+                                        d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-13a1 1 0 10-2 0v.092a4.535 4.535 0 00-1.676.662C6.602 6.234 6 7.009 6 8c0 .99.602 1.765 1.324 2.246.48.32 1.054.545 1.676.662v1.941c-.391-.127-.68-.317-.843-.504a1 1 0 10-1.51 1.31c.562.649 1.413 1.076 2.353 1.253V15a1 1 0 102 0v-.092a4.535 4.535 0 001.676-.662C13.398 13.766 14 12.991 14 12c0-.99-.602-1.765-1.324-2.246A4.535 4.535 0 0011 9.092V7.151c.391.127.68.317.843.504a1 1 0 101.511-1.31c-.563-.649-1.413-1.076-2.354-1.253V5z" />
                                 </svg>
                                 Pendapatan
                             </div>
                             <div class="salary-items">
                                 <div class="salary-item">
                                     <span class="salary-label">Gaji Pokok:</span>
-                                    <span class="salary-value">Rp {{ number_format($karyawan['gaji_pokok'], 0, ',', '.') }}</span>
+                                    <span class="salary-value">Rp
+                                        {{ number_format($karyawan['gaji_pokok'], 0, ',', '.') }}</span>
                                 </div>
                                 <div class="salary-item">
                                     <span class="salary-label">Tunjangan:</span>
-                                    <span class="salary-value">Rp {{ number_format($karyawan['tunjangan_total'], 0, ',', '.') }}</span>
+                                    <span class="salary-value">Rp
+                                        {{ number_format($karyawan['tunjangan_total'], 0, ',', '.') }}</span>
                                 </div>
                                 @if($karyawan['total_lembur'] > 0)
-                                <div class="salary-item">
-                                    <span class="salary-label">Upah Lembur:</span>
-                                    <span class="salary-value salary-positive">Rp {{ number_format($karyawan['lembur_pay'], 0, ',', '.') }}</span>
-                                </div>
-                                <div class="breakdown-detail">
-                                    {{ $karyawan['total_lembur'] }} jam × Rp {{ number_format(($karyawan['gaji_pokok'] / (22 * 8)) * 1.5, 0, ',', '.') }}/jam
-                                </div>
+                                    <div class="salary-item">
+                                        <span class="salary-label">Upah Lembur:</span>
+                                        <span class="salary-value salary-positive">Rp
+                                            {{ number_format($karyawan['lembur_pay'], 0, ',', '.') }}</span>
+                                    </div>
+                                    <div class="breakdown-detail">
+                                        {{ $karyawan['total_lembur'] }} jam × Rp
+                                        {{ number_format(($karyawan['gaji_pokok'] / (22 * 8)) * 1.5, 0, ',', '.') }}/jam
+                                    </div>
                                 @endif
                             </div>
                         </div>
@@ -407,63 +478,61 @@
                         <div class="salary-group">
                             <div class="salary-group-title">
                                 <svg class="icon" viewBox="0 0 20 20">
-                                    <path fill-rule="evenodd" d="M3 10a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1z"/>
+                                    <path fill-rule="evenodd" d="M3 10a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1z" />
                                 </svg>
                                 Potongan
                             </div>
                             <div class="salary-items">
                                 @if($karyawan['total_alfa'] > 0)
-                                <div class="salary-item">
-                                    <span class="salary-label">Potongan Alfa:</span>
-                                    <span class="salary-value salary-negative">Rp {{ number_format($karyawan['total_alfa'] * (($karyawan['gaji_pokok'] / (22 * 8)) * 8), 0, ',', '.') }}</span>
-                                </div>
-                                <div class="breakdown-detail">
-                                    {{ $karyawan['total_alfa'] }} hari × Rp {{ number_format(($karyawan['gaji_pokok'] / (22 * 8)) * 8, 0, ',', '.') }}/hari
-                                </div>
+                                    <div class="salary-item">
+                                        <span class="salary-label">Potongan Alfa:</span>
+                                        <span class="salary-value salary-negative">Rp
+                                            {{ number_format($karyawan['total_alfa'] * (($karyawan['gaji_pokok'] / (22 * 8)) * 8), 0, ',', '.') }}</span>
+                                    </div>
+                                    <div class="breakdown-detail">
+                                        {{ $karyawan['total_alfa'] }} hari × Rp
+                                        {{ number_format(($karyawan['gaji_pokok'] / (22 * 8)) * 8, 0, ',', '.') }}/hari
+                                    </div>
                                 @endif
 
                                 @if($karyawan['total_tidak_tepat'] > 0)
-                                <div class="salary-item">
-                                    <span class="salary-label">Potongan Terlambat:</span>
-                                    <span class="salary-value salary-negative">Rp {{ number_format($karyawan['total_tidak_tepat'] * (($karyawan['gaji_pokok'] / (22 * 8)) * 4), 0, ',', '.') }}</span>
-                                </div>
-                                <div class="breakdown-detail">
-                                    {{ $karyawan['total_tidak_tepat'] }} hari × Rp {{ number_format(($karyawan['gaji_pokok'] / (22 * 8)) * 4, 0, ',', '.') }}/hari (50% gaji harian)
-                                </div>
+                                    <div class="salary-item">
+                                        <span class="salary-label">Potongan Terlambat:</span>
+                                        <span class="salary-value salary-negative">Rp
+                                            {{ number_format($karyawan['total_tidak_tepat'] * (($karyawan['gaji_pokok'] / (22 * 8)) * 4), 0, ',', '.') }}</span>
+                                    </div>
+                                    <div class="breakdown-detail">
+                                        {{ $karyawan['total_tidak_tepat'] }} hari × Rp
+                                        {{ number_format(($karyawan['gaji_pokok'] / (22 * 8)) * 4, 0, ',', '.') }}/hari (50%
+                                        gaji harian)
+                                    </div>
                                 @endif
 
                                 <div class="salary-item">
                                     <span class="salary-label">BPJS (4%):</span>
-                                    <span class="salary-value salary-negative">Rp {{ number_format($karyawan['gaji_pokok'] * 0.04, 0, ',', '.') }}</span>
+                                    <span class="salary-value salary-negative">Rp
+                                        {{ number_format($karyawan['gaji_pokok'] * 0.04, 0, ',', '.') }}</span>
                                 </div>
 
-                                @php
-                                    $totalIncome = $karyawan['gaji_pokok'] + $karyawan['tunjangan_total'] + $karyawan['lembur_pay'];
-                                    $pajak = 0;
-                                    if ($totalIncome > 4500000) {
-                                        if ($totalIncome <= 50000000) {
-                                            $pajak = ($totalIncome - 4500000) * 0.05;
-                                        } elseif ($totalIncome <= 250000000) {
-                                            $pajak = 2275000 + (($totalIncome - 50000000) * 0.15);
-                                        } else {
-                                            $pajak = 32275000 + (($totalIncome - 250000000) * 0.25);
-                                        }
-                                    }
-                                @endphp
+                                    <div class="salary-item">
+                                        <span class="salary-label">Pajak PPh21:</span>
+                                        <span class="salary-value salary-negative">Rp
+                                            {{ number_format($karyawan['pph21_detail']['jumlah'], 0, ',', '.') }}</span>
+                                    </div>
+                                    <div class="breakdown-detail">
+                                        {{ $karyawan['pph21_detail']['tarif_persen'] }}% dari penghasilan bruto Rp
+                                        {{ number_format($karyawan['pph21_detail']['penghasilan_bruto'], 0, ',', '.') }}
+                                    </div>
+                                    <div class="breakdown-detail">
+                                        PTKP: {{ $karyawan['pph21_detail']['golongan_ptkp'] }}
+                                        ({{ $karyawan['pph21_detail']['kategori_ter'] }})
+                                    </div>
 
-                                @if($pajak > 0)
-                                <div class="salary-item">
-                                    <span class="salary-label">Pajak PPh21:</span>
-                                    <span class="salary-value salary-negative">Rp {{ number_format($pajak, 0, ',', '.') }}</span>
-                                </div>
-                                <div class="breakdown-detail">
-                                    Berdasarkan penghasilan bruto Rp {{ number_format($totalIncome, 0, ',', '.') }}
-                                </div>
-                                @endif
-
-                                <div class="salary-item" style="margin-top: 0.5rem; padding-top: 0.5rem; border-top: 1px solid rgb(229 231 235);">
+                                <div class="salary-item"
+                                    style="margin-top: 0.5rem; padding-top: 0.5rem; border-top: 1px solid rgb(229 231 235);">
                                     <span class="salary-label" style="font-weight: 600;">Total Potongan:</span>
-                                    <span class="salary-value salary-negative">Rp {{ number_format($karyawan['potongan_total'], 0, ',', '.') }}</span>
+                                    <span class="salary-value salary-negative">Rp
+                                        {{ number_format($karyawan['potongan_total'], 0, ',', '.') }}</span>
                                 </div>
                             </div>
                         </div>
@@ -481,5 +550,40 @@
                 </div>
             </div>
         @endforeach
+
+        <!-- Pagination -->
+        @if(isset($pagination))
+            <div class="pagination-container">
+                <div class="pagination">
+                    {{-- Previous Page Link --}}
+                    @if ($pagination->onFirstPage())
+                        <span class="disabled">« Sebelumnya</span>
+                    @else
+                        <a href="{{ $pagination->previousPageUrl() }}">« Sebelumnya</a>
+                    @endif
+
+                    {{-- Pagination Elements --}}
+                    @foreach ($pagination->getUrlRange(1, $pagination->lastPage()) as $page => $url)
+                        @if ($page == $pagination->currentPage())
+                            <span class="current">{{ $page }}</span>
+                        @else
+                            <a href="{{ $url }}">{{ $page }}</a>
+                        @endif
+                    @endforeach
+
+                    {{-- Next Page Link --}}
+                    @if ($pagination->hasMorePages())
+                        <a href="{{ $pagination->nextPageUrl() }}">Selanjutnya »</a>
+                    @else
+                        <span class="disabled">Selanjutnya »</span>
+                    @endif
+                </div>
+
+                <div class="pagination-info">
+                    Menampilkan {{ $pagination->firstItem() }} - {{ $pagination->lastItem() }} dari
+                    {{ $pagination->total() }} karyawan
+                </div>
+            </div>
+        @endif
     </div>
 </x-filament-widgets::widget>
