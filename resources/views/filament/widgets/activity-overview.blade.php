@@ -327,6 +327,86 @@
         .dark .legend-text {
             color: rgb(var(--gray-400));
         }
+
+        /* Company Hours Info */
+        .company-hours-info {
+            background-color: rgb(var(--primary-50));
+            border: 1px solid rgb(var(--primary-200));
+            border-radius: 0.5rem;
+            padding: 0.75rem;
+            margin-bottom: 1.5rem;
+            font-size: 0.875rem;
+        }
+
+        .dark .company-hours-info {
+            background-color: rgb(var(--primary-500) / 0.1);
+            border-color: rgb(var(--primary-500) / 0.3);
+        }
+
+        .company-hours-list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 1rem;
+        }
+
+        .company-hours-item {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            color: rgb(var(--primary-700));
+        }
+
+        .dark .company-hours-item {
+            color: rgb(var(--primary-300));
+        }
+
+        .hours-icon {
+            width: 1rem;
+            height: 1rem;
+            flex-shrink: 0;
+        }
+
+        /* Status Badge Enhancement */
+        .status-badge.status-late-warning {
+            background-color: rgb(var(--danger-100));
+            color: rgb(var(--danger-800));
+        }
+
+        .dark .status-badge.status-late-warning {
+            background-color: rgb(var(--danger-500) / 0.5);
+            color: rgb(var(--danger-300));
+        }
+
+        /* Late Time Indicator */
+        .late-time-info {
+            font-size: 0.625rem;
+            color: rgb(var(--danger-600));
+            margin-top: 0.125rem;
+            font-weight: 500;
+        }
+
+        .dark .late-time-info {
+            color: rgb(var(--danger-400));
+        }
+
+        /* Enhanced Legend */
+        .legend-items {
+            display: flex;
+            justify-content: center;
+            gap: 1rem;
+            font-size: 0.75rem;
+            flex-wrap: wrap;
+        }
+
+        .legend-detail {
+            color: rgb(var(--gray-500));
+            font-size: 0.625rem;
+            margin-left: 0.125rem;
+        }
+
+        .dark .legend-detail {
+            color: rgb(var(--gray-500));
+        }
     </style>
 
     <div class="widget-container">
@@ -344,6 +424,26 @@
                 {{ now()->locale('id')->translatedFormat('l, d F Y') }}
             </div>
         </div>
+
+        {{-- Company Operational Hours Info --}}
+        @if($this->getCompanyOperationalHours()->count() > 0)
+            <div class="company-hours-info">
+                <div class="company-hours-list">
+                    @foreach($this->getCompanyOperationalHours() as $company)
+                        <div class="company-hours-item">
+                            <svg class="hours-icon" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round"
+                                    d="M12 6v6h4.5m4.5 0a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
+                            </svg>
+                            <span>
+                                <strong>{{ $company['nama'] }}:</strong>
+                                {{ $company['jam_masuk'] }} - {{ $company['jam_pulang'] }}
+                            </span>
+                        </div>
+                    @endforeach
+                </div>
+            </div>
+        @endif
 
         @if($this->getKaryawanAbsensiHariIni()->count() > 0)
             <div class="employees-scroll-container">
@@ -366,9 +466,21 @@
 
                             {{-- Info Karyawan --}}
                             <div class="employee-info">
+                                <p class="employee-name" title="{{ $karyawan['nama_lengkap'] }}">
+                                    {{ Str::limit($karyawan['nama_lengkap'], 12) }}
+                                </p>
                                 <p class="employee-time">
                                     {{ $karyawan['waktu_masuk'] }}
                                 </p>
+
+                                {{-- Status Badge --}}
+                                <div @class([
+                                    'status-badge',
+                                    'status-hadir' => $karyawan['status'] === 'Hadir',
+                                    'status-terlambat' => $karyawan['status'] === 'Terlambat',
+                                ])>
+                                    {{ $karyawan['status'] }}
+                                </div>
                             </div>
                         </div>
                     @endforeach
@@ -390,16 +502,20 @@
             </div>
         @endif
 
-        {{-- Legend --}}
+        {{-- Enhanced Legend --}}
         <div class="legend-container">
             <div class="legend-items">
                 <div class="legend-item">
                     <div class="legend-dot status-hadir"></div>
-                    <span class="legend-text">Hadir</span>
+                    <span class="legend-text">
+                        Hadir
+                    </span>
                 </div>
                 <div class="legend-item">
                     <div class="legend-dot status-terlambat"></div>
-                    <span class="legend-text">Terlambat</span>
+                    <span class="legend-text">
+                        Terlambat
+                    </span>
                 </div>
             </div>
         </div>
