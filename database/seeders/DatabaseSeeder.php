@@ -18,7 +18,9 @@ class DatabaseSeeder extends Seeder
             RoleSeeder::class,
             
             // 1. Buat data master yang tidak memiliki dependensi
-            GolonganPtkpSeeder::class,
+            KategoriTerSeeder::class,      
+            TarifTerSeeder::class,         
+            GolonganPtkpSeeder::class,     
             
             // 2. Buat data perusahaan, cabang, dan semua karyawan terkait
             PerusahaanKaryawanSeeder::class,

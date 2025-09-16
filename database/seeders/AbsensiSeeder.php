@@ -28,9 +28,9 @@ class AbsensiSeeder extends Seeder
       return;
     }
 
-    // Generate data untuk 2 bulan (60 hari) - akan menghasilkan sekitar 42-44 hari kerja per karyawan
-    $startDate = Carbon::now()->subDays(60);
-    $endDate = Carbon::now(); // Sampai hari ini
+    // Generate data untuk periode: bulan lalu sampai hari terakhir bulan ini
+    $startDate = Carbon::now()->subMonthNoOverflow()->startOfMonth();
+    $endDate = Carbon::now()->endOfMonth();
 
     $absensiData = [];
     $counter = 1;

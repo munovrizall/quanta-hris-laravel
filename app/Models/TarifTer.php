@@ -5,33 +5,28 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
-use Illuminate\Database\Eloquent\Relations\HasMany;
 
-class GolonganPtkp extends Model
+class TarifTer extends Model
 {
     use HasFactory;
-
+    
     // Penyesuaian
-    protected $table = 'golongan_ptkp';
-    protected $primaryKey = 'golongan_ptkp_id';
+    protected $table = 'tarif_ter';
+    protected $primaryKey = 'tarif_ter_id';
     public $incrementing = false;
     protected $keyType = 'string';
 
+
     protected $fillable = [
-        'golongan_ptkp_id',
+        'tarif_ter_id',
         'kategori_ter_id',
-        'nama_golongan_ptkp',
-        'deskripsi',
-        'ptkp_tahunan',
+        'batas_bawah',
+        'batas_atas',
+        'tarif',
     ];
 
     public function kategoriTer(): BelongsTo
     {
         return $this->belongsTo(KategoriTer::class, 'kategori_ter_id', 'kategori_ter_id');
-    }
-    
-    public function karyawan(): HasMany
-    {
-        return $this->hasMany(Karyawan::class, 'golongan_ptkp_id', 'golongan_ptkp_id');
     }
 }
