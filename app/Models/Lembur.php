@@ -2,25 +2,26 @@
 
 namespace App\Models;
 
+use App\Services\LemburService;
+use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Support\Facades\Log;
 
 class Lembur extends Model
 {
     use HasFactory, SoftDeletes;
 
-    /**
-     * Konfigurasi untuk Primary Key Kustom.
-     */
     protected $table = 'lembur';
     protected $primaryKey = 'lembur_id';
     public $incrementing = false;
     protected $keyType = 'string';
 
     /**
-     * Kolom yang dapat diisi secara massal.
+     * Hapus 'durasi_lembur' dari fillable karena tidak lagi digunakan sebagai input.
+     * Ganti 'total_insentif' dengan nama yang lebih sesuai: 'total_upah_lembur'.
      */
     protected $fillable = [
         'lembur_id',
@@ -28,24 +29,23 @@ class Lembur extends Model
         'absensi_id',
         'tanggal_lembur',
         'durasi_lembur',
+        'total_insentif',
         'deskripsi_pekerjaan',
         'dokumen_pendukung',
         'status_lembur',
         'alasan_penolakan',
-        'approver_id', // Changed from approved_by
-        'processed_at', // Changed from approved_at
+        'approver_id',
+        'processed_at',
     ];
 
-    /**
-     * Mengatur casting tipe data untuk atribut model.
-     */
     protected $casts = [
         'tanggal_lembur' => 'date',
-        'processed_at' => 'datetime', // Changed from approved_at
+        'processed_at' => 'datetime',
+        'total_insentif' => 'double', // Tipe data disesuaikan
     ];
 
     /**
-     * Mendefinisikan relasi bahwa satu data Lembur diajukan oleh satu Karyawan.
+     * Relasi ke model Karyawan.
      */
     public function karyawan(): BelongsTo
     {
@@ -53,7 +53,7 @@ class Lembur extends Model
     }
 
     /**
-     * Mendefinisikan relasi bahwa satu data Lembur terkait dengan satu data Absensi.
+     * Relasi ke model Absensi (ini adalah sumber data waktu).
      */
     public function absensi(): BelongsTo
     {
@@ -61,10 +61,21 @@ class Lembur extends Model
     }
 
     /**
-     * Mendefinisikan relasi bahwa satu data Lembur disetujui oleh satu Karyawan (Approver).
+     * Relasi ke model Karyawan (Approver).
      */
     public function approver(): BelongsTo
     {
-        return $this->belongsTo(Karyawan::class, 'approver_id', 'karyawan_id'); // Changed from approved_by
+        return $this->belongsTo(Karyawan::class, 'approver_id', 'karyawan_id');
+    }
+
+    /**
+     * Method untuk menghitung insentif menggunakan LemburService - CENTRALIZED LOGIC
+     *
+     * @return float
+     */
+    public function calculateInsentif(): float
+    {
+        $lemburService = new LemburService();
+        return $lemburService->calculateInsentifFromLembur($this);
     }
 }

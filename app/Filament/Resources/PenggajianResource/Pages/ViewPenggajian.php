@@ -5,6 +5,8 @@ namespace App\Filament\Resources\PenggajianResource\Pages;
 use App\Filament\Resources\PenggajianResource;
 use App\Models\Karyawan;
 use App\Models\Absensi;
+use App\Models\Lembur;
+use App\Services\LemburService;
 use App\Services\Pph21Service;
 use Filament\Actions;
 use Filament\Resources\Pages\ViewRecord;
@@ -232,21 +234,26 @@ class ViewPenggajian extends ViewRecord
     $processedData = [];
 
     foreach ($paginatedKaryawan->items() as $karyawan) {
-      // Hitung absensi
+      // Hitung absensi dan lembur
       $absensiData = $this->calculateAbsensi($karyawan->karyawan_id, $periodeStart, $periodeEnd);
+      $lemburData = $this->calculateLembur($karyawan->karyawan_id, $periodeStart, $periodeEnd);
+
+      // Gabungkan data lembur
+      $combinedData = array_merge($absensiData, $lemburData);
 
       // Hitung gaji menggunakan data real dari database
-      $gajiData = $this->calculateGajiFromDatabase($karyawan, $absensiData);
+      $gajiData = $this->calculateGajiFromDatabase($karyawan, $combinedData);
 
       $processedData[] = [
         'karyawan_id' => $karyawan->karyawan_id,
         'nama_lengkap' => $karyawan->nama_lengkap,
         'jabatan' => $karyawan->jabatan,
         'departemen' => $karyawan->departemen ?? 'N/A',
-        'total_hadir' => $absensiData['total_hadir'],
-        'total_alfa' => $absensiData['total_alfa'],
-        'total_tidak_tepat' => $absensiData['total_tidak_tepat'],
-        'total_lembur' => $absensiData['total_lembur'],
+        'total_hadir' => $combinedData['total_hadir'],
+        'total_alfa' => $combinedData['total_alfa'],
+        'total_tidak_tepat' => $combinedData['total_tidak_tepat'],
+        'total_lembur' => round($combinedData['total_lembur_hours'], 1),
+        'total_lembur_sessions' => $combinedData['total_lembur_sessions'], // Jumlah sesi lembur
         'gaji_pokok' => $gajiData['gaji_pokok'],
         'tunjangan_total' => $gajiData['tunjangan_total'],
         'lembur_pay' => $gajiData['lembur_pay'],
@@ -307,9 +314,13 @@ class ViewPenggajian extends ViewRecord
 
   private function calculateTotalLembur($record): float
   {
-    // Simplified calculation - you can make this more precise
-    $karyawanCount = $this->getTotalKaryawanCount($record);
-    return $karyawanCount * 200000; // Avg lembur per karyawan
+    $periodeStart = Carbon::create($record->periode_tahun, $record->periode_bulan, 1)->startOfMonth();
+    $periodeEnd = Carbon::create($record->periode_tahun, $record->periode_bulan, 1)->endOfMonth();
+
+    // Get total approved overtime insentif for the period
+    return Lembur::whereBetween('tanggal_lembur', [$periodeStart->format('Y-m-d'), $periodeEnd->format('Y-m-d')])
+      ->where('status_lembur', 'Disetujui')
+      ->sum('total_insentif') ?? 0;
   }
 
   private function calculateTotalPotongan($record): float
@@ -327,50 +338,100 @@ class ViewPenggajian extends ViewRecord
   }
 
   /**
-   * Calculate absensi data for a specific employee in a period - OPTIMIZED
+   * Calculate absensi data for a specific employee in a period - FIXED
    */
-    /**
-     * Calculate absensi data for a specific employee in a period - SQL VERSION
-     */
-    private function calculateAbsensi($karyawanId, $periodeStart, $periodeEnd): array
-    {
-      try {
-        // Get absensi stats with proper SQL syntax
-        $absensiStats = Absensi::where('karyawan_id', $karyawanId)
-          ->whereBetween('tanggal', [$periodeStart->format('Y-m-d'), $periodeEnd->format('Y-m-d')])
-          ->selectRaw('
-            status_absensi,
-            COUNT(*) as count,
-            SUM(CASE 
-              WHEN status_absensi != ? AND TIME(waktu_pulang) > TIME(?) 
-              THEN GREATEST(0, TIMESTAMPDIFF(HOUR, TIME(?), TIME(waktu_pulang))) 
-              ELSE 0 
-            END) as total_lembur_hours
-          ', ['Alfa', '17:00:00', '17:00:00'])
-          ->groupBy('status_absensi')
-          ->get()
-          ->keyBy('status_absensi');
-  
-        return [
-          'total_hadir' => $absensiStats->get('Hadir')?->count ?? 0,
-          'total_alfa' => $absensiStats->get('Alfa')?->count ?? 0,
-          'total_tidak_tepat' => $absensiStats->get('Tidak Tepat')?->count ?? 0,
-          'total_lembur' => $absensiStats->sum('total_lembur_hours'),
-          'total_absensi' => $absensiStats->sum('count'),
-        ];
-  
-      } catch (\Exception $e) {
-        Log::error("Error calculating absensi with raw SQL for karyawan {$karyawanId}: " . $e->getMessage());
-        
-        // Fallback to the safer method
-        return $this->calculateAbsensi($karyawanId, $periodeStart, $periodeEnd);
-      }
+  private function calculateAbsensi($karyawanId, $periodeStart, $periodeEnd): array
+  {
+    try {
+      // Get basic absensi stats without complex lembur calculation
+      $absensiStats = Absensi::where('karyawan_id', $karyawanId)
+        ->whereBetween('tanggal', [$periodeStart->format('Y-m-d'), $periodeEnd->format('Y-m-d')])
+        ->selectRaw('status_absensi, COUNT(*) as count')
+        ->groupBy('status_absensi')
+        ->get()
+        ->keyBy('status_absensi');
+
+      return [
+        'total_hadir' => $absensiStats->get('Hadir')?->count ?? 0,
+        'total_alfa' => $absensiStats->get('Alfa')?->count ?? 0,
+        'total_tidak_tepat' => $absensiStats->get('Tidak Tepat')?->count ?? 0,
+        'total_absensi' => $absensiStats->sum('count'),
+      ];
+
+    } catch (\Exception $e) {
+      Log::error("Error calculating absensi for karyawan {$karyawanId}: " . $e->getMessage());
+
+      return [
+        'total_hadir' => 0,
+        'total_alfa' => 0,
+        'total_tidak_tepat' => 0,
+        'total_absensi' => 0,
+      ];
     }
+  }
 
   /**
-   * Calculate salary components using real data from database
+   * Calculate lembur data from lembur table - UPDATED to use total_insentif
    */
-  private function calculateGajiFromDatabase($karyawan, $absensiData): array
+  private function calculateLembur($karyawanId, $periodeStart, $periodeEnd): array
+  {
+    try {
+      $lemburService = new LemburService(); // Inisialisasi service
+
+      // Get approved overtime data from lembur table
+      $lemburData = Lembur::where('karyawan_id', $karyawanId)
+        ->whereBetween('tanggal_lembur', [$periodeStart->format('Y-m-d'), $periodeEnd->format('Y-m-d')])
+        ->where('status_lembur', 'Disetujui') // Only approved overtime
+        ->with('karyawan') // Eager load untuk efisiensi
+        ->get();
+
+      $totalLemburHours = 0;
+      $totalLemburSessions = $lemburData->count();
+      $totalInsentif = 0;
+
+      foreach ($lemburData as $lembur) {
+        try {
+          // Parse durasi_lembur (TIME format: HH:MM:SS)
+          $durasi = Carbon::createFromFormat('H:i:s', $lembur->durasi_lembur);
+          $hours = $durasi->hour + ($durasi->minute / 60) + ($durasi->second / 3600);
+          $totalLemburHours += $hours;
+
+          // *** GUNAKAN SERVICE untuk konsistensi ***
+          if ($lembur->total_insentif && $lembur->total_insentif > 0) {
+            $totalInsentif += $lembur->total_insentif;
+          } else {
+            // Fallback: hitung menggunakan service jika total_insentif kosong
+            $insentif = $lemburService->calculateInsentifFromLembur($lembur);
+            $totalInsentif += $insentif;
+          }
+        } catch (\Exception $e) {
+          Log::warning("Error parsing lembur data for lembur {$lembur->lembur_id}: " . $e->getMessage());
+        }
+      }
+
+      Log::info("Lembur calculated for karyawan {$karyawanId}: {$totalLemburSessions} sessions, {$totalLemburHours} hours, " . $lemburService->formatRupiah($totalInsentif));
+
+      return [
+        'total_lembur_hours' => $totalLemburHours,
+        'total_lembur_sessions' => $totalLemburSessions,
+        'total_lembur_insentif' => $totalInsentif,
+      ];
+
+    } catch (\Exception $e) {
+      Log::error("Error calculating lembur for karyawan {$karyawanId}: " . $e->getMessage());
+
+      return [
+        'total_lembur_hours' => 0,
+        'total_lembur_sessions' => 0,
+        'total_lembur_insentif' => 0,
+      ];
+    }
+  }
+
+  /**
+   * Calculate salary components using real data from database - UPDATED for insentif
+   */
+  private function calculateGajiFromDatabase($karyawan, $combinedData): array
   {
     // Ambil gaji pokok dari database karyawan (REAL DATA)
     $gajiPokok = (float) $karyawan->gaji_pokok;
@@ -383,16 +444,16 @@ class ViewPenggajian extends ViewRecord
 
     $tunjanganTotal = $tunjanganJabatan + $tunjanganTransport + $tunjanganMakan + $tunjanganKeluarga;
 
-    // Upah lembur
-    $gajiPerJam = $gajiPokok / (22 * 8);
-    $lemburPay = $absensiData['total_lembur'] * ($gajiPerJam * 1.5);
+    // Upah lembur (gunakan total_insentif dari database)
+    $lemburPay = $combinedData['total_lembur_insentif'] ?? 0;
 
     // Total penghasilan bruto
     $penghasilanBruto = $gajiPokok + $tunjanganTotal + $lemburPay;
 
     // Potongan
-    $potonganAlfa = $absensiData['total_alfa'] * ($gajiPerJam * 8);
-    $potonganTidakTepat = $absensiData['total_tidak_tepat'] * ($gajiPerJam * 4);
+    $gajiPerJam = $gajiPokok / (22 * 8);
+    $potonganAlfa = $combinedData['total_alfa'] * ($gajiPerJam * 8);
+    $potonganTidakTepat = $combinedData['total_tidak_tepat'] * ($gajiPerJam * 4);
     $potonganBPJS = $gajiPokok * 0.04;
 
     // PPh21
@@ -406,7 +467,7 @@ class ViewPenggajian extends ViewRecord
     return [
       'gaji_pokok' => $gajiPokok,
       'tunjangan_total' => $tunjanganTotal,
-      'lembur_pay' => $lemburPay,
+      'lembur_pay' => $lemburPay, // Sekarang menggunakan insentif dari database
       'potongan_total' => $potonganTotal,
       'total_gaji' => max(0, $totalGaji),
       'pph21_detail' => $pph21Detail,

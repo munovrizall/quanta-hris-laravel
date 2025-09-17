@@ -7,6 +7,7 @@ use Illuminate\Database\Seeder;
 use App\Models\Lembur;
 use App\Models\Karyawan;
 use App\Models\Absensi;
+use App\Services\LemburService;  // Import service
 use Carbon\Carbon;
 use Faker\Factory as Faker;
 
@@ -18,8 +19,9 @@ class LemburSeeder extends Seeder
     public function run(): void
     {
         $faker = Faker::create('id_ID');
+        $lemburService = new LemburService(); // Inisialisasi service
 
-        // Ambil semua karyawan
+        // Ambil semua karyawan dengan relasi (untuk efisiensi)
         $karyawans = Karyawan::all();
 
         // Ambil data absensi yang ada
@@ -79,7 +81,7 @@ class LemburSeeder extends Seeder
 
             if ($statusProbability <= 80) {
                 $statusLembur = 'Disetujui';
-                $processedAt = $absensi->waktu_pulang->addMinutes($faker->numberBetween(60, 180)); // 1-3 jam setelah pulang
+                $processedAt = $absensi->waktu_pulang->addMinutes($faker->numberBetween(60, 180));
                 $alasanPenolakan = null;
             } elseif ($statusProbability <= 95) {
                 $statusLembur = 'Ditolak';
@@ -113,7 +115,8 @@ class LemburSeeder extends Seeder
                 $dokumenPendukung = 'lembur/dokumen_' . $faker->randomNumber(6) . '.pdf';
             }
 
-            $lemburData[] = [
+            // Prepare data awal untuk lembur
+            $lemburRecord = [
                 'lembur_id' => 'LB' . str_pad($counter, 4, '0', STR_PAD_LEFT),
                 'karyawan_id' => $absensi->karyawan_id,
                 'absensi_id' => $absensi->absensi_id,
@@ -125,10 +128,35 @@ class LemburSeeder extends Seeder
                 'alasan_penolakan' => $alasanPenolakan,
                 'approver_id' => $statusLembur !== 'Diajukan' ? $approver->karyawan_id : null,
                 'processed_at' => $processedAt,
-                'created_at' => $absensi->waktu_pulang->addMinutes($faker->numberBetween(5, 30)), // Dibuat 5-30 menit setelah pulang
+                'created_at' => $absensi->waktu_pulang->addMinutes($faker->numberBetween(5, 30)),
                 'updated_at' => $processedAt ?? $absensi->waktu_pulang->addMinutes($faker->numberBetween(5, 30)),
             ];
 
+            // *** MENGGUNAKAN LEMBURSERVICE untuk menghitung insentif ***
+            $totalInsentif = null;
+
+            if ($statusLembur === 'Disetujui') {
+                try {
+                    // Ambil data karyawan untuk perhitungan
+                    $karyawan = $karyawans->where('karyawan_id', $absensi->karyawan_id)->first();
+
+                    if ($karyawan && $karyawan->gaji_pokok > 0) {
+                        // *** GUNAKAN SERVICE untuk konsistensi ***
+                        $totalInsentif = $lemburService->calculateInsentif($durasiLembur, $karyawan);
+
+                        $this->command->info("Lembur {$lemburRecord['lembur_id']}: Durasi {$durasiLembur}, Insentif " . $lemburService->formatRupiah($totalInsentif));
+                    } else {
+                        $this->command->warn("Karyawan {$absensi->karyawan_id} tidak ditemukan atau gaji pokok = 0");
+                    }
+                } catch (\Exception $e) {
+                    $this->command->error("Error menghitung insentif untuk {$lemburRecord['lembur_id']}: " . $e->getMessage());
+                }
+            }
+
+            // Set total_insentif berdasarkan status
+            $lemburRecord['total_insentif'] = $totalInsentif;
+
+            $lemburData[] = $lemburRecord;
             $counter++;
         }
 
@@ -137,7 +165,18 @@ class LemburSeeder extends Seeder
             Lembur::insert($chunk);
         }
 
-        $this->command->info('Berhasil membuat ' . count($lemburData) . ' data lembur');
-        $this->command->info('Status: Disetujui (~80%), Ditolak (~15%), Diajukan (~5%)');
+        // Hitung statistik menggunakan service untuk format
+        $totalData = count($lemburData);
+        $disetujui = collect($lemburData)->where('status_lembur', 'Disetujui')->count();
+        $ditolak = collect($lemburData)->where('status_lembur', 'Ditolak')->count();
+        $diajukan = collect($lemburData)->where('status_lembur', 'Diajukan')->count();
+        $totalInsentifDibayar = collect($lemburData)->whereNotNull('total_insentif')->sum('total_insentif');
+
+        $this->command->info('=== STATISTIK LEMBUR SEEDER ===');
+        $this->command->info("Total data lembur: {$totalData}");
+        $this->command->info("- Disetujui: {$disetujui} (dengan insentif)");
+        $this->command->info("- Ditolak: {$ditolak} (tanpa insentif)");
+        $this->command->info("- Diajukan: {$diajukan} (tanpa insentif)");
+        $this->command->info("Total insentif dibayar: " . $lemburService->formatRupiah($totalInsentifDibayar));
     }
 }

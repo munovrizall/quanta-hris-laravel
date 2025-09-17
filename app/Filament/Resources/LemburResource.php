@@ -7,13 +7,16 @@ use App\Filament\Resources\LemburResource\RelationManagers;
 use App\Models\Lembur;
 use App\Models\Karyawan;
 use App\Models\Absensi;
+use App\Services\LemburService;
 use Filament\Forms;
 use Filament\Forms\Form;
 use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Table;
+use Filament\Notifications\Notification;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
+use Illuminate\Support\Facades\Auth;
 
 class LemburResource extends Resource
 {
@@ -74,6 +77,14 @@ class LemburResource extends Resource
                             ->label('Durasi Lembur')
                             ->required()
                             ->seconds(false),
+                        Forms\Components\TextInput::make('total_insentif')
+                            ->label('Total Insentif (Rp)')
+                            ->numeric()
+                            ->prefix('Rp')
+                            ->placeholder('Akan dihitung otomatis saat disetujui')
+                            ->disabled()
+                            ->dehydrated(false)
+                            ->formatStateUsing(fn($state) => $state ? number_format($state, 0, ',', '.') : null),
                     ])
                     ->columns(2),
 
@@ -104,16 +115,16 @@ class LemburResource extends Resource
                             ->reactive()
                             ->afterStateUpdated(function (callable $set, $state) {
                                 if ($state === 'Disetujui') {
-                                    $set('processed_at', now()); // Changed from approved_at
+                                    $set('processed_at', now());
                                     $set('alasan_penolakan', null);
                                 } elseif ($state === 'Ditolak') {
-                                    $set('processed_at', null); // Changed from approved_at
+                                    $set('processed_at', null);
                                 } else {
-                                    $set('processed_at', null); // Changed from approved_at
+                                    $set('processed_at', null);
                                     $set('alasan_penolakan', null);
                                 }
                             }),
-                        Forms\Components\Select::make('approver_id') // Changed from approved_by
+                        Forms\Components\Select::make('approver_id')
                             ->label('Disetujui Oleh')
                             ->options(function () {
                                 return Karyawan::whereHas('role', function ($query) {
@@ -129,9 +140,6 @@ class LemburResource extends Resource
                             ->helperText('Otomatis terisi saat mengubah status. Anda dapat mengubahnya secara manual.')
                             ->seconds(false)
                             ->default(fn(callable $get) => $get('status_lembur') !== 'Diajukan' ? now() : null),
-                        Forms\Components\DateTimePicker::make('processed_at') // Changed from approved_at
-                            ->label('Waktu Persetujuan')
-                            ->visible(fn(callable $get) => $get('status_lembur') === 'Disetujui'),
                         Forms\Components\Textarea::make('alasan_penolakan')
                             ->label('Alasan Penolakan')
                             ->rows(3)
@@ -156,10 +164,6 @@ class LemburResource extends Resource
                     ->label('Karyawan')
                     ->searchable()
                     ->sortable(),
-                Tables\Columns\TextColumn::make('absensi.tanggal')
-                    ->label('Tanggal Absensi')
-                    ->date()
-                    ->sortable(),
                 Tables\Columns\TextColumn::make('tanggal_lembur')
                     ->label('Tanggal Lembur')
                     ->date()
@@ -171,6 +175,12 @@ class LemburResource extends Resource
                     })
                     ->badge()
                     ->color('info'),
+                Tables\Columns\TextColumn::make('total_insentif')
+                    ->label('Insentif')
+                    ->formatStateUsing(fn($state) => $state ? 'Rp ' . number_format($state, 0, ',', '.') : '-')
+                    ->badge()
+                    ->color('success')
+                    ->toggleable(),
                 Tables\Columns\TextColumn::make('status_lembur')
                     ->label('Status')
                     ->badge()
@@ -180,11 +190,11 @@ class LemburResource extends Resource
                         'Ditolak' => 'danger',
                         default => 'gray',
                     }),
-                Tables\Columns\TextColumn::make('approver.nama_lengkap') // Changed from approver.nama_lengkap
+                Tables\Columns\TextColumn::make('approver.nama_lengkap')
                     ->label('Disetujui Oleh')
                     ->placeholder('-')
                     ->toggleable(isToggledHiddenByDefault: true),
-                Tables\Columns\TextColumn::make('processed_at') // Changed from approved_at
+                Tables\Columns\TextColumn::make('processed_at')
                     ->label('Waktu Persetujuan')
                     ->dateTime()
                     ->placeholder('-')
@@ -224,6 +234,133 @@ class LemburResource extends Resource
                     }),
             ])
             ->actions([
+                Tables\Actions\Action::make('approve')
+                    ->label('Setujui')
+                    ->icon('heroicon-o-check-circle')
+                    ->color('success')
+                    ->visible(fn(Lembur $record): bool => $record->status_lembur === 'Diajukan')
+                    ->requiresConfirmation()
+                    ->modalHeading('Setujui Pengajuan Lembur')
+                    ->modalDescription(
+                        fn(Lembur $record): string =>
+                        "Apakah Anda yakin ingin menyetujui pengajuan lembur untuk {$record->karyawan->nama_lengkap} pada tanggal {$record->tanggal_lembur->format('d F Y')}?"
+                    )
+                    ->modalSubmitActionLabel('Ya, Setujui')
+                    ->form([
+                        Forms\Components\Placeholder::make('preview')
+                            ->label('Preview Perhitungan Insentif')
+                            ->content(function (Lembur $record): string {
+                                $lemburService = new LemburService();
+                                $insentif = $lemburService->calculateInsentifFromLembur($record);
+                                return "Insentif yang akan diberikan: " . $lemburService->formatRupiah($insentif);
+                            }),
+                    ])
+                    ->action(function (Lembur $record, array $data): void {
+                        try {
+                            $lemburService = new LemburService();
+                            $insentif = $lemburService->calculateInsentifFromLembur($record);
+
+                            // Update status dan data persetujuan
+                            $record->update([
+                                'status_lembur' => 'Disetujui',
+                                'total_insentif' => $insentif,
+                                'approver_id' => Auth::user()->karyawan_id ?? 'SYSTEM',
+                                'processed_at' => now(),
+                                'alasan_penolakan' => null,
+                            ]);
+
+                            Notification::make()
+                                ->title('Lembur Berhasil Disetujui')
+                                ->body("Pengajuan lembur untuk {$record->karyawan->nama_lengkap} telah disetujui dengan insentif " . $lemburService->formatRupiah($insentif))
+                                ->success()
+                                ->send();
+
+                        } catch (\Exception $e) {
+                            Notification::make()
+                                ->title('Error')
+                                ->body('Terjadi kesalahan saat menyetujui lembur: ' . $e->getMessage())
+                                ->danger()
+                                ->send();
+                        }
+
+                    }),
+
+                // ACTION BARU: Tolak Lembur
+                Tables\Actions\Action::make('reject')
+                    ->label('Tolak')
+                    ->icon('heroicon-o-x-circle')
+                    ->color('danger')
+                    ->visible(fn(Lembur $record): bool => $record->status_lembur === 'Diajukan')
+                    ->requiresConfirmation()
+                    ->modalHeading('Tolak Pengajuan Lembur')
+                    ->modalDescription(
+                        fn(Lembur $record): string =>
+                        "Apakah Anda yakin ingin menolak pengajuan lembur untuk {$record->karyawan->nama_lengkap} pada tanggal {$record->tanggal_lembur->format('d F Y')}?"
+                    )
+                    ->modalSubmitActionLabel('Ya, Tolak')
+                    ->form([
+                        Forms\Components\Textarea::make('alasan_penolakan')
+                            ->label('Alasan Penolakan')
+                            ->required()
+                            ->rows(3)
+                            ->helperText('Berikan alasan yang jelas untuk penolakan ini.'),
+                    ])
+                    ->action(function (Lembur $record, array $data): void {
+                        try {
+                            // Update status dan data penolakan
+                            $record->update([
+                                'status_lembur' => 'Ditolak',
+                                'alasan_penolakan' => $data['alasan_penolakan'],
+                                'approver_id' => Auth::user()->karyawan_id ?? 'SYSTEM',
+                                'processed_at' => now(),
+                                'total_insentif' => null, // Clear insentif jika ada
+                            ]);
+
+                            Notification::make()
+                                ->title('Lembur Berhasil Ditolak')
+                                ->body("Pengajuan lembur untuk {$record->karyawan->nama_lengkap} telah ditolak.")
+                                ->warning()
+                                ->send();
+
+                        } catch (\Exception $e) {
+                            Notification::make()
+                                ->title('Error')
+                                ->body('Terjadi kesalahan saat menolak lembur: ' . $e->getMessage())
+                                ->danger()
+                                ->send();
+                        }
+                    }),
+
+                // ACTION: Reset Status (untuk admin)
+                Tables\Actions\Action::make('reset')
+                    ->label('Reset Status')
+                    ->icon('heroicon-o-arrow-path')
+                    ->color('gray')
+                    ->visible(
+                        fn(Lembur $record): bool =>
+                        in_array($record->status_lembur, ['Disetujui', 'Ditolak']) &&
+                        Auth::user()?->hasRole(['Admin', 'CEO'])
+                    )
+                    ->requiresConfirmation()
+                    ->modalHeading('Reset Status Lembur')
+                    ->modalDescription('Apakah Anda yakin ingin mereset status lembur ini kembali ke "Diajukan"?')
+                    ->modalSubmitActionLabel('Ya, Reset')
+                    ->action(function (Lembur $record): void {
+                        $record->update([
+                            'status_lembur' => 'Diajukan',
+                            'total_insentif' => null,
+                            'approver_id' => null,
+                            'processed_at' => null,
+                            'alasan_penolakan' => null,
+                        ]);
+
+                        Notification::make()
+                            ->title('Status Berhasil Direset')
+                            ->body('Status lembur telah direset ke "Diajukan".')
+                            ->info()
+                            ->send();
+                    }),
+
                 Tables\Actions\ViewAction::make()
                     ->label('Lihat'),
                 Tables\Actions\EditAction::make()
@@ -237,6 +374,54 @@ class LemburResource extends Resource
             ])
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([
+                    // BULK ACTION: Setujui Banyak Lembur
+                    Tables\Actions\BulkAction::make('approve_bulk')
+                        ->label('Setujui Terpilih')
+                        ->icon('heroicon-o-check-circle')
+                        ->color('success')
+                        ->requiresConfirmation()
+                        ->modalHeading('Setujui Pengajuan Lembur')
+                        ->modalDescription('Apakah Anda yakin ingin menyetujui semua pengajuan lembur yang dipilih?')
+                        ->modalSubmitActionLabel('Ya, Setujui Semua')
+                        ->action(function (\Illuminate\Database\Eloquent\Collection $records): void {
+                            $approved = 0;
+                            $errors = [];
+
+                            foreach ($records as $record) {
+                                if ($record->status_lembur === 'Diajukan') {
+                                    try {
+                                        $insentif = $record->calculateInsentif();
+                                        $record->update([
+                                            'status_lembur' => 'Disetujui',
+                                            'total_insentif' => $insentif,
+                                            'approver_id' => Auth::user()->karyawan_id ?? 'SYSTEM',
+                                            'processed_at' => now(),
+                                            'alasan_penolakan' => null,
+                                        ]);
+                                        $approved++;
+                                    } catch (\Exception $e) {
+                                        $errors[] = "Error untuk {$record->lembur_id}: " . $e->getMessage();
+                                    }
+                                }
+                            }
+
+                            if ($approved > 0) {
+                                Notification::make()
+                                    ->title('Bulk Approval Selesai')
+                                    ->body("{$approved} pengajuan lembur berhasil disetujui.")
+                                    ->success()
+                                    ->send();
+                            }
+
+                            if (!empty($errors)) {
+                                Notification::make()
+                                    ->title('Beberapa Error Terjadi')
+                                    ->body(implode(', ', $errors))
+                                    ->warning()
+                                    ->send();
+                            }
+                        }),
+
                     Tables\Actions\DeleteBulkAction::make()
                         ->label('Hapus Terpilih'),
                     Tables\Actions\RestoreBulkAction::make()

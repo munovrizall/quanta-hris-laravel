@@ -93,17 +93,28 @@ class Karyawan extends Authenticable implements FilamentUser, HasName
     return $this->belongsTo(GolonganPtkp::class, 'golongan_ptkp_id', 'golongan_ptkp_id');
   }
 
+  // Relasi HasMany
+  public function absensi()
+  {
+    return $this->hasMany(Absensi::class, 'karyawan_id', 'karyawan_id');
+  }
+
+  public function lembur()
+  {
+    return $this->hasMany(Lembur::class, 'karyawan_id', 'karyawan_id');
+  }
+
+  public function cuti()
+  {
+    return $this->hasMany(Cuti::class, 'karyawan_id', 'karyawan_id');
+  }
+  
   public function calculatePph21Deduction(): float
   {
     $pph21Service = new Pph21Service();
     return $pph21Service->calculateMonthlyPph21Deduction($this);
   }
 
-  // Relasi HasMany
-  public function absensi()
-  {
-    return $this->hasMany(Absensi::class, 'karyawan_id', 'karyawan_id');
-  }
 
   public static function getEloquentQuery(): Builder
   {
