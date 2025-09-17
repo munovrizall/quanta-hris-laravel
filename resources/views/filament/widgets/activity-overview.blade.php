@@ -472,15 +472,6 @@
                                 <p class="employee-time">
                                     {{ $karyawan['waktu_masuk'] }}
                                 </p>
-
-                                {{-- Status Badge --}}
-                                <div @class([
-                                    'status-badge',
-                                    'status-hadir' => $karyawan['status'] === 'Hadir',
-                                    'status-terlambat' => $karyawan['status'] === 'Terlambat',
-                                ])>
-                                    {{ $karyawan['status'] }}
-                                </div>
                             </div>
                         </div>
                     @endforeach
