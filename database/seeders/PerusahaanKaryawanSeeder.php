@@ -39,6 +39,16 @@ class PerusahaanKaryawanSeeder extends Seeder
             'nomor_telepon' => '0215550123',
             'jam_masuk' => '09:00:00',
             'jam_pulang' => '17:00:00',
+            'potongan_keterlambatan' => 50000,
+
+            // Konfigurasi Potongan BPJS Karyawan
+            'persen_bpjs_kesehatan_karyawan' => 0.01, // 1%
+            'persen_bpjs_jht_karyawan' => 0.02, // 2%
+            'persen_bpjs_jp_karyawan' => 0.01, // 1%
+
+            // Batas Atas Gaji (Salary Cap) BPJS
+            'batas_gaji_bpjs_kesehatan' => 12000000,
+            'batas_gaji_bpjs_pensiun' => 10547400,
         ]);
 
         // 6. Buat Cabang untuk Perusahaan tersebut
