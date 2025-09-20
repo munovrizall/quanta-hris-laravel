@@ -21,7 +21,13 @@ class Perusahaan extends Model
     'email',
     'nomor_telepon',
     'jam_masuk',
-    'jam_pulang'
+    'jam_pulang',
+    'potongan_keterlambatan',
+    'persen_bpjs_kesehatan_karyawan',
+    'persen_bpjs_jht_karyawan',
+    'persen_bpjs_jp_karyawan',
+    'batas_gaji_bpjs_kesehatan',
+    'batas_gaji_bpjs_pensiun',
   ];
 
   public function karyawan()
