@@ -34,6 +34,7 @@ return new class extends Migration {
                 'Freelance'
             ])->nullable();
             $table->date('tanggal_mulai_bekerja')->nullable();
+            $table->integer('kuota_cuti_tahunan')->default(12);
             $table->decimal('gaji_pokok', 15, 2)->nullable();
             $table->string('nomor_rekening', 50)->nullable();
             $table->string('nama_pemilik_rekening', 255)->nullable();

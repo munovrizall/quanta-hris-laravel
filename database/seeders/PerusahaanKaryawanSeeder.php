@@ -86,7 +86,10 @@ class PerusahaanKaryawanSeeder extends Seeder
         $ptkps = GolonganPtkp::all();
         $counter = 1;
 
-        // 8. Buat 1 Admin
+        // 8. Buat 1 Admin dengan Tunjangan Realistic
+        $adminGajiPokok = 20000000;
+        $adminTunjangan = $this->calculateRealisticTunjanganBulanan($adminGajiPokok, 'Executive');
+        
         $adminKaryawan = Karyawan::create([
             'karyawan_id' => 'K' . str_pad($counter++, 4, '0', STR_PAD_LEFT),
             'perusahaan_id' => $perusahaan->perusahaan_id,
@@ -103,14 +106,21 @@ class PerusahaanKaryawanSeeder extends Seeder
             'departemen' => 'Information Technology',
             'status_kepegawaian' => 'Tetap',
             'tanggal_mulai_bekerja' => '2015-01-15',
-            'gaji_pokok' => 20000000,
+            'gaji_pokok' => $adminGajiPokok,
+            'tunjangan_jabatan' => $adminTunjangan['jabatan'],
+            'tunjangan_makan_bulanan' => $adminTunjangan['makan'],
+            'tunjangan_transport_bulanan' => $adminTunjangan['transport'],
+            'kuota_cuti_tahunan' => 12,
             'nomor_rekening' => '1234567890',
             'nama_pemilik_rekening' => 'Budi Santoso',
             'role_id' => 'R01',
         ]);
         $adminKaryawan->assignRole('Admin');
 
-        // 9. Buat 1 CEO
+        // 9. Buat 1 CEO dengan Tunjangan
+        $ceoGajiPokok = 50000000;
+        $ceoTunjangan = $this->calculateRealisticTunjanganBulanan($ceoGajiPokok, 'Executive');
+        
         $ceoKaryawan = Karyawan::create([
             'karyawan_id' => 'K' . str_pad($counter++, 4, '0', STR_PAD_LEFT),
             'perusahaan_id' => $perusahaan->perusahaan_id,
@@ -127,14 +137,18 @@ class PerusahaanKaryawanSeeder extends Seeder
             'departemen' => 'Executive',
             'status_kepegawaian' => 'Tetap',
             'tanggal_mulai_bekerja' => '2010-03-01',
-            'gaji_pokok' => 50000000,
+            'gaji_pokok' => $ceoGajiPokok,
+            'tunjangan_jabatan' => $ceoTunjangan['jabatan'],
+            'tunjangan_makan_bulanan' => $ceoTunjangan['makan'],
+            'tunjangan_transport_bulanan' => $ceoTunjangan['transport'],
+            'kuota_cuti_tahunan' => 12,
             'nomor_rekening' => '1234567891',
             'nama_pemilik_rekening' => 'Dr. Ahmad Wijaya',
             'role_id' => 'R06',
         ]);
         $ceoKaryawan->assignRole('CEO');
 
-        // 10. Buat 2 Manager HRD
+        // 10. Buat 2 Manager HRD dengan Tunjangan
         $managerHRDData = [
             [
                 'nik' => '3171010301780001',
@@ -171,6 +185,8 @@ class PerusahaanKaryawanSeeder extends Seeder
         ];
 
         foreach ($managerHRDData as $data) {
+            $tunjangan = $this->calculateRealisticTunjanganBulanan($data['gaji_pokok'], 'Manager');
+            
             $managerHRD = Karyawan::create([
                 'karyawan_id' => 'K' . str_pad($counter++, 4, '0', STR_PAD_LEFT),
                 'perusahaan_id' => $perusahaan->perusahaan_id,
@@ -188,6 +204,10 @@ class PerusahaanKaryawanSeeder extends Seeder
                 'status_kepegawaian' => 'Tetap',
                 'tanggal_mulai_bekerja' => $data['tanggal_mulai_bekerja'],
                 'gaji_pokok' => $data['gaji_pokok'],
+                'tunjangan_jabatan' => $tunjangan['jabatan'],
+                'tunjangan_makan_bulanan' => $tunjangan['makan'],
+                'tunjangan_transport_bulanan' => $tunjangan['transport'],
+                'kuota_cuti_tahunan' => 12,
                 'nomor_rekening' => $data['nomor_rekening'],
                 'nama_pemilik_rekening' => $data['nama_pemilik_rekening'],
                 'role_id' => 'R03',
@@ -195,7 +215,7 @@ class PerusahaanKaryawanSeeder extends Seeder
             $managerHRD->assignRole('Manager HRD');
         }
 
-        // 11. Buat 5 Staff HRD
+        // 11. Buat 5 Staff HRD dengan Tunjangan
         $staffHRDData = [
             [
                 'nik' => '3171010501820001',
@@ -280,6 +300,8 @@ class PerusahaanKaryawanSeeder extends Seeder
         ];
 
         foreach ($staffHRDData as $data) {
+            $tunjangan = $this->calculateRealisticTunjanganBulanan($data['gaji_pokok'], 'Staff');
+            
             $staffHRD = Karyawan::create([
                 'karyawan_id' => 'K' . str_pad($counter++, 4, '0', STR_PAD_LEFT),
                 'perusahaan_id' => $perusahaan->perusahaan_id,
@@ -297,6 +319,10 @@ class PerusahaanKaryawanSeeder extends Seeder
                 'status_kepegawaian' => 'Tetap',
                 'tanggal_mulai_bekerja' => $data['tanggal_mulai_bekerja'],
                 'gaji_pokok' => $data['gaji_pokok'],
+                'tunjangan_jabatan' => $tunjangan['jabatan'],
+                'tunjangan_makan_bulanan' => $tunjangan['makan'],
+                'tunjangan_transport_bulanan' => $tunjangan['transport'],
+                'kuota_cuti_tahunan' => 12,
                 'nomor_rekening' => $data['nomor_rekening'],
                 'nama_pemilik_rekening' => $data['nama_pemilik_rekening'],
                 'role_id' => 'R02',
@@ -304,7 +330,10 @@ class PerusahaanKaryawanSeeder extends Seeder
             $staffHRD->assignRole('Staff HRD');
         }
 
-        // 12. Buat 1 Manager Finance
+        // 12. Buat 1 Manager Finance dengan Tunjangan
+        $managerFinanceGaji = 19000000;
+        $managerFinanceTunjangan = $this->calculateRealisticTunjanganBulanan($managerFinanceGaji, 'Manager');
+        
         $managerFinance = Karyawan::create([
             'karyawan_id' => 'K' . str_pad($counter++, 4, '0', STR_PAD_LEFT),
             'perusahaan_id' => $perusahaan->perusahaan_id,
@@ -321,14 +350,18 @@ class PerusahaanKaryawanSeeder extends Seeder
             'departemen' => 'Finance & Accounting',
             'status_kepegawaian' => 'Tetap',
             'tanggal_mulai_bekerja' => '2014-08-01',
-            'gaji_pokok' => 19000000,
+            'gaji_pokok' => $managerFinanceGaji,
+            'tunjangan_jabatan' => $managerFinanceTunjangan['jabatan'],
+            'tunjangan_makan_bulanan' => $managerFinanceTunjangan['makan'],
+            'tunjangan_transport_bulanan' => $managerFinanceTunjangan['transport'],
+            'kuota_cuti_tahunan' => 12,
             'nomor_rekening' => '1234567899',
             'nama_pemilik_rekening' => 'Rini Setyowati',
             'role_id' => 'R04',
         ]);
         $managerFinance->assignRole('Manager Finance');
 
-        // 13. Buat 2 Account Payment
+        // 13. Buat 2 Account Payment dengan Tunjangan
         $accountPaymentData = [
             [
                 'nik' => '3171011101810001',
@@ -365,6 +398,8 @@ class PerusahaanKaryawanSeeder extends Seeder
         ];
 
         foreach ($accountPaymentData as $data) {
+            $tunjangan = $this->calculateRealisticTunjanganBulanan($data['gaji_pokok'], 'Staff');
+            
             $accountPayment = Karyawan::create([
                 'karyawan_id' => 'K' . str_pad($counter++, 4, '0', STR_PAD_LEFT),
                 'perusahaan_id' => $perusahaan->perusahaan_id,
@@ -382,6 +417,10 @@ class PerusahaanKaryawanSeeder extends Seeder
                 'status_kepegawaian' => 'Tetap',
                 'tanggal_mulai_bekerja' => $data['tanggal_mulai_bekerja'],
                 'gaji_pokok' => $data['gaji_pokok'],
+                'tunjangan_jabatan' => $tunjangan['jabatan'],
+                'tunjangan_makan_bulanan' => $tunjangan['makan'],
+                'tunjangan_transport_bulanan' => $tunjangan['transport'],
+                'kuota_cuti_tahunan' => 12,
                 'nomor_rekening' => $data['nomor_rekening'],
                 'nama_pemilik_rekening' => $data['nama_pemilik_rekening'],
                 'role_id' => 'R05',
@@ -389,7 +428,7 @@ class PerusahaanKaryawanSeeder extends Seeder
             $accountPayment->assignRole('Account Payment');
         }
 
-        // 14. Buat 100 Karyawan dengan Faker
+        // 14. Buat 100 Karyawan dengan Faker dan Tunjangan
         $cabangIds = [$cabangUtama->cabang_id, $cabangDepok->cabang_id, $cabangBandung->cabang_id];
 
         for ($i = 1; $i <= 100; $i++) {
@@ -403,10 +442,19 @@ class PerusahaanKaryawanSeeder extends Seeder
                 $selectedCabang = $cabangBandung->cabang_id;
             }
 
+            // Generate gaji pokok yang realistis untuk karyawan biasa
+            $gajiPokok = rand(4500000, 12000000); // 4.5 juta - 12 juta
+            $tunjangan = $this->calculateRealisticTunjanganBulanan($gajiPokok, 'Staff');
+
             $staffKaryawan = Karyawan::factory()->create([
                 'karyawan_id' => 'K' . str_pad($counter++, 4, '0', STR_PAD_LEFT),
                 'perusahaan_id' => $perusahaan->perusahaan_id,
                 'golongan_ptkp_id' => $ptkps->random()->golongan_ptkp_id,
+                'gaji_pokok' => $gajiPokok,
+                'tunjangan_jabatan' => $tunjangan['jabatan'],
+                'tunjangan_makan_bulanan' => $tunjangan['makan'],
+                'tunjangan_transport_bulanan' => $tunjangan['transport'],
+                'kuota_cuti_tahunan' => 12,
                 'role_id' => 'R07', // Role Karyawan
                 // Jika ada kolom cabang_id, uncomment line berikut:
                 // 'cabang_id' => $selectedCabang,
@@ -416,7 +464,7 @@ class PerusahaanKaryawanSeeder extends Seeder
             $staffKaryawan->assignRole('Karyawan');
         }
 
-        $this->command->info('Berhasil membuat karyawan:');
+        $this->command->info('Berhasil membuat karyawan dengan tunjangan bulanan:');
         $this->command->info('- Admin: 1');
         $this->command->info('- CEO: 1');
         $this->command->info('- Manager HRD: 2');
@@ -424,6 +472,71 @@ class PerusahaanKaryawanSeeder extends Seeder
         $this->command->info('- Manager Finance: 1');
         $this->command->info('- Account Payment: 2');
         $this->command->info('- Karyawan: 100');
-        $this->command->info('Total: 112 karyawan');
+        $this->command->info('Total: 112 karyawan dengan kuota cuti 12 hari');
+        
+        // Log contoh perhitungan tunjangan
+        $this->command->info('');
+        $this->command->info('Contoh Perhitungan Tunjangan BULANAN (75% Rule):');
+        $this->command->info('- Gaji 10jt → Max Tunjangan: 3.33jt/bulan (Total: 13.33jt, Gaji=75%)');
+        $this->command->info('- Gaji 20jt → Max Tunjangan: 6.67jt/bulan (Total: 26.67jt, Gaji=75%)');
+    }
+
+    /**
+     * Hitung tunjangan bulanan yang realistis dengan rule: Gaji Pokok ≥ 75% dari Total
+     * Formula: Gaji Pokok ≥ 0.75 * (Gaji Pokok + Total Tunjangan)
+     * Atau: Total Tunjangan ≤ (Gaji Pokok / 0.75) - Gaji Pokok = Gaji Pokok * (1/0.75 - 1) = Gaji Pokok * 0.3333
+     */
+    private function calculateRealisticTunjanganBulanan(float $gajiPokok, string $level): array
+    {
+        // Maksimal total tunjangan agar gaji pokok tetap 75%
+        $maxTotalTunjangan = $gajiPokok * (1/0.75 - 1); // = $gajiPokok * 0.3333
+
+        // Distribusi tunjangan berdasarkan level jabatan - LANGSUNG BULANAN
+        switch ($level) {
+            case 'Executive': // CEO, Admin level tinggi
+                $tunjanganJabatan = $maxTotalTunjangan * 0.6; // 60% dari max
+                $tunjanganMakanBulanan = min(1650000, $maxTotalTunjangan * 0.2); // 20% atau max 1.65jt/bulan (~75k/hari)
+                $tunjanganTransportBulanan = $maxTotalTunjangan - $tunjanganJabatan - $tunjanganMakanBulanan;
+                break;
+                
+            case 'Manager': // Manager level
+                $tunjanganJabatan = $maxTotalTunjangan * 0.5; // 50% dari max
+                $tunjanganMakanBulanan = min(1100000, $maxTotalTunjangan * 0.25); // 25% atau max 1.1jt/bulan (~50k/hari)
+                $tunjanganTransportBulanan = $maxTotalTunjangan - $tunjanganJabatan - $tunjanganMakanBulanan;
+                break;
+                
+            case 'Staff':
+            default: // Staff dan karyawan biasa
+                $tunjanganJabatan = $maxTotalTunjangan * 0.4; // 40% dari max
+                $tunjanganMakanBulanan = min(770000, $maxTotalTunjangan * 0.3); // 30% atau max 770k/bulan (~35k/hari)
+                $tunjanganTransportBulanan = $maxTotalTunjangan - $tunjanganJabatan - $tunjanganMakanBulanan;
+                break;
+        }
+
+        // Pastikan tidak ada nilai negatif dan bulatkan
+        $tunjanganJabatan = max(0, round($tunjanganJabatan, -3)); // Bulatkan ke ribuan
+        $tunjanganMakanBulanan = max(0, round($tunjanganMakanBulanan, -3));
+        $tunjanganTransportBulanan = max(0, round($tunjanganTransportBulanan, -3));
+
+        // Validasi final: pastikan rule 75% terpenuhi
+        $totalTunjangan = $tunjanganJabatan + $tunjanganMakanBulanan + $tunjanganTransportBulanan;
+        $totalGaji = $gajiPokok + $totalTunjangan;
+        $persentaseGajiPokok = ($gajiPokok / $totalGaji) * 100;
+
+        // Jika masih belum 75%, adjust
+        if ($persentaseGajiPokok < 75) {
+            $factor = 0.75 / ($persentaseGajiPokok / 100);
+            $adjustedMaxTunjangan = $totalTunjangan / $factor;
+            
+            $tunjanganJabatan = round(($tunjanganJabatan / $totalTunjangan) * $adjustedMaxTunjangan, -3);
+            $tunjanganMakanBulanan = round(($tunjanganMakanBulanan / $totalTunjangan) * $adjustedMaxTunjangan, -3);
+            $tunjanganTransportBulanan = round(($tunjanganTransportBulanan / $totalTunjangan) * $adjustedMaxTunjangan, -3);
+        }
+
+        return [
+            'jabatan' => $tunjanganJabatan,
+            'makan' => $tunjanganMakanBulanan,
+            'transport' => $tunjanganTransportBulanan,
+        ];
     }
 }

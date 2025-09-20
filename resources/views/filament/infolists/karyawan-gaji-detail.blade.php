@@ -1,4 +1,5 @@
-{{-- filepath: resources/views/filament/infolists/karyawan-gaji-detail.blade.php --}}
+{{-- filepath:
+/home/ideapad/Dev/laravel/quanta-hris-laravel/resources/views/filament/infolists/karyawan-gaji-detail.blade.php --}}
 <x-filament-widgets::widget class="fi-karyawan-gaji-widget">
     <style>
         /* General Widget Styling */
@@ -262,7 +263,7 @@
             color: rgb(252 165 165);
         }
 
-        /* Detail breakdown untuk potongan */
+        /* Detail breakdown untuk potongan DAN tunjangan - UNIFIED STYLE */
         .breakdown-detail {
             font-size: 0.75rem;
             color: rgb(107 114 128);
@@ -311,7 +312,7 @@
             color: rgb(134 239 172);
         }
 
-        /* Pagination dengan Cyan Primary Color - UPDATED */
+        /* Pagination dengan Cyan Primary Color */
         .pagination-container {
             display: flex;
             justify-content: center;
@@ -364,11 +365,8 @@
 
         .pagination-links a:hover {
             background-color: rgb(236 254 255);
-            /* cyan-50 */
             border-color: rgb(6 182 212);
-            /* cyan-500 */
             color: rgb(14 116 144);
-            /* cyan-700 */
             transform: translateY(-1px);
             box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1);
         }
@@ -377,12 +375,10 @@
             background-color: rgb(6 182 212 / 0.1);
             border-color: rgb(6 182 212);
             color: rgb(103 232 249);
-            /* cyan-300 */
         }
 
         .pagination-links .current {
             background: linear-gradient(135deg, rgb(6 182 212), rgb(8 145 178));
-            /* cyan gradient */
             color: white;
             border-color: rgb(6 182 212);
             font-weight: 600;
@@ -515,11 +511,18 @@
                                     <span class="salary-value">Rp
                                         {{ number_format($karyawan['gaji_pokok'], 0, ',', '.') }}</span>
                                 </div>
-                                <div class="salary-item">
-                                    <span class="salary-label">Tunjangan:</span>
-                                    <span class="salary-value">Rp
-                                        {{ number_format($karyawan['tunjangan_total'], 0, ',', '.') }}</span>
-                                </div>
+
+                                <!-- BREAKDOWN TUNJANGAN - SETIAP ITEM TERPISAH -->
+                                @if(isset($karyawan['tunjangan_breakdown']) && !empty($karyawan['tunjangan_breakdown']['breakdown']))
+                                    @foreach($karyawan['tunjangan_breakdown']['breakdown'] as $item)
+                                        <div class="salary-item">
+                                            <span class="salary-label">{{ $item['label'] }}:</span>
+                                            <span class="salary-value salary-positive">Rp
+                                                {{ number_format($item['amount'], 0, ',', '.') }}</span>
+                                        </div>
+                                    @endforeach
+                                @endif
+
                                 @if($karyawan['total_lembur'] > 0)
                                     <div class="salary-item">
                                         <span class="salary-label">Upah Lembur:</span>
@@ -566,11 +569,33 @@
                                     </div>
                                 @endif
 
-                                <div class="salary-item">
-                                    <span class="salary-label">BPJS (4%):</span>
-                                    <span class="salary-value salary-negative">Rp
-                                        {{ number_format($karyawan['gaji_pokok'] * 0.04, 0, ',', '.') }}</span>
-                                </div>
+                                @if(isset($karyawan['bpjs_breakdown']) && !empty($karyawan['bpjs_breakdown']['breakdown']))
+                                    @foreach($karyawan['bpjs_breakdown']['breakdown'] as $item)
+                                        <div class="salary-item">
+                                            <span class="salary-label">{{ $item['label'] }}:</span>
+                                            <span class="salary-value salary-negative">Rp
+                                                {{ number_format($item['amount'], 0, ',', '.') }}</span>
+                                        </div>
+                                        <div class="breakdown-detail">
+                                            {{ $item['description'] }}
+                                        </div>
+                                    @endforeach
+
+                                    <!-- BPJS Summary Info -->
+                                    @if(isset($karyawan['bpjs_breakdown']['info']))
+                                        @php $info = $karyawan['bpjs_breakdown']['info']; @endphp
+                                    @endif
+                                @else
+                                    {{-- Fallback jika tidak ada breakdown --}}
+                                    <div class="salary-item">
+                                        <span class="salary-label">BPJS:</span>
+                                        <span class="salary-value salary-negative">Rp
+                                            {{ number_format($karyawan['gaji_pokok'] * 0.04, 0, ',', '.') }}</span>
+                                    </div>
+                                    <div class="breakdown-detail">
+                                        4% dari gaji pokok (estimasi)
+                                    </div>
+                                @endif
 
                                 <div class="salary-item">
                                     <span class="salary-label">Pajak PPh21:</span>
@@ -609,7 +634,7 @@
             </div>
         @endforeach
 
-        <!-- PAGINATION dengan Cyan Theme - FIXED & RESPONSIVE -->
+        <!-- PAGINATION -->
         @if(isset($pagination) && $pagination->hasPages())
             <div class="pagination-container">
                 <div class="pagination-links">

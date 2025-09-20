@@ -10,6 +10,7 @@ use App\Services\BpjsService;
 use App\Services\LemburService;
 use App\Services\PenaltyService;
 use App\Services\Pph21Service;
+use App\Services\TunjanganService;
 use Filament\Actions;
 use Filament\Resources\Pages\ViewRecord;
 use Filament\Infolists;
@@ -255,9 +256,11 @@ class ViewPenggajian extends ViewRecord
         'total_alfa' => $combinedData['total_alfa'],
         'total_tidak_tepat' => $combinedData['total_tidak_tepat'],
         'total_lembur' => round($combinedData['total_lembur_hours'], 1),
-        'total_lembur_sessions' => $combinedData['total_lembur_sessions'], // Jumlah sesi lembur
+        'total_lembur_sessions' => $combinedData['total_lembur_sessions'],
         'gaji_pokok' => $gajiData['gaji_pokok'],
         'tunjangan_total' => $gajiData['tunjangan_total'],
+        'tunjangan_breakdown' => $gajiData['tunjangan_breakdown'], // ← Tunjangan breakdown
+        'bpjs_breakdown' => $gajiData['bpjs_breakdown'], // ← BPJS breakdown - NEW!
         'lembur_pay' => $gajiData['lembur_pay'],
         'potongan_total' => $gajiData['potongan_total'],
         'total_gaji' => $gajiData['total_gaji'],
@@ -340,26 +343,28 @@ class ViewPenggajian extends ViewRecord
               $gajiPokok = $gajiData['gaji_pokok'];
 
               // Menggunakan service untuk perhitungan yang akurat
+              $tunjanganService = new TunjanganService();
               $potonganService = new PenaltyService();
               $bpjsService = new BpjsService();
 
+              $tunjanganData = $tunjanganService->calculateAllTunjangan($karyawan);
               $alfaData = $potonganService->calculateAlfaDeduction($karyawan, $combinedData['total_alfa']);
               $keterlambatanData = $potonganService->calculateKeterlambatanDeduction($karyawan, $combinedData['total_tidak_tepat']);
               $bpjsData = $bpjsService->calculateBpjsDeductions($karyawan);
               $individualPotonganPph21 = $pph21Service->calculateMonthlyPph21Deduction($karyawan);
+
+              // Akumulasi totals dengan data yang akurat
+              $totals['gaji_pokok'] += $gajiData['gaji_pokok'];
+              $totals['tunjangan'] += $tunjanganData['total_tunjangan']; // Dari service
+              $totals['lembur'] += $gajiData['lembur_pay'];
+              $totals['potongan'] += $gajiData['potongan_total'];
+              $totals['grand_total'] += $gajiData['total_gaji'];
 
               // Akumulasi debug dengan data yang akurat
               $debug['potongan_alfa'] += $alfaData['total_potongan'];
               $debug['potongan_terlambat'] += $keterlambatanData['total_potongan'];
               $debug['potongan_bpjs'] += $bpjsData['total_bpjs'];
               $debug['potongan_pph21'] += $individualPotonganPph21;
-
-              // Akumulasi totals
-              $totals['gaji_pokok'] += $gajiData['gaji_pokok'];
-              $totals['tunjangan'] += $gajiData['tunjangan_total'];
-              $totals['lembur'] += $gajiData['lembur_pay'];
-              $totals['potongan'] += $gajiData['potongan_total'];
-              $totals['grand_total'] += $gajiData['total_gaji'];
 
             } catch (\Exception $e) {
               Log::warning("Error calculating totals for karyawan {$karyawan->karyawan_id}: " . $e->getMessage());
@@ -578,19 +583,17 @@ class ViewPenggajian extends ViewRecord
   }
 
   /**
-   * Calculate salary components using real data from database
+   * Calculate salary components using real data from database - WITH BPJS BREAKDOWN
    */
   private function calculateGajiFromDatabase($karyawan, $combinedData): array
   {
     // Ambil gaji pokok dari database karyawan (REAL DATA)
     $gajiPokok = (float) $karyawan->gaji_pokok;
 
-    // Tunjangan (berdasarkan gaji pokok dari database)
-    $tunjanganJabatan = $gajiPokok * 0.15;
-    $tunjanganTransport = 500000;
-    $tunjanganMakan = 300000;
-    $tunjanganKeluarga = ($karyawan->status_pernikahan === 'Menikah') ? 400000 : 0;
-    $tunjanganTotal = $tunjanganJabatan + $tunjanganTransport + $tunjanganMakan + $tunjanganKeluarga;
+    // *** MENGGUNAKAN TUNJANGAN SERVICE ***
+    $tunjanganService = new TunjanganService();
+    $tunjanganData = $tunjanganService->calculateAllTunjangan($karyawan);
+    $tunjanganTotal = $tunjanganData['total_tunjangan'];
 
     // Upah lembur (gunakan total_insentif dari database)
     $lemburPay = $combinedData['total_lembur_insentif'] ?? 0;
@@ -598,25 +601,19 @@ class ViewPenggajian extends ViewRecord
     // Total penghasilan bruto
     $penghasilanBruto = $gajiPokok + $tunjanganTotal + $lemburPay;
 
-    // *** POTONGAN MENGGUNAKAN SERVICE BARU ***
-
-    // 1. Potongan Alfa menggunakan PenaltyService
+    // *** POTONGAN MENGGUNAKAN SERVICE ***
     $potonganService = new PenaltyService();
-    $alfaData = $potonganService->calculateAlfaDeduction($karyawan, $combinedData['total_alfa']);
-    $potonganAlfa = $alfaData['total_potongan'];
-
-    // 2. Potongan Keterlambatan menggunakan PenaltyService
-    $keterlambatanData = $potonganService->calculateKeterlambatanDeduction($karyawan, $combinedData['total_tidak_tepat']);
-    $potonganTidakTepat = $keterlambatanData['total_potongan'];
-
-    // 3. BPJS menggunakan BpjsService
     $bpjsService = new BpjsService();
-    $bpjsData = $bpjsService->calculateBpjsDeductions($karyawan);
-    $potonganBPJS = $bpjsData['total_bpjs'];
-
-    // 4. PPh21 menggunakan existing service
     $pph21Service = new Pph21Service();
+
+    $alfaData = $potonganService->calculateAlfaDeduction($karyawan, $combinedData['total_alfa']);
+    $keterlambatanData = $potonganService->calculateKeterlambatanDeduction($karyawan, $combinedData['total_tidak_tepat']);
+    $bpjsData = $bpjsService->calculateBpjsDeductions($karyawan); // ← Get full BPJS data
     $potonganPph21 = $pph21Service->calculateMonthlyPph21Deduction($karyawan);
+
+    $potonganAlfa = $alfaData['total_potongan'];
+    $potonganTidakTepat = $keterlambatanData['total_potongan'];
+    $potonganBPJS = $bpjsData['total_bpjs'];
 
     // Safety check untuk PPh21
     if ($potonganPph21 > ($penghasilanBruto * 0.3)) {
@@ -624,7 +621,6 @@ class ViewPenggajian extends ViewRecord
         'karyawan' => $karyawan->nama_lengkap,
         'penghasilan_bruto' => $penghasilanBruto,
         'pph21_amount' => $potonganPph21,
-        'pph21_percentage' => round(($potonganPph21 / $penghasilanBruto) * 100, 2) . '%'
       ]);
       $potonganPph21 = min($potonganPph21, $penghasilanBruto * 0.15);
     }
@@ -633,38 +629,12 @@ class ViewPenggajian extends ViewRecord
     $potonganTotal = $potonganAlfa + $potonganTidakTepat + $potonganBPJS + $potonganPph21;
     $totalGaji = $penghasilanBruto - $potonganTotal;
 
-    // Enhanced logging dengan service breakdown
-    if ($potonganTotal > ($penghasilanBruto * 0.5)) {
-      Log::warning("High deduction for karyawan {$karyawan->karyawan_id}", [
-        'karyawan' => $karyawan->nama_lengkap,
-        'penghasilan_bruto' => number_format($penghasilanBruto, 0, ',', '.'),
-        'potongan_breakdown' => [
-          'alfa' => [
-            'amount' => number_format($potonganAlfa, 0, ',', '.'),
-            'days' => $alfaData['jumlah_hari_alfa'],
-            'method' => $alfaData['breakdown']['metode_perhitungan']
-          ],
-          'terlambat' => [
-            'amount' => number_format($potonganTidakTepat, 0, ',', '.'),
-            'days' => $keterlambatanData['jumlah_hari_terlambat'],
-            'method' => $keterlambatanData['breakdown']['metode_perhitungan']
-          ],
-          'bpjs' => [
-            'amount' => number_format($potonganBPJS, 0, ',', '.'),
-            'kesehatan' => number_format($bpjsData['bpjs_kesehatan'], 0, ',', '.'),
-            'jht' => number_format($bpjsData['bpjs_jht'], 0, ',', '.'),
-            'jp' => number_format($bpjsData['bpjs_jp'], 0, ',', '.')
-          ],
-          'pph21' => number_format($potonganPph21, 0, ',', '.'),
-          'total' => number_format($potonganTotal, 0, ',', '.'),
-        ],
-        'potongan_percentage' => round(($potonganTotal / $penghasilanBruto) * 100, 2) . '%'
-      ]);
-    }
-
     return [
       'gaji_pokok' => $gajiPokok,
       'tunjangan_total' => $tunjanganTotal,
+      'tunjangan_detail' => $tunjanganData,
+      'tunjangan_breakdown' => $tunjanganService->getTunjanganBreakdown($karyawan),
+      'bpjs_breakdown' => $this->getBpjsBreakdown($bpjsData), // ← NEW: BPJS breakdown
       'lembur_pay' => $lemburPay,
       'potongan_total' => $potonganTotal,
       'total_gaji' => max(0, $totalGaji),
@@ -672,11 +642,65 @@ class ViewPenggajian extends ViewRecord
       'potongan_detail' => [
         'alfa' => $alfaData,
         'keterlambatan' => $keterlambatanData,
-        'bpjs' => $bpjsData,
+        'bpjs' => $potonganBPJS,
+        'bpjs_full' => $bpjsData, // ← Include full BPJS data
         'pph21' => $potonganPph21
       ]
     ];
   }
+
+  /**
+   * Get BPJS breakdown for display - NEW METHOD
+   */
+  private function getBpjsBreakdown($bpjsData): array
+  {
+    $breakdown = [];
+
+    // BPJS Kesehatan
+    if ($bpjsData['bpjs_kesehatan'] > 0) {
+      $batasKesehatan = $bpjsData['breakdown']['batas_kesehatan'] ?? 12000000;
+      $persenKesehatan = ($bpjsData['breakdown']['persen_kesehatan'] ?? 0.01) * 100;
+
+      $breakdown[] = [
+        'label' => 'BPJS Kesehatan',
+        'amount' => $bpjsData['bpjs_kesehatan'],
+        'description' => "{$persenKesehatan}% dari gaji (max Rp " . number_format($batasKesehatan, 0, ',', '.') . ")"
+      ];
+    }
+
+    // BPJS Jaminan Hari Tua (JHT)
+    if ($bpjsData['bpjs_jht'] > 0) {
+      $persenJht = ($bpjsData['breakdown']['persen_jht'] ?? 0.02) * 100;
+
+      $breakdown[] = [
+        'label' => 'BPJS JHT',
+        'amount' => $bpjsData['bpjs_jht'],
+        'description' => "{$persenJht}% dari gaji pokok (tanpa batas)"
+      ];
+    }
+
+    // BPJS Jaminan Pensiun (JP)
+    if ($bpjsData['bpjs_jp'] > 0) {
+      $batasPensiun = $bpjsData['breakdown']['batas_pensiun'] ?? 10547400;
+      $persenJp = ($bpjsData['breakdown']['persen_jp'] ?? 0.01) * 100;
+
+      $breakdown[] = [
+        'label' => 'BPJS Jaminan Pensiun',
+        'amount' => $bpjsData['bpjs_jp'],
+        'description' => "{$persenJp}% dari gaji (max Rp " . number_format($batasPensiun, 0, ',', '.') . ")"
+      ];
+    }
+
+    return [
+      'breakdown' => $breakdown,
+      'total_amount' => $bpjsData['total_bpjs'],
+      'info' => [
+        'gaji_pokok' => $bpjsData['breakdown']['gaji_pokok'] ?? 0,
+        'total_percentage' => round(($bpjsData['total_bpjs'] / ($bpjsData['breakdown']['gaji_pokok'] ?? 1)) * 100, 2),
+      ]
+    ];
+  }
+
 
   /**
    * Get detailed PPh21 calculation information
