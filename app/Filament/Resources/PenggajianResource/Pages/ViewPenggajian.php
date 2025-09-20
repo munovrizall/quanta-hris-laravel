@@ -265,6 +265,7 @@ class ViewPenggajian extends ViewRecord
         'potongan_total' => $gajiData['potongan_total'],
         'total_gaji' => $gajiData['total_gaji'],
         'pph21_detail' => $gajiData['pph21_detail'],
+        'potongan_detail' => $gajiData['potongan_detail'],
       ];
     }
 
@@ -654,17 +655,31 @@ class ViewPenggajian extends ViewRecord
       $pph21Detail['jumlah'] = $potonganPph21;
     }
 
+    // *** FIXED: Hitung total potongan dengan semua komponen yang benar ***
     $potonganTotal = $potonganAlfa + $potonganTidakTepat + $potonganBPJS + $potonganPph21;
     $totalGaji = $penghasilanBruto - $potonganTotal;
 
-    // *** DETAILED LOG - CONSISTENCY CHECK ***
-    Log::info("=== FINAL GAJI CALCULATION: {$karyawan->nama_lengkap} ({$karyawan->karyawan_id}) ===", [
+    // *** DETAILED DEBUG LOG - BREAKDOWN ALL DEDUCTIONS ***
+    Log::info("=== DETAILED POTONGAN BREAKDOWN: {$karyawan->nama_lengkap} ({$karyawan->karyawan_id}) ===", [
       'penghasilan_bruto' => 'Rp ' . number_format($penghasilanBruto, 0, ',', '.'),
-      'pph21_service_calculation' => 'Rp ' . number_format($potonganPph21, 0, ',', '.'),
-      'pph21_detail_jumlah' => 'Rp ' . number_format($pph21Detail['jumlah'], 0, ',', '.'),
-      'consistency_check' => ($pph21Detail['jumlah'] == $potonganPph21) ? 'CONSISTENT' : 'INCONSISTENT',
-      'total_potongan' => 'Rp ' . number_format($potonganTotal, 0, ',', '.'),
-      'total_gaji' => 'Rp ' . number_format($totalGaji, 0, ',', '.'),
+      'potongan_breakdown' => [
+        'alfa' => 'Rp ' . number_format($potonganAlfa, 0, ',', '.'),
+        'terlambat' => 'Rp ' . number_format($potonganTidakTepat, 0, ',', '.'),
+        'bpjs_kesehatan' => 'Rp ' . number_format($bpjsData['bpjs_kesehatan'], 0, ',', '.'),
+        'bpjs_jht' => 'Rp ' . number_format($bpjsData['bpjs_jht'], 0, ',', '.'),
+        'bpjs_jp' => 'Rp ' . number_format($bpjsData['bpjs_jp'], 0, ',', '.'),
+        'total_bpjs' => 'Rp ' . number_format($potonganBPJS, 0, ',', '.'),
+        'pph21' => 'Rp ' . number_format($potonganPph21, 0, ',', '.'),
+      ],
+      'calculation_check' => [
+        'manual_sum' => 'Rp ' . number_format($potonganAlfa + $potonganTidakTepat + $potonganBPJS + $potonganPph21, 0, ',', '.'),
+        'total_potongan' => 'Rp ' . number_format($potonganTotal, 0, ',', '.'),
+        'match' => ($potonganTotal == ($potonganAlfa + $potonganTidakTepat + $potonganBPJS + $potonganPph21)) ? 'VALID' : 'ERROR',
+      ],
+      'final_result' => [
+        'total_gaji' => 'Rp ' . number_format($totalGaji, 0, ',', '.'),
+        'formula_check' => 'Rp ' . number_format($penghasilanBruto - $potonganTotal, 0, ',', '.'),
+      ],
     ]);
 
     return [
@@ -676,13 +691,17 @@ class ViewPenggajian extends ViewRecord
       'lembur_pay' => $lemburPay,
       'potongan_total' => $potonganTotal,
       'total_gaji' => max(0, $totalGaji),
-      'pph21_detail' => $pph21Detail, // ← This should now have consistent values
+      'pph21_detail' => $pph21Detail,
       'potongan_detail' => [
         'alfa' => $alfaData,
         'keterlambatan' => $keterlambatanData,
         'bpjs' => $potonganBPJS,
         'bpjs_full' => $bpjsData,
-        'pph21' => $potonganPph21
+        'pph21' => $potonganPph21,
+        // *** ADD INDIVIDUAL BPJS COMPONENTS FOR DEBUG ***
+        'bpjs_kesehatan' => $bpjsData['bpjs_kesehatan'],
+        'bpjs_jht' => $bpjsData['bpjs_jht'],
+        'bpjs_jp' => $bpjsData['bpjs_jp'],
       ]
     ];
   }

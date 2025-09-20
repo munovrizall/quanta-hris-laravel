@@ -534,11 +534,11 @@
                                     </div>
                                 @endif
 
-                                 <div class="salary-item"
+                                <div class="salary-item"
                                     style="margin-top: 0.5rem; padding-top: 0.5rem; border-top: 1px solid rgb(229 231 235);">
                                     <span class="salary-label" style="font-weight: 600;">Total Pendapatan:</span>
                                     <span class="salary-value salary-positive">Rp
-                                         {{ number_format($karyawan['pph21_detail']['penghasilan_bruto'], 0, ',', '.') }}
+                                        {{ number_format($karyawan['pph21_detail']['penghasilan_bruto'], 0, ',', '.') }}
                                     </span>
                                 </div>
                             </div>
@@ -557,26 +557,31 @@
                                     <div class="salary-item">
                                         <span class="salary-label">Potongan Alfa:</span>
                                         <span class="salary-value salary-negative">Rp
-                                            {{ number_format($karyawan['total_alfa'] * (($karyawan['gaji_pokok'] / (22 * 8)) * 8), 0, ',', '.') }}</span>
+                                            {{-- ✅ GUNAKAN DATA DARI SERVICE, BUKAN MANUAL CALCULATION --}}
+                                            {{ number_format($karyawan['potongan_detail']['alfa']['total_potongan'], 0, ',', '.') }}
+                                        </span>
                                     </div>
                                     <div class="breakdown-detail">
                                         {{ $karyawan['total_alfa'] }} hari × Rp
-                                        {{ number_format(($karyawan['gaji_pokok'] / (22 * 8)) * 8, 0, ',', '.') }}/hari
+                                        {{ number_format($karyawan['potongan_detail']['alfa']['potongan_per_hari'], 0, ',', '.') }}/hari
                                     </div>
                                 @endif
-
+                                
                                 @if($karyawan['total_tidak_tepat'] > 0)
                                     <div class="salary-item">
                                         <span class="salary-label">Potongan Terlambat:</span>
                                         <span class="salary-value salary-negative">Rp
-                                            {{ number_format($karyawan['total_tidak_tepat'] * (($karyawan['gaji_pokok'] / (22 * 8)) * 4), 0, ',', '.') }}</span>
+                                            {{-- ✅ GUNAKAN DATA DARI SERVICE, BUKAN MANUAL CALCULATION --}}
+                                            {{ number_format($karyawan['potongan_detail']['keterlambatan']['total_potongan'], 0, ',', '.') }}
+                                        </span>
                                     </div>
                                     <div class="breakdown-detail">
                                         {{ $karyawan['total_tidak_tepat'] }} hari × Rp
-                                        {{ number_format(($karyawan['gaji_pokok'] / (22 * 8)) * 4, 0, ',', '.') }}/hari
+                                        {{ number_format($karyawan['potongan_detail']['keterlambatan']['potongan_per_hari'], 0, ',', '.') }}/hari
                                     </div>
                                 @endif
 
+                                {{-- BPJS Components - sudah benar --}}
                                 @if(isset($karyawan['bpjs_breakdown']) && !empty($karyawan['bpjs_breakdown']['breakdown']))
                                     @foreach($karyawan['bpjs_breakdown']['breakdown'] as $item)
                                         <div class="salary-item">
@@ -588,23 +593,9 @@
                                             {{ $item['description'] }}
                                         </div>
                                     @endforeach
-
-                                    <!-- BPJS Summary Info -->
-                                    @if(isset($karyawan['bpjs_breakdown']['info']))
-                                        @php $info = $karyawan['bpjs_breakdown']['info']; @endphp
-                                    @endif
-                                @else
-                                    {{-- Fallback jika tidak ada breakdown --}}
-                                    <div class="salary-item">
-                                        <span class="salary-label">BPJS:</span>
-                                        <span class="salary-value salary-negative">Rp
-                                            {{ number_format($karyawan['gaji_pokok'] * 0.04, 0, ',', '.') }}</span>
-                                    </div>
-                                    <div class="breakdown-detail">
-                                        4% dari gaji pokok (estimasi)
-                                    </div>
                                 @endif
 
+                                {{-- PPh21 - sudah benar --}}
                                 <div class="salary-item">
                                     <span class="salary-label">Pajak PPh21:</span>
                                     <span class="salary-value salary-negative">Rp
@@ -619,6 +610,7 @@
                                     ({{ $karyawan['pph21_detail']['kategori_ter'] }})
                                 </div>
 
+                                {{-- Total Potongan - gunakan dari service --}}
                                 <div class="salary-item"
                                     style="margin-top: 0.5rem; padding-top: 0.5rem; border-top: 1px solid rgb(229 231 235);">
                                     <span class="salary-label" style="font-weight: 600;">Total Potongan:</span>
