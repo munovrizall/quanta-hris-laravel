@@ -299,7 +299,6 @@ class ViewPenggajian extends ViewRecord
         'grand_total' => 0
       ];
 
-      // Debug breakdown
       $debug = [
         'potongan_alfa' => 0,
         'potongan_terlambat' => 0,
@@ -337,28 +336,41 @@ class ViewPenggajian extends ViewRecord
               ];
 
               $combinedData = array_merge($karyawanAbsensi, $karyawanLembur);
-              $gajiData = $this->calculateGajiFromDatabase($karyawan, $combinedData);
-
-              // Debug individual components
-              $gajiPokok = $gajiData['gaji_pokok'];
 
               // Menggunakan service untuk perhitungan yang akurat
               $tunjanganService = new TunjanganService();
               $potonganService = new PenaltyService();
               $bpjsService = new BpjsService();
 
+              $gajiPokok = (float) $karyawan->gaji_pokok;
               $tunjanganData = $tunjanganService->calculateAllTunjangan($karyawan);
+              $lemburPay = $combinedData['total_lembur_insentif'];
+
+              // *** FIXED: Hitung penghasilan bruto untuk PPh21 ***
+              $penghasilanBruto = $gajiPokok + $tunjanganData['total_tunjangan'] + $lemburPay;
+
               $alfaData = $potonganService->calculateAlfaDeduction($karyawan, $combinedData['total_alfa']);
               $keterlambatanData = $potonganService->calculateKeterlambatanDeduction($karyawan, $combinedData['total_tidak_tepat']);
               $bpjsData = $bpjsService->calculateBpjsDeductions($karyawan);
-              $individualPotonganPph21 = $pph21Service->calculateMonthlyPph21Deduction($karyawan);
+
+              // *** FIXED: Gunakan penghasilan bruto untuk PPh21 ***
+              $individualPotonganPph21 = $pph21Service->calculateMonthlyPph21Deduction($karyawan, $penghasilanBruto);
+
+              // Safety check PPh21
+              if ($individualPotonganPph21 > ($penghasilanBruto * 0.3)) {
+                Log::warning("PPh21 too high in totals calculation for karyawan {$karyawan->karyawan_id}");
+                $individualPotonganPph21 = min($individualPotonganPph21, $penghasilanBruto * 0.15);
+              }
+
+              $totalPotongan = $alfaData['total_potongan'] + $keterlambatanData['total_potongan'] + $bpjsData['total_bpjs'] + $individualPotonganPph21;
+              $totalGaji = $penghasilanBruto - $totalPotongan;
 
               // Akumulasi totals dengan data yang akurat
-              $totals['gaji_pokok'] += $gajiData['gaji_pokok'];
-              $totals['tunjangan'] += $tunjanganData['total_tunjangan']; // Dari service
-              $totals['lembur'] += $gajiData['lembur_pay'];
-              $totals['potongan'] += $gajiData['potongan_total'];
-              $totals['grand_total'] += $gajiData['total_gaji'];
+              $totals['gaji_pokok'] += $gajiPokok;
+              $totals['tunjangan'] += $tunjanganData['total_tunjangan'];
+              $totals['lembur'] += $lemburPay;
+              $totals['potongan'] += $totalPotongan;
+              $totals['grand_total'] += $totalGaji;
 
               // Akumulasi debug dengan data yang akurat
               $debug['potongan_alfa'] += $alfaData['total_potongan'];
@@ -373,7 +385,7 @@ class ViewPenggajian extends ViewRecord
         });
 
       // Detailed logging dengan breakdown
-      Log::info("=== DETAILED TOTALS BREAKDOWN ===", [
+      Log::info("=== DETAILED TOTALS BREAKDOWN (FIXED PPh21) ===", [
         'total_karyawan' => $debug['karyawan_count'],
         'gaji_pokok' => 'Rp ' . number_format($totals['gaji_pokok'], 0, ',', '.'),
         'tunjangan' => 'Rp ' . number_format($totals['tunjangan'], 0, ',', '.'),
@@ -381,8 +393,8 @@ class ViewPenggajian extends ViewRecord
         'potongan_breakdown' => [
           'alfa' => 'Rp ' . number_format($debug['potongan_alfa'], 0, ',', '.'),
           'terlambat' => 'Rp ' . number_format($debug['potongan_terlambat'], 0, ',', '.'),
-          'bpjs_4persen' => 'Rp ' . number_format($debug['potongan_bpjs'], 0, ',', '.'),
-          'pph21' => 'Rp ' . number_format($debug['potongan_pph21'], 0, ',', '.'),
+          'bpjs' => 'Rp ' . number_format($debug['potongan_bpjs'], 0, ',', '.'),
+          'pph21_from_bruto' => 'Rp ' . number_format($debug['potongan_pph21'], 0, ',', '.'),
           'total_potongan' => 'Rp ' . number_format($totals['potongan'], 0, ',', '.'),
         ],
         'grand_total' => 'Rp ' . number_format($totals['grand_total'], 0, ',', '.'),
@@ -608,8 +620,10 @@ class ViewPenggajian extends ViewRecord
 
     $alfaData = $potonganService->calculateAlfaDeduction($karyawan, $combinedData['total_alfa']);
     $keterlambatanData = $potonganService->calculateKeterlambatanDeduction($karyawan, $combinedData['total_tidak_tepat']);
-    $bpjsData = $bpjsService->calculateBpjsDeductions($karyawan); // ← Get full BPJS data
-    $potonganPph21 = $pph21Service->calculateMonthlyPph21Deduction($karyawan);
+    $bpjsData = $bpjsService->calculateBpjsDeductions($karyawan);
+
+    // *** CONSISTENT: Menggunakan penghasilan bruto untuk PPh21 ***
+    $potonganPph21 = $pph21Service->calculateMonthlyPph21Deduction($karyawan, $penghasilanBruto);
 
     $potonganAlfa = $alfaData['total_potongan'];
     $potonganTidakTepat = $keterlambatanData['total_potongan'];
@@ -625,25 +639,49 @@ class ViewPenggajian extends ViewRecord
       $potonganPph21 = min($potonganPph21, $penghasilanBruto * 0.15);
     }
 
+    // *** FIXED: Pastikan getPph21Detail menggunakan penghasilan bruto yang sama ***
     $pph21Detail = $this->getPph21Detail($karyawan, $penghasilanBruto);
+
+    // *** CONSISTENCY CHECK: Pastikan nilai sama ***
+    if (abs($pph21Detail['jumlah'] - $potonganPph21) > 1) { // Allow 1 rupiah difference due to rounding
+      Log::warning("PPh21 calculation inconsistency for karyawan {$karyawan->karyawan_id}", [
+        'pph21_detail_jumlah' => $pph21Detail['jumlah'],
+        'potongan_pph21' => $potonganPph21,
+        'difference' => abs($pph21Detail['jumlah'] - $potonganPph21),
+      ]);
+
+      // Use the consistent value
+      $pph21Detail['jumlah'] = $potonganPph21;
+    }
+
     $potonganTotal = $potonganAlfa + $potonganTidakTepat + $potonganBPJS + $potonganPph21;
     $totalGaji = $penghasilanBruto - $potonganTotal;
+
+    // *** DETAILED LOG - CONSISTENCY CHECK ***
+    Log::info("=== FINAL GAJI CALCULATION: {$karyawan->nama_lengkap} ({$karyawan->karyawan_id}) ===", [
+      'penghasilan_bruto' => 'Rp ' . number_format($penghasilanBruto, 0, ',', '.'),
+      'pph21_service_calculation' => 'Rp ' . number_format($potonganPph21, 0, ',', '.'),
+      'pph21_detail_jumlah' => 'Rp ' . number_format($pph21Detail['jumlah'], 0, ',', '.'),
+      'consistency_check' => ($pph21Detail['jumlah'] == $potonganPph21) ? 'CONSISTENT' : 'INCONSISTENT',
+      'total_potongan' => 'Rp ' . number_format($potonganTotal, 0, ',', '.'),
+      'total_gaji' => 'Rp ' . number_format($totalGaji, 0, ',', '.'),
+    ]);
 
     return [
       'gaji_pokok' => $gajiPokok,
       'tunjangan_total' => $tunjanganTotal,
       'tunjangan_detail' => $tunjanganData,
       'tunjangan_breakdown' => $tunjanganService->getTunjanganBreakdown($karyawan),
-      'bpjs_breakdown' => $this->getBpjsBreakdown($bpjsData), // ← NEW: BPJS breakdown
+      'bpjs_breakdown' => $this->getBpjsBreakdown($bpjsData),
       'lembur_pay' => $lemburPay,
       'potongan_total' => $potonganTotal,
       'total_gaji' => max(0, $totalGaji),
-      'pph21_detail' => $pph21Detail,
+      'pph21_detail' => $pph21Detail, // ← This should now have consistent values
       'potongan_detail' => [
         'alfa' => $alfaData,
         'keterlambatan' => $keterlambatanData,
         'bpjs' => $potonganBPJS,
-        'bpjs_full' => $bpjsData, // ← Include full BPJS data
+        'bpjs_full' => $bpjsData,
         'pph21' => $potonganPph21
       ]
     ];
@@ -733,11 +771,24 @@ class ViewPenggajian extends ViewRecord
       $kategoriTer = $golonganPtkp->kategoriTer?->nama_kategori ?? 'TER-' . $golonganPtkp->kategori_ter_id;
     }
 
+    // *** FIXED: Hitung PPh21 menggunakan penghasilan bruto yang benar ***
     $pph21Service = new Pph21Service();
-    $jumlahPph21 = $pph21Service->calculateMonthlyPph21Deduction($karyawan);
+    $jumlahPph21 = $pph21Service->calculateMonthlyPph21Deduction($karyawan, $penghasilanBruto); // ← Pass penghasilan bruto
+
+    // *** DEBUG LOG - Check calculation consistency ***
+    Log::info("=== PPh21 DETAIL CHECK: {$karyawan->nama_lengkap} ===", [
+      'penghasilan_bruto_passed' => $penghasilanBruto,
+      'pph21_calculated' => $jumlahPph21,
+      'tarif_persen' => $tarifPersen,
+      'tarif_ter_info' => $tarifTer ? [
+        'batas_bawah' => $tarifTer->batas_bawah,
+        'batas_atas' => $tarifTer->batas_atas,
+        'tarif' => $tarifTer->tarif,
+      ] : 'null'
+    ]);
 
     return [
-      'jumlah' => $jumlahPph21,
+      'jumlah' => $jumlahPph21, // ← This should match the calculation
       'tarif_persen' => $tarifPersen,
       'golongan_ptkp' => $golonganPtkp->nama_golongan_ptkp,
       'kategori_ter' => $kategoriTer,

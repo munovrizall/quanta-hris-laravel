@@ -533,6 +533,14 @@
                                         {{ $karyawan['total_lembur'] }} jam ({{ $karyawan['total_lembur_sessions'] }} sesi)
                                     </div>
                                 @endif
+
+                                 <div class="salary-item"
+                                    style="margin-top: 0.5rem; padding-top: 0.5rem; border-top: 1px solid rgb(229 231 235);">
+                                    <span class="salary-label" style="font-weight: 600;">Total Pendapatan:</span>
+                                    <span class="salary-value salary-positive">Rp
+                                         {{ number_format($karyawan['pph21_detail']['penghasilan_bruto'], 0, ',', '.') }}
+                                    </span>
+                                </div>
                             </div>
                         </div>
 
