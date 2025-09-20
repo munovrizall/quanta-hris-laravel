@@ -63,8 +63,8 @@ class PenaltyService
 
       $gajiPokok = (float) $karyawan->gaji_pokok;
 
-      // Asumsi: 22 hari kerja per bulan, 8 jam per hari
-      $gajiPerHari = $gajiPokok / 22;
+      // Asumsi: 21 hari kerja per bulan, 8 jam per hari
+      $gajiPerHari = $gajiPokok / 21;
       $totalPotongan = $gajiPerHari * $jumlahHariAlfa;
 
       return [
@@ -74,7 +74,7 @@ class PenaltyService
         'breakdown' => [
           'gaji_pokok' => $gajiPokok,
           'gaji_per_hari' => $gajiPerHari,
-          'hari_kerja_per_bulan' => 22,
+          'hari_kerja_per_bulan' => 21,
           'metode_perhitungan' => 'Full day deduction',
         ]
       ];
@@ -101,18 +101,18 @@ class PenaltyService
 
     // Jika potongan_setting berupa persentase (misal: 0.5 = 0.5% dari gaji harian)
     if ($potonganSetting < 1 && $potonganSetting > 0) {
-      $gajiPerHari = $gajiPokok / 22; // 22 hari kerja
+      $gajiPerHari = $gajiPokok / 21; // 21 hari kerja
       return ($gajiPerHari * $potonganSetting) * $jumlahHari;
     }
 
     // Jika potongan_setting berupa jam (misal: 4 = 4 jam per hari terlambat)
     if ($potonganSetting >= 1 && $potonganSetting <= 8) {
-      $gajiPerJam = $gajiPokok / (22 * 8); // Per jam
+      $gajiPerJam = $gajiPokok / (21 * 8); // Per jam
       return ($gajiPerJam * $potonganSetting) * $jumlahHari;
     }
 
     // Default fallback: 4 jam per hari terlambat
-    $gajiPerJam = $gajiPokok / (22 * 8);
+    $gajiPerJam = $gajiPokok / (21 * 8);
     return ($gajiPerJam * 4) * $jumlahHari;
   }
 
