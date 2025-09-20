@@ -54,41 +54,51 @@ class PenaltyService
    * @param int $jumlahHariAlfa
    * @return array
    */
-  public function calculateAlfaDeduction(Karyawan $karyawan, int $jumlahHariAlfa): array
+  public function calculateAlfaDeduction(Karyawan $karyawan, int $jumlahHariAlfa, int $hariKerjaPerBulan = 22): array
   {
     try {
       if ($jumlahHariAlfa <= 0) {
-        return $this->getEmptyPotonganData();
+        return $this->getEmptyAlfaData(); // Helper baru untuk data kosong
       }
 
-      $gajiPokok = (float) $karyawan->gaji_pokok;
+      // PASTIKAN HARI KERJA TIDAK NOL UNTUK MENGHINDARI ERROR
+      if ($hariKerjaPerBulan === 0) {
+        throw new \Exception("Hari kerja per bulan tidak boleh nol.");
+      }
 
-      // Asumsi: 21 hari kerja per bulan, 8 jam per hari
-      $gajiPerHari = $gajiPokok / 21;
-      $totalPotongan = $gajiPerHari * $jumlahHariAlfa;
+      // LANGKAH 1: HITUNG KOMPONEN GAJI TETAP
+      $upahTetapSebulan = (float) $karyawan->gaji_pokok + (float) $karyawan->tunjangan_jabatan;
+      $potonganUpahTetapPerHari = $upahTetapSebulan / $hariKerjaPerBulan;
+
+      // LANGKAH 2: HITUNG KOMPONEN TUNJANGAN HARIAN YANG HANGUS
+      $potonganTunjanganTidakTetapHarian = (float) $karyawan->tunjangan_makan_harian + (float) $karyawan->tunjangan_transport_harian;
+
+      // LANGKAH 3: JUMLAHKAN KEDUANYA UNTUK DAPAT POTONGAN TOTAL PER HARI
+      $totalPotonganPerHari = $potonganUpahTetapPerHari + $potonganTunjanganTidakTetapHarian;
+      $totalPotongan = $totalPotonganPerHari * $jumlahHariAlfa;
 
       return [
-        'total_potongan' => $totalPotongan,
+        'total_potongan' => round($totalPotongan),
         'jumlah_hari_alfa' => $jumlahHariAlfa,
-        'potongan_per_hari' => $gajiPerHari,
+        'potongan_per_hari' => round($totalPotonganPerHari),
         'breakdown' => [
-          'gaji_pokok' => $gajiPokok,
-          'gaji_per_hari' => $gajiPerHari,
-          'hari_kerja_per_bulan' => 21,
-          'metode_perhitungan' => 'Full day deduction',
+          'upah_tetap_sebulan' => $upahTetapSebulan,
+          'potongan_upah_tetap_harian' => round($potonganUpahTetapPerHari),
+          'potongan_tunjangan_harian' => round($potonganTunjanganTidakTetapHarian),
+          'hari_kerja_per_bulan' => $hariKerjaPerBulan,
+          'metode_perhitungan' => 'Upah Tetap Harian + Tunjangan Harian',
         ]
       ];
-
     } catch (\Exception $e) {
       Log::error("Error calculating alfa deduction for karyawan {$karyawan->karyawan_id}: " . $e->getMessage());
-      return $this->getEmptyPotonganData();
+      return $this->getEmptyAlfaData();
     }
   }
 
   /**
    * Calculate based on deduction type stored in database
    */
-  private function calculateByDeductionType(float $gajiPokok, int $jumlahHari, float $potonganSetting): float
+  private function calculateByDeductionType(float $gajiPokok, int $jumlahHari, float $potonganSetting, int $hariKerjaPerBulan = 22): float
   {
     if ($potonganSetting <= 0) {
       return 0;
@@ -101,18 +111,18 @@ class PenaltyService
 
     // Jika potongan_setting berupa persentase (misal: 0.5 = 0.5% dari gaji harian)
     if ($potonganSetting < 1 && $potonganSetting > 0) {
-      $gajiPerHari = $gajiPokok / 21; // 21 hari kerja
+      $gajiPerHari = $gajiPokok / $hariKerjaPerBulan; // Hari kerja per bulan
       return ($gajiPerHari * $potonganSetting) * $jumlahHari;
     }
 
     // Jika potongan_setting berupa jam (misal: 4 = 4 jam per hari terlambat)
     if ($potonganSetting >= 1 && $potonganSetting <= 8) {
-      $gajiPerJam = $gajiPokok / (21 * 8); // Per jam
+      $gajiPerJam = $gajiPokok / ($hariKerjaPerBulan * 8); // Per jam
       return ($gajiPerJam * $potonganSetting) * $jumlahHari;
     }
 
     // Default fallback: 4 jam per hari terlambat
-    $gajiPerJam = $gajiPokok / (21 * 8);
+    $gajiPerJam = $gajiPokok / ($hariKerjaPerBulan * 8);
     return ($gajiPerJam * 4) * $jumlahHari;
   }
 
@@ -169,6 +179,16 @@ class PenaltyService
         'potongan_setting' => 0,
         'metode_perhitungan' => 'N/A',
       ]
+    ];
+  }
+
+  private function getEmptyAlfaData(): array
+  {
+    return [
+      'total_potongan' => 0,
+      'jumlah_hari_alfa' => 0,
+      'potongan_per_hari' => 0,
+      'breakdown' => []
     ];
   }
 }
