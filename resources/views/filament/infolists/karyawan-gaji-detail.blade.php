@@ -107,11 +107,18 @@
             color: rgb(196 181 253);
         }
 
-        /* Attendance Stats */
+        /* Attendance Stats - Updated to 3x2 Grid */
         .attendance-stats {
             display: grid;
             grid-template-columns: repeat(2, 1fr);
             gap: 0.75rem;
+        }
+
+        /* Mobile responsive untuk attendance */
+        @media (max-width: 640px) {
+            .attendance-stats {
+                grid-template-columns: repeat(2, 1fr);
+            }
         }
 
         .attendance-item {
@@ -173,14 +180,34 @@
             color: rgb(253 230 138);
         }
 
+        .attendance-cuti {
+            background-color: rgb(235 245 255);
+            color: rgb(29 78 216);
+        }
+
+        .dark .attendance-cuti {
+            background-color: rgb(29 78 216 / 0.5);
+            color: rgb(147 197 253);
+        }
+
+        .attendance-izin {
+            background-color: rgb(243 232 255);
+            color: rgb(126 34 206);
+        }
+
+        .dark .attendance-izin {
+            background-color: rgb(126 34 206 / 0.5);
+            color: rgb(196 181 253);
+        }
+
         .attendance-lembur {
-            background-color: rgb(219 234 254);
-            color: rgb(30 64 175);
+            background-color: rgb(209 250 229); /* emerald-100 */
+            color: rgb(4 120 87); /* emerald-700 */
         }
 
         .dark .attendance-lembur {
-            background-color: rgb(30 64 175 / 0.5);
-            color: rgb(147 197 253);
+            background-color: rgb(4 120 87 / 0.5); /* emerald-700 with opacity */
+            color: rgb(110 231 183); /* emerald-300 */
         }
 
         /* Right Column - Salary Details */
@@ -463,7 +490,7 @@
                             </div>
                         </div>
 
-                        <!-- Attendance Stats -->
+                        <!-- Attendance Stats - Now 3x2 Grid -->
                         <div class="attendance-stats">
                             <div class="attendance-item">
                                 <span class="attendance-value attendance-hadir">
@@ -482,6 +509,18 @@
                                     {{ $karyawan['total_tidak_tepat'] }}
                                 </span>
                                 <span class="attendance-label">Tidak Tepat</span>
+                            </div>
+                            <div class="attendance-item">
+                                <span class="attendance-value attendance-cuti">
+                                    {{ $karyawan['total_cuti'] }}
+                                </span>
+                                <span class="attendance-label">Cuti</span>
+                            </div>
+                            <div class="attendance-item">
+                                <span class="attendance-value attendance-izin">
+                                    {{ $karyawan['total_izin'] }}
+                                </span>
+                                <span class="attendance-label">Izin</span>
                             </div>
                             <div class="attendance-item">
                                 <span class="attendance-value attendance-lembur">
@@ -566,7 +605,7 @@
                                         {{ number_format($karyawan['potongan_detail']['alfa']['potongan_per_hari'], 0, ',', '.') }}/hari
                                     </div>
                                 @endif
-                                
+
                                 @if($karyawan['total_tidak_tepat'] > 0)
                                     <div class="salary-item">
                                         <span class="salary-label">Potongan Terlambat:</span>
