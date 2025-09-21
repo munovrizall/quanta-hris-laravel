@@ -47,7 +47,6 @@ class LemburService
       // Langkah 3: Hitung upah per jam dengan RUMUS RESMI (dibagi 173)
       $gajiPokok = (float) ($karyawan->gaji_pokok ?? 0);
 
-      // TODO: Jika ada tunjangan tetap, bisa ditambahkan di sini
       $upahSebulan = $gajiPokok; // + tunjangan_tetap jika ada
 
       if ($upahSebulan <= 0) {

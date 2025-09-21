@@ -36,6 +36,14 @@ class CutiSeeder extends Seeder
             return;
         }
 
+        // ✅ CLEAR existing cuti data untuk menghindari duplikasi
+        $this->command->info('Clearing existing cuti data...');
+        Cuti::truncate();
+
+        // ✅ UPDATE: Sesuaikan dengan periode yang sama dengan AbsensiSeeder
+        $startDate = Carbon::now()->subMonthNoOverflow()->startOfMonth();
+        $endDate = Carbon::now()->endOfMonth();
+
         $cutiData = [];
         $counter = 1;
 
@@ -52,6 +60,7 @@ class CutiSeeder extends Seeder
 
         // Keterangan yang realistis berdasarkan jenis cuti
         $keteranganPerJenis = [
+            // ...existing code... (sama seperti sebelumnya)
             'Cuti Tahunan' => [
                 'Berlibur bersama keluarga ke Bali selama 5 hari',
                 'Mengambil cuti tahunan untuk istirahat dan refreshing',
@@ -99,98 +108,124 @@ class CutiSeeder extends Seeder
             ]
         ];
 
-        // Generate 100 data cuti
-        for ($i = 1; $i <= 100; $i++) {
-            // Pilih karyawan secara random
-            $karyawan = $karyawans->random();
+        // ✅ GENERATE: Setiap karyawan berpotensi punya 1-2 periode cuti dalam 2 bulan
+        foreach ($karyawans as $karyawan) {
+            // 60% chance karyawan punya cuti dalam periode ini (turun dari 70%)
+            if (!$faker->boolean(60))
+                continue;
 
-            // Tentukan jenis cuti berdasarkan probabilitas
-            $randomNum = $faker->numberBetween(1, 100);
-            $jenisCuti = 'Cuti Tahunan'; // default
-            $cumulativeProbability = 0;
+            $jumlahCuti = $faker->numberBetween(1, 2); // 1-2 periode cuti per karyawan
 
-            foreach ($jenisCutiProbability as $jenis => $probability) {
-                $cumulativeProbability += $probability;
-                if ($randomNum <= $cumulativeProbability) {
-                    $jenisCuti = $jenis;
-                    break;
+            for ($c = 0; $c < $jumlahCuti; $c++) {
+                // Tentukan jenis cuti berdasarkan probabilitas
+                $randomNum = $faker->numberBetween(1, 100);
+                $jenisCuti = 'Cuti Tahunan'; // default
+                $cumulativeProbability = 0;
+
+                foreach ($jenisCutiProbability as $jenis => $probability) {
+                    $cumulativeProbability += $probability;
+                    if ($randomNum <= $cumulativeProbability) {
+                        $jenisCuti = $jenis;
+                        break;
+                    }
                 }
-            }
 
-            // Generate tanggal cuti (dalam 3 bulan terakhir sampai 1 bulan ke depan)
-            $tanggalMulai = $faker->dateTimeBetween('-3 months', '+1 month');
+                // ✅ GENERATE tanggal cuti dalam periode yang benar
+                $tanggalMulai = $faker->dateTimeBetween($startDate, $endDate->copy()->subDays(7)); // Leave some buffer
 
-            // Tentukan durasi berdasarkan jenis cuti
-            $durasi = match ($jenisCuti) {
-                'Cuti Tahunan' => $faker->numberBetween(2, 7),      // 2-7 hari
-                'Cuti Sakit' => $faker->numberBetween(1, 5),        // 1-5 hari
-                'Cuti Menikah' => $faker->numberBetween(3, 7),      // 3-7 hari
-                'Cuti Melahirkan' => $faker->numberBetween(90, 180), // 3-6 bulan
-                'Cuti Besar' => $faker->numberBetween(14, 30),      // 2-4 minggu
-                'Cuti Khusus' => $faker->numberBetween(1, 3),       // 1-3 hari
-                'Cuti Tanpa Gaji' => $faker->numberBetween(7, 14),  // 1-2 minggu
-                default => $faker->numberBetween(1, 3)
-            };
+                // Pastikan tanggal mulai adalah hari kerja (Senin-Jumat)
+                while (in_array((int) $tanggalMulai->format('N'), [6, 7])) { // 6=Saturday, 7=Sunday
+                    $tanggalMulai = $faker->dateTimeBetween($startDate, $endDate->copy()->subDays(7));
+                }
 
-            $tanggalSelesai = (clone $tanggalMulai)->modify("+{$durasi} days");
-
-            // 85% disetujui, 10% ditolak, 5% masih diajukan
-            $statusProbability = $faker->numberBetween(1, 100);
-
-            if ($statusProbability <= 85) {
-                $statusCuti = 'Disetujui';
-                $processedAt = (clone $tanggalMulai)->modify('-' . $faker->numberBetween(1, 7) . ' days'); // Diproses 1-7 hari sebelum cuti
-                $alasanPenolakan = null;
-            } elseif ($statusProbability <= 95) {
-                $statusCuti = 'Ditolak';
-                $processedAt = (clone $tanggalMulai)->modify('-' . $faker->numberBetween(1, 5) . ' days');
-                $alasanPenolakan = $faker->randomElement([
-                    'Periode cuti bertepatan dengan high season perusahaan, mohon diajukan ulang di periode lain',
-                    'Kuota cuti tahunan untuk periode ini sudah habis',
-                    'Tidak ada backup yang memadai untuk mengcover pekerjaan selama cuti',
-                    'Dokumen pendukung belum lengkap, silakan lengkapi terlebih dahulu',
-                    'Jadwal cuti bertepatan dengan project deadline yang sangat penting',
-                    'Tim sedang dalam kondisi understaffed, mohon ditunda sampai kondisi normal'
-                ]);
-            } else {
-                $statusCuti = 'Diajukan';
-                $processedAt = null;
-                $alasanPenolakan = null;
-            }
-
-            // Pilih keterangan berdasarkan jenis cuti
-            $keterangan = $faker->randomElement($keteranganPerJenis[$jenisCuti]);
-
-            // 40% ada dokumen pendukung
-            $dokumenPendukung = null;
-            if ($faker->boolean(40)) {
-                $dokumenSuffix = match ($jenisCuti) {
-                    'Cuti Sakit' => 'surat_dokter',
-                    'Cuti Menikah' => 'undangan_nikah',
-                    'Cuti Melahirkan' => 'surat_dokter_kandungan',
-                    'Cuti Khusus' => 'surat_kematian',
-                    default => 'surat_pendukung'
+                // ✅ SHORTER DURATION: Tentukan durasi yang lebih pendek untuk 2 bulan
+                $durasi = match ($jenisCuti) {
+                    'Cuti Tahunan' => $faker->numberBetween(2, 4),      // 2-4 hari
+                    'Cuti Sakit' => $faker->numberBetween(1, 3),        // 1-3 hari
+                    'Cuti Menikah' => $faker->numberBetween(3, 5),      // 3-5 hari
+                    'Cuti Melahirkan' => $faker->numberBetween(14, 30), // 2-4 minggu (reduced)
+                    'Cuti Besar' => $faker->numberBetween(5, 10),       // 1 minggu (reduced)
+                    'Cuti Khusus' => $faker->numberBetween(1, 3),       // 1-3 hari
+                    'Cuti Tanpa Gaji' => $faker->numberBetween(2, 5),   // 2-5 hari
+                    default => $faker->numberBetween(1, 3)
                 };
-                $dokumenPendukung = 'cuti/' . $dokumenSuffix . '_' . $faker->randomNumber(6) . '.pdf';
+
+                // ✅ SKIP WEEKENDS in duration calculation
+                $tanggalSelesai = Carbon::parse($tanggalMulai); // ✅ Convert DateTime to Carbon
+                $dayCounter = 0;
+
+                while ($dayCounter < $durasi) {
+                    $tanggalSelesai->addDay();
+                    if (!$tanggalSelesai->isWeekend()) {
+                        $dayCounter++;
+                    }
+                    // Safety check
+                    if ($tanggalSelesai->gt($endDate)) {
+                        $tanggalSelesai = $endDate->copy();
+                        break;
+                    }
+                }
+
+                // ✅ IMPROVED STATUS LOGIC: Hanya yang disetujui yang akan jadi absensi
+                // 90% disetujui (hanya yang disetujui yang akan mempengaruhi absensi)
+                // 7% ditolak, 3% masih diajukan
+                $statusProbability = $faker->numberBetween(1, 100);
+
+                if ($statusProbability <= 90) { // ✅ INCREASED approval rate
+                    $statusCuti = 'Disetujui';
+                    $processedAt = (clone $tanggalMulai)->modify('-' . $faker->numberBetween(1, 7) . ' days');
+                    $alasanPenolakan = null;
+                } elseif ($statusProbability <= 97) {
+                    $statusCuti = 'Ditolak';
+                    $processedAt = (clone $tanggalMulai)->modify('-' . $faker->numberBetween(1, 5) . ' days');
+                    $alasanPenolakan = $faker->randomElement([
+                        'Periode cuti bertepatan dengan high season perusahaan',
+                        'Kuota cuti tahunan untuk periode ini sudah habis',
+                        'Tidak ada backup yang memadai untuk mengcover pekerjaan',
+                        'Dokumen pendukung belum lengkap',
+                        'Jadwal cuti bertepatan dengan project deadline penting',
+                        'Tim sedang dalam kondisi understaffed'
+                    ]);
+                } else {
+                    $statusCuti = 'Diajukan';
+                    $processedAt = null;
+                    $alasanPenolakan = null;
+                }
+
+                // Pilih keterangan berdasarkan jenis cuti
+                $keterangan = $faker->randomElement($keteranganPerJenis[$jenisCuti]);
+
+                // 40% ada dokumen pendukung
+                $dokumenPendukung = null;
+                if ($faker->boolean(40)) {
+                    $dokumenSuffix = match ($jenisCuti) {
+                        'Cuti Sakit' => 'surat_dokter',
+                        'Cuti Menikah' => 'undangan_nikah',
+                        'Cuti Melahirkan' => 'surat_dokter_kandungan',
+                        'Cuti Khusus' => 'surat_kematian',
+                        default => 'surat_pendukung'
+                    };
+                    $dokumenPendukung = 'cuti/' . $dokumenSuffix . '_' . $faker->randomNumber(6) . '.pdf';
+                }
+
+                $cutiData[] = [
+                    'cuti_id' => 'CT' . str_pad($counter, 4, '0', STR_PAD_LEFT),
+                    'karyawan_id' => $karyawan->karyawan_id,
+                    'jenis_cuti' => $jenisCuti,
+                    'tanggal_mulai' => $tanggalMulai->format('Y-m-d'),
+                    'tanggal_selesai' => $tanggalSelesai->format('Y-m-d'),
+                    'keterangan' => $keterangan,
+                    'dokumen_pendukung' => $dokumenPendukung,
+                    'status_cuti' => $statusCuti,
+                    'alasan_penolakan' => $alasanPenolakan,
+                    'approver_id' => $statusCuti !== 'Diajukan' ? $approver->karyawan_id : null,
+                    'processed_at' => $processedAt?->format('Y-m-d H:i:s'),
+                    'created_at' => (clone $tanggalMulai)->modify('-' . $faker->numberBetween(3, 14) . ' days'),
+                    'updated_at' => $processedAt?->format('Y-m-d H:i:s') ?? (clone $tanggalMulai)->modify('-' . $faker->numberBetween(3, 14) . ' days'),
+                ];
+
+                $counter++;
             }
-
-            $cutiData[] = [
-                'cuti_id' => 'CT' . str_pad($counter, 4, '0', STR_PAD_LEFT),
-                'karyawan_id' => $karyawan->karyawan_id,
-                'jenis_cuti' => $jenisCuti,
-                'tanggal_mulai' => $tanggalMulai->format('Y-m-d'),
-                'tanggal_selesai' => $tanggalSelesai->format('Y-m-d'),
-                'keterangan' => $keterangan,
-                'dokumen_pendukung' => $dokumenPendukung,
-                'status_cuti' => $statusCuti,
-                'alasan_penolakan' => $alasanPenolakan,
-                'approver_id' => $statusCuti !== 'Diajukan' ? $approver->karyawan_id : null,
-                'processed_at' => $processedAt?->format('Y-m-d H:i:s'),
-                'created_at' => (clone $tanggalMulai)->modify('-' . $faker->numberBetween(3, 14) . ' days'), // Dibuat 3-14 hari sebelum cuti
-                'updated_at' => $processedAt?->format('Y-m-d H:i:s') ?? (clone $tanggalMulai)->modify('-' . $faker->numberBetween(3, 14) . ' days'),
-            ];
-
-            $counter++;
         }
 
         // Insert data dalam batch
@@ -198,8 +233,13 @@ class CutiSeeder extends Seeder
             Cuti::insert($chunk);
         }
 
+        $disetujuiCount = collect($cutiData)->where('status_cuti', 'Disetujui')->count();
+        $ditolakCount = collect($cutiData)->where('status_cuti', 'Ditolak')->count();
+        $diajukanCount = collect($cutiData)->where('status_cuti', 'Diajukan')->count();
+
         $this->command->info('Berhasil membuat ' . count($cutiData) . ' data cuti');
-        $this->command->info('Status: Disetujui (~85%), Ditolak (~10%), Diajukan (~5%)');
-        $this->command->info('Jenis Cuti: Tahunan (40%), Sakit (25%), Khusus (10%), Besar (10%), dst.');
+        $this->command->info('Periode: ' . $startDate->format('d-m-Y') . ' sampai ' . $endDate->format('d-m-Y'));
+        $this->command->info("Status: Disetujui ({$disetujuiCount}), Ditolak ({$ditolakCount}), Diajukan ({$diajukanCount})");
+        $this->command->info("⚠️  HANYA CUTI YANG DISETUJUI ({$disetujuiCount}) YANG AKAN MEMPENGARUHI ABSENSI!");
     }
 }

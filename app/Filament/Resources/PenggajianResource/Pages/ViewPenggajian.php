@@ -595,6 +595,9 @@ class ViewPenggajian extends ViewRecord
     }
   }
 
+  // TODO: ADD searchbar
+
+  // TODO: ADD enum in absensi for cuti and izin
   /**
    * Calculate salary components using real data from database - WITH BPJS BREAKDOWN
    */

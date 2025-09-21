@@ -25,7 +25,7 @@ return new class extends Migration {
             $table->string('koordinat_pulang', 50)->nullable();
             $table->string('foto_masuk', 255);
             $table->string('foto_pulang', 255)->nullable();
-            $table->enum('status_absensi', ['Hadir', 'Tidak Tepat', 'Alfa']);
+            $table->enum('status_absensi', ['Hadir', 'Tidak Tepat', 'Alfa', 'Izin', 'Cuti']);
             $table->timestamps();
 
             $table->foreign('karyawan_id')->references('karyawan_id')->on('karyawan')->onDelete('cascade');

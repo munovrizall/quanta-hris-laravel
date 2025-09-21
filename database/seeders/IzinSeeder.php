@@ -36,24 +36,29 @@ class IzinSeeder extends Seeder
             return;
         }
 
+        // ✅ UPDATE: Sesuaikan dengan periode yang sama dengan AbsensiSeeder
+        $startDate = Carbon::now()->subMonthNoOverflow()->startOfMonth();
+        $endDate = Carbon::now()->endOfMonth();
+
         $izinData = [];
         $counter = 1;
 
         // Daftar jenis izin dengan probabilitas
         $jenisIzinProbability = [
-            'Izin Keperluan Keluarga' => 20,      // 20%
-            'Izin Keperluan Pribadi' => 15,       // 15%
-            'Izin Sakit' => 18,                   // 18%
-            'Izin Datang Terlambat' => 12,        // 12%
-            'Izin Pulang Lebih Awal' => 10,       // 10%
-            'Izin Keluar Kantor' => 8,            // 8%
-            'Izin Menghadiri Acara' => 7,         // 7%
-            'Izin Keperluan Dinas' => 5,          // 5%
-            'Izin Tidak Masuk' => 3,              // 3%
-            'Izin Cuti Mendadak' => 2,            // 2%
+            // ...existing code... (sama seperti sebelumnya)
+            'Izin Keperluan Keluarga' => 20,
+            'Izin Keperluan Pribadi' => 15,
+            'Izin Sakit' => 18,
+            'Izin Datang Terlambat' => 12,
+            'Izin Pulang Lebih Awal' => 10,
+            'Izin Keluar Kantor' => 8,
+            'Izin Menghadiri Acara' => 7,
+            'Izin Keperluan Dinas' => 5,
+            'Izin Tidak Masuk' => 3,
+            'Izin Cuti Mendadak' => 2,
         ];
 
-        // Keterangan yang realistis berdasarkan jenis izin
+        // Keterangan yang realistis berdasarkan jenis izin (sama seperti sebelumnya)
         $keteranganPerJenis = [
             'Izin Keperluan Keluarga' => [
                 'Mengantarkan anak ke dokter karena demam tinggi',
@@ -154,112 +159,127 @@ class IzinSeeder extends Seeder
             ],
         ];
 
-        // Generate 100 data izin
-        for ($i = 1; $i <= 100; $i++) {
-            // Pilih karyawan secara random
-            $karyawan = $karyawans->random();
+        // ✅ GENERATE: Setiap karyawan berpotensi punya 2-5 izin dalam 2 bulan
+        foreach ($karyawans as $karyawan) {
+            // 80% chance karyawan punya izin dalam periode ini (lebih tinggi dari cuti)
+            if (!$faker->boolean(80))
+                continue;
 
-            // Tentukan jenis izin berdasarkan probabilitas
-            $randomNum = $faker->numberBetween(1, 100);
-            $jenisIzin = 'Izin Keperluan Keluarga'; // default
-            $cumulativeProbability = 0;
+            $jumlahIzin = $faker->numberBetween(1, 3); // 1-3 izin per karyawan
 
-            foreach ($jenisIzinProbability as $jenis => $probability) {
-                $cumulativeProbability += $probability;
-                if ($randomNum <= $cumulativeProbability) {
-                    $jenisIzin = $jenis;
-                    break;
+            for ($i = 0; $i < $jumlahIzin; $i++) {
+                // Tentukan jenis izin berdasarkan probabilitas
+                $randomNum = $faker->numberBetween(1, 100);
+                $jenisIzin = 'Izin Keperluan Keluarga'; // default
+                $cumulativeProbability = 0;
+
+                foreach ($jenisIzinProbability as $jenis => $probability) {
+                    $cumulativeProbability += $probability;
+                    if ($randomNum <= $cumulativeProbability) {
+                        $jenisIzin = $jenis;
+                        break;
+                    }
                 }
-            }
 
-            // Generate tanggal izin (dalam 3 bulan terakhir sampai 1 bulan ke depan)
-            $tanggalMulai = $faker->dateTimeBetween('-3 months', '+1 month');
+                // ✅ GENERATE tanggal izin dalam periode yang benar
+                $tanggalMulai = $faker->dateTimeBetween($startDate, $endDate);
 
-            // Tentukan durasi berdasarkan jenis izin
-            $durasi = match ($jenisIzin) {
-                'Izin Keperluan Keluarga' => $faker->numberBetween(1, 3),      // 1-3 hari
-                'Izin Keperluan Pribadi' => $faker->numberBetween(1, 2),       // 1-2 hari
-                'Izin Sakit' => $faker->numberBetween(1, 3),                   // 1-3 hari
-                'Izin Datang Terlambat' => 0,                                  // Same day
-                'Izin Pulang Lebih Awal' => 0,                                 // Same day
-                'Izin Keluar Kantor' => 0,                                     // Same day
-                'Izin Menghadiri Acara' => $faker->numberBetween(1, 2),        // 1-2 hari
-                'Izin Keperluan Dinas' => $faker->numberBetween(1, 3),         // 1-3 hari
-                'Izin Tidak Masuk' => $faker->numberBetween(1, 2),             // 1-2 hari
-                'Izin Cuti Mendadak' => $faker->numberBetween(2, 5),           // 2-5 hari
-                default => $faker->numberBetween(1, 2)
-            };
+                // Pastikan tanggal mulai adalah hari kerja (Senin-Jumat)
+                while (in_array((int) $tanggalMulai->format('N'), [6, 7])) { // 6 = Saturday, 7 = Sunday
+                    $tanggalMulai = $faker->dateTimeBetween($startDate, $endDate);
+                }
 
-            $tanggalSelesai = (clone $tanggalMulai)->modify("+{$durasi} days");
-
-            // 88% disetujui, 8% ditolak, 4% masih diajukan (izin umumnya lebih mudah disetujui)
-            $statusProbability = $faker->numberBetween(1, 100);
-
-            if ($statusProbability <= 88) {
-                $statusIzin = 'Disetujui';
-                $processedAt = (clone $tanggalMulai)->modify('-' . $faker->numberBetween(1, 5) . ' hours'); // Diproses 1-5 jam sebelumnya
-                $alasanPenolakan = null;
-            } elseif ($statusProbability <= 96) {
-                $statusIzin = 'Ditolak';
-                $processedAt = (clone $tanggalMulai)->modify('-' . $faker->numberBetween(1, 3) . ' hours');
-                $alasanPenolakan = $faker->randomElement([
-                    'Tidak ada coverage yang memadai untuk pekerjaan yang ditinggalkan',
-                    'Periode yang dipilih bertepatan dengan deadline project penting',
-                    'Keterangan kurang detail dan tidak mencukupi',
-                    'Sudah terlalu banyak karyawan yang izin di hari yang sama',
-                    'Dokumen pendukung diperlukan untuk jenis izin ini',
-                    'Jadwal izin terlalu mendadak, harap koordinasi lebih awal',
-                    'Workload sedang tinggi, mohon reschedule ke waktu lain',
-                    'Tidak sesuai dengan kebijakan izin perusahaan'
-                ]);
-            } else {
-                $statusIzin = 'Diajukan';
-                $processedAt = null;
-                $alasanPenolakan = null;
-            }
-
-            // Pilih keterangan berdasarkan jenis izin
-            $keterangan = $faker->randomElement($keteranganPerJenis[$jenisIzin]);
-
-            // 30% ada dokumen pendukung (lebih sedikit dari cuti)
-            $dokumenPendukung = null;
-            if ($faker->boolean(30)) {
-                $dokumenSuffix = match ($jenisIzin) {
-                    'Izin Sakit' => 'surat_dokter',
-                    'Izin Keperluan Keluarga' => 'surat_keterangan',
-                    'Izin Menghadiri Acara' => 'undangan_acara',
-                    'Izin Keperluan Dinas' => 'surat_tugas',
-                    'Izin Cuti Mendadak' => 'surat_kematian',
-                    default => 'surat_pendukung'
+                // Tentukan durasi berdasarkan jenis izin
+                $durasi = match ($jenisIzin) {
+                    'Izin Keperluan Keluarga' => $faker->numberBetween(1, 3),
+                    'Izin Keperluan Pribadi' => $faker->numberBetween(1, 2),
+                    'Izin Sakit' => $faker->numberBetween(1, 3),
+                    'Izin Datang Terlambat' => 0,
+                    'Izin Pulang Lebih Awal' => 0,
+                    'Izin Keluar Kantor' => 0,
+                    'Izin Menghadiri Acara' => $faker->numberBetween(1, 2),
+                    'Izin Keperluan Dinas' => $faker->numberBetween(1, 3),
+                    'Izin Tidak Masuk' => $faker->numberBetween(1, 2),
+                    'Izin Cuti Mendadak' => $faker->numberBetween(2, 5),
+                    default => $faker->numberBetween(1, 2)
                 };
-                $dokumenPendukung = 'izin/' . $dokumenSuffix . '_' . $faker->randomNumber(6) . '.pdf';
+
+                $tanggalSelesai = (clone $tanggalMulai)->modify("+{$durasi} days");
+
+                // ✅ PASTIKAN tidak melebihi endDate
+                if ($tanggalSelesai > $endDate) {
+                    $tanggalSelesai = $endDate->copy();
+                }
+
+                // 88% disetujui, 8% ditolak, 4% masih diajukan
+                $statusProbability = $faker->numberBetween(1, 100);
+
+                if ($statusProbability <= 88) {
+                    $statusIzin = 'Disetujui';
+                    $processedAt = (clone $tanggalMulai)->modify('-' . $faker->numberBetween(1, 5) . ' hours');
+                    $alasanPenolakan = null;
+                } elseif ($statusProbability <= 96) {
+                    $statusIzin = 'Ditolak';
+                    $processedAt = (clone $tanggalMulai)->modify('-' . $faker->numberBetween(1, 3) . ' hours');
+                    $alasanPenolakan = $faker->randomElement([
+                        'Tidak ada coverage yang memadai',
+                        'Bertepatan dengan deadline project penting',
+                        'Keterangan kurang detail',
+                        'Sudah terlalu banyak karyawan izin di hari sama',
+                        'Dokumen pendukung diperlukan',
+                        'Jadwal terlalu mendadak',
+                        'Workload sedang tinggi',
+                        'Tidak sesuai kebijakan perusahaan'
+                    ]);
+                } else {
+                    $statusIzin = 'Diajukan';
+                    $processedAt = null;
+                    $alasanPenolakan = null;
+                }
+
+                // Pilih keterangan berdasarkan jenis izin
+                $keterangan = $faker->randomElement($keteranganPerJenis[$jenisIzin]);
+
+                // 30% ada dokumen pendukung
+                $dokumenPendukung = null;
+                if ($faker->boolean(30)) {
+                    $dokumenSuffix = match ($jenisIzin) {
+                        'Izin Sakit' => 'surat_dokter',
+                        'Izin Keperluan Keluarga' => 'surat_keterangan',
+                        'Izin Menghadiri Acara' => 'undangan_acara',
+                        'Izin Keperluan Dinas' => 'surat_tugas',
+                        'Izin Cuti Mendadak' => 'surat_kematian',
+                        default => 'surat_pendukung'
+                    };
+                    $dokumenPendukung = 'izin/' . $dokumenSuffix . '_' . $faker->randomNumber(6) . '.pdf';
+                }
+
+                // Untuk izin same day, created_at bisa jadi di hari yang sama
+                $createdAt = match ($jenisIzin) {
+                    'Izin Datang Terlambat' => (clone $tanggalMulai)->modify('-' . $faker->numberBetween(0, 2) . ' hours'),
+                    'Izin Pulang Lebih Awal' => (clone $tanggalMulai)->modify('-' . $faker->numberBetween(1, 8) . ' hours'),
+                    'Izin Keluar Kantor' => (clone $tanggalMulai)->modify('-' . $faker->numberBetween(1, 24) . ' hours'),
+                    default => (clone $tanggalMulai)->modify('-' . $faker->numberBetween(1, 7) . ' days')
+                };
+
+                $izinData[] = [
+                    'izin_id' => 'IZ' . str_pad($counter, 4, '0', STR_PAD_LEFT),
+                    'karyawan_id' => $karyawan->karyawan_id,
+                    'jenis_izin' => $jenisIzin,
+                    'tanggal_mulai' => $tanggalMulai->format('Y-m-d'),
+                    'tanggal_selesai' => $tanggalSelesai->format('Y-m-d'),
+                    'keterangan' => $keterangan,
+                    'dokumen_pendukung' => $dokumenPendukung,
+                    'status_izin' => $statusIzin,
+                    'alasan_penolakan' => $alasanPenolakan,
+                    'approver_id' => $statusIzin !== 'Diajukan' ? $approver->karyawan_id : null,
+                    'processed_at' => $processedAt?->format('Y-m-d H:i:s'),
+                    'created_at' => $createdAt->format('Y-m-d H:i:s'),
+                    'updated_at' => $processedAt?->format('Y-m-d H:i:s') ?? $createdAt->format('Y-m-d H:i:s'),
+                ];
+
+                $counter++;
             }
-
-            // Untuk izin same day, created_at bisa jadi di hari yang sama
-            $createdAt = match ($jenisIzin) {
-                'Izin Datang Terlambat' => (clone $tanggalMulai)->modify('-' . $faker->numberBetween(0, 2) . ' hours'),
-                'Izin Pulang Lebih Awal' => (clone $tanggalMulai)->modify('-' . $faker->numberBetween(1, 8) . ' hours'),
-                'Izin Keluar Kantor' => (clone $tanggalMulai)->modify('-' . $faker->numberBetween(1, 24) . ' hours'),
-                default => (clone $tanggalMulai)->modify('-' . $faker->numberBetween(1, 7) . ' days')
-            };
-
-            $izinData[] = [
-                'izin_id' => 'IZ' . str_pad($counter, 4, '0', STR_PAD_LEFT),
-                'karyawan_id' => $karyawan->karyawan_id,
-                'jenis_izin' => $jenisIzin,
-                'tanggal_mulai' => $tanggalMulai->format('Y-m-d'),
-                'tanggal_selesai' => $tanggalSelesai->format('Y-m-d'),
-                'keterangan' => $keterangan,
-                'dokumen_pendukung' => $dokumenPendukung,
-                'status_izin' => $statusIzin,
-                'alasan_penolakan' => $alasanPenolakan,
-                'approver_id' => $statusIzin !== 'Diajukan' ? $approver->karyawan_id : null,
-                'processed_at' => $processedAt?->format('Y-m-d H:i:s'),
-                'created_at' => $createdAt->format('Y-m-d H:i:s'),
-                'updated_at' => $processedAt?->format('Y-m-d H:i:s') ?? $createdAt->format('Y-m-d H:i:s'),
-            ];
-
-            $counter++;
         }
 
         // Insert data dalam batch
@@ -268,8 +288,7 @@ class IzinSeeder extends Seeder
         }
 
         $this->command->info('Berhasil membuat ' . count($izinData) . ' data izin');
+        $this->command->info('Periode: ' . $startDate->format('d-m-Y') . ' sampai ' . $endDate->format('d-m-Y'));
         $this->command->info('Status: Disetujui (~88%), Ditolak (~8%), Diajukan (~4%)');
-        $this->command->info('Jenis Izin: Keluarga (20%), Pribadi (15%), Sakit (18%), Terlambat (12%), dst.');
-        $this->command->info('Distribusi durasi: Same day untuk izin harian, 1-5 hari untuk izin lainnya');
     }
 }

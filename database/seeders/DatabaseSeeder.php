@@ -26,12 +26,10 @@ class DatabaseSeeder extends Seeder
             PerusahaanKaryawanSeeder::class,
             
             // 3. Buat data transaksional yang bergantung pada karyawan
-            AbsensiSeeder::class,
-
-            // 4. Buat data lembur dan cuti (bergantung pada karyawan dan absensi)
-            LemburSeeder::class,
             CutiSeeder::class,
             IzinSeeder::class,
+            AbsensiSeeder::class,
+            LemburSeeder::class,
         ]);
     }
 }

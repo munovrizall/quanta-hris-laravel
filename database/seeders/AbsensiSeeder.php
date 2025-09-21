@@ -7,6 +7,8 @@ use Illuminate\Database\Seeder;
 use App\Models\Absensi;
 use App\Models\Karyawan;
 use App\Models\Cabang;
+use App\Models\Cuti;
+use App\Models\Izin;
 use Carbon\Carbon;
 use Faker\Factory as Faker;
 
@@ -19,7 +21,7 @@ class AbsensiSeeder extends Seeder
   {
     $faker = Faker::create('id_ID');
 
-    // Ambil semua karyawan (112 karyawan)
+    // Ambil semua karyawan
     $karyawans = Karyawan::all();
     $cabangs = Cabang::all();
 
@@ -32,16 +34,95 @@ class AbsensiSeeder extends Seeder
     $startDate = Carbon::now()->subMonthNoOverflow()->startOfMonth();
     $endDate = Carbon::now()->endOfMonth();
 
+    // ✅ CLEAR existing absensi data untuk periode ini (untuk avoid duplikasi)
+    $this->command->info('Clearing existing absensi data for period...');
+    Absensi::whereBetween('tanggal', [$startDate->format('Y-m-d'), $endDate->format('Y-m-d')])
+      ->delete();
+
+    // ✅ INTEGRASI: Ambil data cuti dan izin yang sudah ada dan disetujui
+    $cutiDisetujui = Cuti::where('status_cuti', 'Disetujui')
+      ->whereBetween('tanggal_mulai', [$startDate->format('Y-m-d'), $endDate->format('Y-m-d')])
+      ->orWhereBetween('tanggal_selesai', [$startDate->format('Y-m-d'), $endDate->format('Y-m-d')])
+      ->get();
+
+    $izinDisetujui = Izin::where('status_izin', 'Disetujui')
+      ->whereBetween('tanggal_mulai', [$startDate->format('Y-m-d'), $endDate->format('Y-m-d')])
+      ->orWhereBetween('tanggal_selesai', [$startDate->format('Y-m-d'), $endDate->format('Y-m-d')])
+      ->get();
+
+    // ✅ BUAT mapping tanggal cuti dan izin per karyawan dengan UNIQUE tanggal
+    $cutiPerKaryawan = [];
+    $izinPerKaryawan = [];
+    $allReservedDates = []; // Track all reserved dates to avoid duplicates
+
+    // Map cuti dates
+    foreach ($cutiDisetujui as $cuti) {
+      $startCuti = Carbon::parse($cuti->tanggal_mulai);
+      $endCuti = Carbon::parse($cuti->tanggal_selesai);
+
+      // Ensure dates are within our period
+      if ($startCuti->lt($startDate))
+        $startCuti = $startDate->copy();
+      if ($endCuti->gt($endDate))
+        $endCuti = $endDate->copy();
+
+      $currentDate = $startCuti->copy();
+      while ($currentDate <= $endCuti) {
+        if (!$currentDate->isWeekend()) {
+          $dateKey = $cuti->karyawan_id . '_' . $currentDate->format('Y-m-d');
+
+          // ✅ AVOID DUPLICATES: Cek apakah tanggal sudah direservasi
+          if (!isset($allReservedDates[$dateKey])) {
+            $cutiPerKaryawan[$cuti->karyawan_id][] = $currentDate->format('Y-m-d');
+            $allReservedDates[$dateKey] = 'cuti';
+          }
+        }
+        $currentDate->addDay();
+      }
+    }
+
+    // Map izin dates
+    foreach ($izinDisetujui as $izin) {
+      $startIzin = Carbon::parse($izin->tanggal_mulai);
+      $endIzin = Carbon::parse($izin->tanggal_selesai);
+
+      // Ensure dates are within our period
+      if ($startIzin->lt($startDate))
+        $startIzin = $startDate->copy();
+      if ($endIzin->gt($endDate))
+        $endIzin = $endDate->copy();
+
+      $currentDate = $startIzin->copy();
+      while ($currentDate <= $endIzin) {
+        if (!$currentDate->isWeekend()) {
+          $dateKey = $izin->karyawan_id . '_' . $currentDate->format('Y-m-d');
+
+          // ✅ PRIORITY: Cuti > Izin (jika ada conflict, cuti menang)
+          if (!isset($allReservedDates[$dateKey])) {
+            $izinPerKaryawan[$izin->karyawan_id][] = $currentDate->format('Y-m-d');
+            $allReservedDates[$dateKey] = 'izin';
+          }
+        }
+        $currentDate->addDay();
+      }
+    }
+
     $absensiData = [];
     $counter = 1;
     $totalAbsensiGenerated = 0;
 
     $this->command->info("Mulai generate data absensi untuk {$karyawans->count()} karyawan selama 2 bulan...");
+    $this->command->info("Mengintegrasikan {$cutiDisetujui->count()} cuti dan {$izinDisetujui->count()} izin yang disetujui...");
+    $this->command->info("Total reserved dates: " . count($allReservedDates));
 
     // Loop untuk setiap karyawan
     foreach ($karyawans as $index => $karyawan) {
       $currentDate = $startDate->copy();
       $absensiKaryawan = 0;
+
+      // Ambil daftar tanggal cuti dan izin untuk karyawan ini
+      $tanggalCutiKaryawan = $cutiPerKaryawan[$karyawan->karyawan_id] ?? [];
+      $tanggalIzinKaryawan = $izinPerKaryawan[$karyawan->karyawan_id] ?? [];
 
       $this->command->info("Processing karyawan " . ($index + 1) . "/" . $karyawans->count() . ": {$karyawan->nama_lengkap}");
 
@@ -59,25 +140,41 @@ class AbsensiSeeder extends Seeder
           continue;
         }
 
-        // Probabilitas kehadiran berdasarkan posisi/role
-        $attendanceProbability = $this->getAttendanceProbability($karyawan->jabatan);
+        $tanggalStr = $currentDate->format('Y-m-d');
+        $dateKey = $karyawan->karyawan_id . '_' . $tanggalStr;
 
-        if ($faker->boolean($attendanceProbability)) {
-          // Generate absensi hadir dengan variasi
-          $absensiData[] = $this->generateAbsensiHadir($faker, $karyawan, $cabangs->random(), $currentDate, $counter);
+        // ✅ CEK STATUS: Cuti, Izin, atau Hadir/Alfa (ONLY ONE per date)
+        if (in_array($tanggalStr, $tanggalCutiKaryawan)) {
+          // Status absensi: Cuti
+          $absensiData[] = $this->generateAbsensiCuti($faker, $karyawan, $cabangs->random(), $currentDate, $counter);
+          $absensiKaryawan++;
+          $counter++;
+        } elseif (in_array($tanggalStr, $tanggalIzinKaryawan)) {
+          // Status absensi: Izin
+          $absensiData[] = $this->generateAbsensiIzin($faker, $karyawan, $cabangs->random(), $currentDate, $counter);
           $absensiKaryawan++;
           $counter++;
         } else {
-          // Generate absensi tidak hadir (hanya Alfa sesuai enum database)
-          $absensiData[] = $this->generateAbsensiTidakHadir($faker, $karyawan, $cabangs->random(), $currentDate, $counter);
-          $absensiKaryawan++;
-          $counter++;
+          // Status normal: Hadir, Tidak Tepat, atau Alfa
+          $attendanceProbability = $this->getAttendanceProbability($karyawan->jabatan);
+
+          if ($faker->boolean($attendanceProbability)) {
+            // Generate absensi hadir dengan variasi
+            $absensiData[] = $this->generateAbsensiHadir($faker, $karyawan, $cabangs->random(), $currentDate, $counter);
+            $absensiKaryawan++;
+            $counter++;
+          } else {
+            // Generate absensi tidak hadir (Alfa)
+            $absensiData[] = $this->generateAbsensiTidakHadir($faker, $karyawan, $cabangs->random(), $currentDate, $counter);
+            $absensiKaryawan++;
+            $counter++;
+          }
         }
 
         $currentDate->addDay();
 
         // Safety limit untuk mencegah memory overflow
-        if ($counter > 10000) {
+        if ($counter > 15000) {
           break 2;
         }
       }
@@ -101,6 +198,55 @@ class AbsensiSeeder extends Seeder
     $this->command->info('Total karyawan: ' . $karyawans->count());
     $this->command->info('Rata-rata absensi per karyawan: ' . round($totalAbsensiGenerated / $karyawans->count(), 1) . ' hari');
     $this->command->info('Periode: ' . $startDate->format('d-m-Y') . ' sampai ' . $endDate->format('d-m-Y'));
+    $this->command->info('Integrasi: ' . $cutiDisetujui->count() . ' cuti + ' . $izinDisetujui->count() . ' izin');
+  }
+
+  // ✅ IMPROVED: Generate absensi dengan status Cuti
+  private function generateAbsensiCuti($faker, $karyawan, $cabang, $date, $counter): array
+  {
+    return [
+      'absensi_id' => 'AB' . str_pad($counter, 4, '0', STR_PAD_LEFT),
+      'karyawan_id' => $karyawan->karyawan_id,
+      'cabang_id' => $cabang->cabang_id,
+      'tanggal' => $date->format('Y-m-d'),
+      'waktu_masuk' => $date->copy()->setTime(9, 0, 0)->format('Y-m-d H:i:s'), // Set waktu standar
+      'waktu_pulang' => $date->copy()->setTime(17, 0, 0)->format('Y-m-d H:i:s'), // Set waktu standar
+      'status_masuk' => 'Tepat Waktu',
+      'status_pulang' => 'Tepat Waktu',
+      'durasi_telat' => null,
+      'durasi_pulang_cepat' => null,
+      'koordinat_masuk' => '0.000000,0.000000',
+      'koordinat_pulang' => '0.000000,0.000000',
+      'foto_masuk' => 'cuti_placeholder.jpg', // ✅ NOT NULL - required by database
+      'foto_pulang' => 'cuti_placeholder.jpg', // ✅ NOT NULL - required by database
+      'status_absensi' => 'Cuti', // ✅ Sesuai enum database
+      'created_at' => $date->copy()->setTime(9, 0, 0)->format('Y-m-d H:i:s'),
+      'updated_at' => $date->copy()->setTime(17, 0, 0)->format('Y-m-d H:i:s'),
+    ];
+  }
+
+  // ✅ IMPROVED: Generate absensi dengan status Izin
+  private function generateAbsensiIzin($faker, $karyawan, $cabang, $date, $counter): array
+  {
+    return [
+      'absensi_id' => 'AB' . str_pad($counter, 4, '0', STR_PAD_LEFT),
+      'karyawan_id' => $karyawan->karyawan_id,
+      'cabang_id' => $cabang->cabang_id,
+      'tanggal' => $date->format('Y-m-d'),
+      'waktu_masuk' => $date->copy()->setTime(9, 0, 0)->format('Y-m-d H:i:s'), // Set waktu standar
+      'waktu_pulang' => $date->copy()->setTime(17, 0, 0)->format('Y-m-d H:i:s'), // Set waktu standar  
+      'status_masuk' => 'Tepat Waktu',
+      'status_pulang' => 'Tepat Waktu',
+      'durasi_telat' => null,
+      'durasi_pulang_cepat' => null,
+      'koordinat_masuk' => '0.000000,0.000000',
+      'koordinat_pulang' => '0.000000,0.000000',
+      'foto_masuk' => 'izin_placeholder.jpg', // ✅ NOT NULL - required by database
+      'foto_pulang' => 'izin_placeholder.jpg', // ✅ NOT NULL - required by database
+      'status_absensi' => 'Izin', // ✅ Sesuai enum database
+      'created_at' => $date->copy()->setTime(9, 0, 0)->format('Y-m-d H:i:s'),
+      'updated_at' => $date->copy()->setTime(17, 0, 0)->format('Y-m-d H:i:s'),
+    ];
   }
 
   /**
@@ -134,16 +280,16 @@ class AbsensiSeeder extends Seeder
 
     // Generate waktu masuk dengan variasi lebih realistis
     // 60% tepat waktu, 25% sedikit terlambat (9:01-9:30), 15% terlambat (9:31-10:30)
-    $ketepataanWaktu = $faker->numberBetween(1, 100);
+    $ketepatanWaktu = $faker->numberBetween(1, 100);
 
-    if ($ketepataanWaktu <= 60) {
+    if ($ketepatanWaktu <= 60) {
       // Tepat waktu atau lebih awal (7:30-9:00)
       $waktuMasuk = $date->copy()->setTime(
         $faker->numberBetween(7, 8),
         $faker->numberBetween(30, 59),
         $faker->numberBetween(0, 59)
       );
-    } elseif ($ketepataanWaktu <= 85) {
+    } elseif ($ketepatanWaktu <= 85) {
       // Sedikit terlambat (9:01-9:30)
       $waktuMasuk = $date->copy()->setTime(9, $faker->numberBetween(1, 30), $faker->numberBetween(0, 59));
     } else {
