@@ -6,7 +6,7 @@ use App\Models\Karyawan;
 use App\Models\Perusahaan;
 use Illuminate\Support\Facades\Log;
 
-class PenaltyService
+class PotonganService
 {
   /**
    * Hitung potongan keterlambatan berdasarkan data perusahaan

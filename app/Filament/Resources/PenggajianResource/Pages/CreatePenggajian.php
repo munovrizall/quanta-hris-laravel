@@ -6,7 +6,7 @@ use App\Filament\Resources\PenggajianResource;
 use App\Models\Penggajian;
 use App\Models\DetailPenggajian;
 use App\Models\Karyawan;
-use App\Services\AttendanceService;
+use App\Services\AbsensiService;
 use App\Services\HitungGajiService;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Log;
@@ -21,13 +21,13 @@ class CreatePenggajian extends CreateRecord
 
     protected static ?string $breadcrumb = 'Tambah';
 
-    protected AttendanceService $attendanceService;
+    protected AbsensiService $attendanceService;
     protected HitungGajiService $payrollService;
 
     public function __construct()
     {
         parent::__construct();
-        $this->attendanceService = new AttendanceService();
+        $this->attendanceService = new AbsensiService();
         $this->payrollService = new HitungGajiService();
     }
 

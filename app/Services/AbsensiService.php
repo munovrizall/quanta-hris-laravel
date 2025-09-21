@@ -7,7 +7,7 @@ use App\Models\Lembur;
 use Carbon\Carbon;
 use Illuminate\Support\Collection;
 
-class AttendanceService
+class AbsensiService
 {
     /**
      * Get absensi data for multiple karyawan - BATCH OPERATION

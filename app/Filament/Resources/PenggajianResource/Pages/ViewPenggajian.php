@@ -6,7 +6,7 @@ use App\Filament\Resources\PenggajianResource;
 use App\Models\DetailPenggajian;
 use App\Services\TunjanganService;
 use App\Services\BpjsService;
-use App\Services\AttendanceService;
+use App\Services\AbsensiService;
 use Filament\Actions;
 use Filament\Resources\Pages\ViewRecord;
 use Filament\Infolists;
@@ -235,7 +235,7 @@ class ViewPenggajian extends ViewRecord
     $karyawanIds = collect($paginatedDetailPenggajian->items())->pluck('karyawan_id');
 
     // Initialize attendance service
-    $attendanceService = new AttendanceService();
+    $attendanceService = new AbsensiService();
 
     // Get attendance data in batch
     $attendanceData = $attendanceService->getCombinedDataBatch($karyawanIds, $periodeStart, $periodeEnd);

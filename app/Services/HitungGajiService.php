@@ -8,14 +8,14 @@ use Illuminate\Support\Facades\Log;
 class HitungGajiService
 {
   protected TunjanganService $tunjanganService;
-  protected PenaltyService $penaltyService;
+  protected PotonganService $penaltyService;
   protected BpjsService $bpjsService;
   protected Pph21Service $pph21Service;
 
   public function __construct()
   {
     $this->tunjanganService = new TunjanganService();
-    $this->penaltyService = new PenaltyService();
+    $this->penaltyService = new PotonganService();
     $this->bpjsService = new BpjsService();
     $this->pph21Service = new Pph21Service();
   }
