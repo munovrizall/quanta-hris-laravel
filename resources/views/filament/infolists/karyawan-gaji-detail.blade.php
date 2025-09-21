@@ -1,733 +1,332 @@
-{{-- filepath:
-/home/ideapad/Dev/laravel/quanta-hris-laravel/resources/views/filament/infolists/karyawan-gaji-detail.blade.php --}}
+{{-- Include external CSS --}}
+@push('styles')
+    <link rel="stylesheet" href="{{ asset('css/karyawan-gaji-detail.css') }}">
+@endpush
+
 <x-filament-widgets::widget class="fi-karyawan-gaji-widget">
-    <style>
-        /* General Widget Styling */
-        .fi-karyawan-gaji-widget .karyawan-container {
-            border-radius: 0.75rem;
-            background-color: #fff;
-            box-shadow: 0 1px 2px 0 rgb(0 0 0 / 0.05);
-            border: 1px solid rgb(156 163 175 / 0.2);
-            padding: 1.5rem;
-            margin-bottom: 1rem;
-        }
-
-        /* Dark Mode Styling */
-        .dark .fi-karyawan-gaji-widget .karyawan-container {
-            background-color: rgb(31 41 55);
-            border-color: rgb(255 255 255 / 0.1);
-        }
-
-        /* Main Grid Layout */
-        .karyawan-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 2rem;
-            align-items: start;
-        }
-
-        /* Mobile Responsive */
-        @media (max-width: 1024px) {
-            .karyawan-grid {
-                grid-template-columns: 1fr;
-                gap: 1.5rem;
+    <div x-data="{
+        editModal: null
+    }" 
+    x-init="
+        window.addEventListener('open-modal', (event) => {
+            if (event.detail.action === 'editKaryawanGaji') {
+                // Use Livewire to call the method
+                @this.call('openEditModal', event.detail.detailId);
             }
-        }
-
-        /* Left Column - Employee Info */
-        .employee-info-section {
-            display: flex;
-            flex-direction: column;
-            gap: 1rem;
-        }
-
-        .employee-header {
-            display: flex;
-            flex-direction: column;
-            gap: 0.5rem;
-        }
-
-        .employee-id {
-            display: inline-flex;
-            background-color: rgb(243 244 246);
-            color: rgb(75 85 99);
-            font-size: 0.75rem;
-            padding: 0.25rem 0.75rem;
-            border-radius: 0.375rem;
-            font-weight: 500;
-            width: fit-content;
-        }
-
-        .dark .employee-id {
-            background-color: rgb(75 85 99);
-            color: rgb(209 213 219);
-        }
-
-        .employee-name {
-            font-size: 1.125rem;
-            font-weight: 600;
-            color: rgb(17 24 39);
-            margin: 0;
-        }
-
-        .dark .employee-name {
-            color: #fff;
-        }
-
-        .employee-badges {
-            display: flex;
-            gap: 0.5rem;
-            flex-wrap: wrap;
-        }
-
-        .badge {
-            font-size: 0.75rem;
-            padding: 0.25rem 0.75rem;
-            border-radius: 9999px;
-            font-weight: 500;
-        }
-
-        .badge-blue {
-            background-color: rgb(219 234 254);
-            color: rgb(30 64 175);
-        }
-
-        .dark .badge-blue {
-            background-color: rgb(30 64 175 / 0.5);
-            color: rgb(147 197 253);
-        }
-
-        .badge-purple {
-            background-color: rgb(233 213 255);
-            color: rgb(107 33 168);
-        }
-
-        .dark .badge-purple {
-            background-color: rgb(107 33 168 / 0.5);
-            color: rgb(196 181 253);
-        }
-
-        /* Attendance Stats - Updated to 3x2 Grid */
-        .attendance-stats {
-            display: grid;
-            grid-template-columns: repeat(2, 1fr);
-            gap: 0.75rem;
-        }
-
-        /* Mobile responsive untuk attendance */
-        @media (max-width: 640px) {
-            .attendance-stats {
-                grid-template-columns: repeat(2, 1fr);
-            }
-        }
-
-        .attendance-item {
-            text-align: center;
-            padding: 0.75rem;
-            border-radius: 0.5rem;
-            border: 1px solid rgb(229 231 235);
-        }
-
-        .dark .attendance-item {
-            border-color: rgb(75 85 99);
-        }
-
-        .attendance-value {
-            display: block;
-            font-size: 0.75rem;
-            padding: 0.25rem 0.5rem;
-            border-radius: 0.375rem;
-            font-weight: 600;
-            margin-bottom: 0.25rem;
-        }
-
-        .attendance-label {
-            font-size: 0.75rem;
-            color: rgb(107 114 128);
-        }
-
-        .dark .attendance-label {
-            color: rgb(156 163 175);
-        }
-
-        .attendance-hadir {
-            background-color: rgb(220 252 231);
-            color: rgb(22 101 52);
-        }
-
-        .dark .attendance-hadir {
-            background-color: rgb(22 101 52 / 0.5);
-            color: rgb(134 239 172);
-        }
-
-        .attendance-alfa {
-            background-color: rgb(254 226 226);
-            color: rgb(153 27 27);
-        }
-
-        .dark .attendance-alfa {
-            background-color: rgb(153 27 27 / 0.5);
-            color: rgb(252 165 165);
-        }
-
-        .attendance-tidak-tepat {
-            background-color: rgb(254 240 138);
-            color: rgb(133 77 14);
-        }
-
-        .dark .attendance-tidak-tepat {
-            background-color: rgb(133 77 14 / 0.5);
-            color: rgb(253 230 138);
-        }
-
-        .attendance-cuti {
-            background-color: rgb(235 245 255);
-            color: rgb(29 78 216);
-        }
-
-        .dark .attendance-cuti {
-            background-color: rgb(29 78 216 / 0.5);
-            color: rgb(147 197 253);
-        }
-
-        .attendance-izin {
-            background-color: rgb(243 232 255);
-            color: rgb(126 34 206);
-        }
-
-        .dark .attendance-izin {
-            background-color: rgb(126 34 206 / 0.5);
-            color: rgb(196 181 253);
-        }
-
-        .attendance-lembur {
-            background-color: rgb(209 250 229); /* emerald-100 */
-            color: rgb(4 120 87); /* emerald-700 */
-        }
-
-        .dark .attendance-lembur {
-            background-color: rgb(4 120 87 / 0.5); /* emerald-700 with opacity */
-            color: rgb(110 231 183); /* emerald-300 */
-        }
-
-        /* Right Column - Salary Details */
-        .salary-section {
-            display: flex;
-            flex-direction: column;
-            gap: 1rem;
-        }
-
-        .salary-group {
-            background-color: rgb(249 250 251);
-            padding: 1rem;
-            border-radius: 0.5rem;
-            border: 1px solid rgb(229 231 235);
-        }
-
-        .dark .salary-group {
-            background-color: rgb(17 24 39);
-            border-color: rgb(75 85 99);
-        }
-
-        .salary-group-title {
-            font-size: 0.875rem;
-            font-weight: 600;
-            color: rgb(75 85 99);
-            margin-bottom: 0.75rem;
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-        }
-
-        .dark .salary-group-title {
-            color: rgb(209 213 219);
-        }
-
-        .salary-items {
-            display: flex;
-            flex-direction: column;
-            gap: 0.5rem;
-        }
-
-        .salary-item {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            font-size: 0.875rem;
-        }
-
-        .salary-label {
-            color: rgb(107 114 128);
-            font-weight: 500;
-        }
-
-        .dark .salary-label {
-            color: rgb(156 163 175);
-        }
-
-        .salary-value {
-            font-weight: 600;
-            color: rgb(17 24 39);
-        }
-
-        .dark .salary-value {
-            color: #fff;
-        }
-
-        .salary-positive {
-            color: rgb(22 101 52);
-        }
-
-        .dark .salary-positive {
-            color: rgb(134 239 172);
-        }
-
-        .salary-negative {
-            color: rgb(153 27 27);
-        }
-
-        .dark .salary-negative {
-            color: rgb(252 165 165);
-        }
-
-        /* Detail breakdown untuk potongan DAN tunjangan - UNIFIED STYLE */
-        .breakdown-detail {
-            font-size: 0.75rem;
-            color: rgb(107 114 128);
-            margin-left: 0.5rem;
-            font-style: italic;
-        }
-
-        .dark .breakdown-detail {
-            color: rgb(156 163 175);
-        }
-
-        /* Total Salary */
-        .total-salary {
-            border-top: 2px solid rgb(229 231 235);
-            padding-top: 1rem;
-            margin-top: 1rem;
-        }
-
-        .dark .total-salary {
-            border-color: rgb(75 85 99);
-        }
-
-        .total-salary-item {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-
-        .total-salary-label {
-            font-size: 1.125rem;
-            font-weight: 700;
-            color: rgb(17 24 39);
-        }
-
-        .dark .total-salary-label {
-            color: #fff;
-        }
-
-        .total-salary-value {
-            font-size: 1.125rem;
-            font-weight: 700;
-            color: rgb(22 101 52);
-        }
-
-        .dark .total-salary-value {
-            color: rgb(134 239 172);
-        }
-
-        /* Pagination dengan Cyan Primary Color */
-        .pagination-container {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            margin-top: 2rem;
-            padding: 1rem;
-            flex-direction: column;
-            gap: 1rem;
-        }
-
-        @media (min-width: 640px) {
-            .pagination-container {
-                flex-direction: row;
-                justify-content: space-between;
-            }
-        }
-
-        .pagination-links {
-            display: flex;
-            gap: 0.25rem;
-            align-items: center;
-            flex-wrap: wrap;
-            justify-content: center;
-        }
-
-        .pagination-links a,
-        .pagination-links span {
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            padding: 0.5rem 0.75rem;
-            min-width: 2.5rem;
-            height: 2.5rem;
-            border: 1px solid rgb(229 231 235);
-            border-radius: 0.5rem;
-            text-decoration: none;
-            color: rgb(75 85 99);
-            font-size: 0.875rem;
-            font-weight: 500;
-            transition: all 0.2s ease-in-out;
-            background-color: white;
-        }
-
-        .dark .pagination-links a,
-        .dark .pagination-links span {
-            border-color: rgb(75 85 99);
-            color: rgb(209 213 219);
-            background-color: rgb(31 41 55);
-        }
-
-        .pagination-links a:hover {
-            background-color: rgb(236 254 255);
-            border-color: rgb(6 182 212);
-            color: rgb(14 116 144);
-            transform: translateY(-1px);
-            box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1);
-        }
-
-        .dark .pagination-links a:hover {
-            background-color: rgb(6 182 212 / 0.1);
-            border-color: rgb(6 182 212);
-            color: rgb(103 232 249);
-        }
-
-        .pagination-links .current {
-            background: linear-gradient(135deg, rgb(6 182 212), rgb(8 145 178));
-            color: white;
-            border-color: rgb(6 182 212);
-            font-weight: 600;
-            box-shadow: 0 4px 6px -1px rgb(6 182 212 / 0.3);
-        }
-
-        .pagination-links .disabled {
-            opacity: 0.5;
-            cursor: not-allowed;
-            pointer-events: none;
-            background-color: rgb(249 250 251);
-            color: rgb(156 163 175);
-        }
-
-        .dark .pagination-links .disabled {
-            background-color: rgb(17 24 39);
-            color: rgb(107 114 128);
-        }
-
-        .pagination-info {
-            font-size: 0.875rem;
-            color: rgb(107 114 128);
-            text-align: center;
-        }
-
-        @media (min-width: 640px) {
-            .pagination-info {
-                text-align: left;
-            }
-        }
-
-        .dark .pagination-info {
-            color: rgb(156 163 175);
-        }
-
-        .pagination-links a:focus {
-            outline: 2px solid rgb(6 182 212);
-            outline-offset: 2px;
-        }
-
-        /* Responsive adjustments */
-        @media (max-width: 480px) {
-
-            .pagination-links a,
-            .pagination-links span {
-                padding: 0.375rem 0.5rem;
-                min-width: 2rem;
-                height: 2rem;
-                font-size: 0.8rem;
-            }
-        }
-
-        /* Icons */
-        .icon {
-            width: 1rem;
-            height: 1rem;
-            fill: currentColor;
-        }
-    </style>
-
-    <div class="space-y-4">
-        @foreach($karyawanData as $karyawan)
-            <div class="karyawan-container">
-                <div class="karyawan-grid">
-                    <!-- Left Column - Employee Info -->
-                    <div class="employee-info-section">
-                        <!-- Employee Header -->
-                        <div class="employee-header">
-                            <span class="employee-id">
-                                {{ $karyawan['karyawan_id'] }}
-                            </span>
-                            <h3 class="employee-name">
-                                {{ $karyawan['nama_lengkap'] }}
-                            </h3>
-                            <div class="employee-badges">
-                                <span class="badge badge-blue">
-                                    {{ $karyawan['jabatan'] }}
+        });
+    ">
+
+        <div class="space-y-4">
+            @foreach($karyawanData as $karyawan)
+                <div class="karyawan-container">
+                    {{-- Edit Button - Updated to use Alpine.js --}}
+                    @if(isset($canEdit) && $canEdit)
+                        <button 
+                            class="edit-button"
+                            x-on:click="window.dispatchEvent(new CustomEvent('open-modal', {
+                                detail: { 
+                                    action: 'editKaryawanGaji',
+                                    detailId: {{ $karyawan['detail_id'] }}
+                                }
+                            }))"
+                            type="button"
+                        >
+                            <svg class="edit-icon" viewBox="0 0 20 20">
+                                <path
+                                    d="m5.433 13.917 1.262-3.155A4 4 0 0 1 7.58 9.42l6.92-6.918a2.121 2.121 0 0 1 3 3l-6.92 6.918c-.383.383-.84.685-1.343.886l-3.154 1.262a.5.5 0 0 1-.65-.65Z" />
+                                <path
+                                    d="M3.5 5.75c0-.69.56-1.25 1.25-1.25H10A.75.75 0 0 0 10 3H4.75A2.75 2.75 0 0 0 2 5.75v9.5A2.75 2.75 0 0 0 4.75 18h9.5A2.75 2.75 0 0 0 17 15.25V10a.75.75 0 0 0-1.5 0v5.25c0 .69-.56 1.25-1.25 1.25h-9.5c-.69 0-1.25-.56-1.25-1.25v-9.5Z" />
+                            </svg>
+                            Edit Gaji
+                        </button>
+                    @endif
+
+                    <div class="karyawan-grid">
+                        <!-- Left Column - Employee Info -->
+                        <div class="employee-info-section">
+                            <!-- Employee Header -->
+                            <div class="employee-header">
+                                <span class="employee-id">
+                                    {{ $karyawan['karyawan_id'] }}
                                 </span>
-                                <span class="badge badge-purple">
-                                    {{ $karyawan['departemen'] }}
-                                </span>
-                            </div>
-                        </div>
-
-                        <!-- Attendance Stats - Now 3x2 Grid -->
-                        <div class="attendance-stats">
-                            <div class="attendance-item">
-                                <span class="attendance-value attendance-hadir">
-                                    {{ $karyawan['total_hadir'] }}
-                                </span>
-                                <span class="attendance-label">Hadir</span>
-                            </div>
-                            <div class="attendance-item">
-                                <span class="attendance-value attendance-alfa">
-                                    {{ $karyawan['total_alfa'] }}
-                                </span>
-                                <span class="attendance-label">Alfa</span>
-                            </div>
-                            <div class="attendance-item">
-                                <span class="attendance-value attendance-tidak-tepat">
-                                    {{ $karyawan['total_tidak_tepat'] }}
-                                </span>
-                                <span class="attendance-label">Tidak Tepat</span>
-                            </div>
-                            <div class="attendance-item">
-                                <span class="attendance-value attendance-cuti">
-                                    {{ $karyawan['total_cuti'] }}
-                                </span>
-                                <span class="attendance-label">Cuti</span>
-                            </div>
-                            <div class="attendance-item">
-                                <span class="attendance-value attendance-izin">
-                                    {{ $karyawan['total_izin'] }}
-                                </span>
-                                <span class="attendance-label">Izin</span>
-                            </div>
-                            <div class="attendance-item">
-                                <span class="attendance-value attendance-lembur">
-                                    {{ $karyawan['total_lembur'] }}
-                                </span>
-                                <span class="attendance-label">Jam Lembur</span>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Right Column - Salary Details -->
-                    <div class="salary-section">
-                        <!-- Income Section -->
-                        <div class="salary-group">
-                            <div class="salary-group-title">
-                                <svg class="icon" viewBox="0 0 20 20">
-                                    <path
-                                        d="M8.433 7.418c.155-.103.346-.196.567-.267v1.698a2.305 2.305 0 01-.567-.267C8.07 8.34 8 8.114 8 8c0-.114.07-.34.433-.582zM11 12.849v-1.698c.22.071.412.164.567.267.364.243.433.468.433.582 0 .114-.07.34-.433.582a2.305 2.305 0 01-.567.267z" />
-                                    <path fill-rule="evenodd"
-                                        d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-13a1 1 0 10-2 0v.092a4.535 4.535 0 00-1.676.662C6.602 6.234 6 7.009 6 8c0 .99.602 1.765 1.324 2.246.48.32 1.054.545 1.676.662v1.941c-.391-.127-.68-.317-.843-.504a1 1 0 10-1.51 1.31c.562.649 1.413 1.076 2.353 1.253V15a1 1 0 102 0v-.092a4.535 4.535 0 001.676-.662C13.398 13.766 14 12.991 14 12c0-.99-.602-1.765-1.324-2.246A4.535 4.535 0 0011 9.092V7.151c.391.127.68.317.843.504a1 1 0 101.511-1.31c-.563-.649-1.413-1.076-2.354-1.253V5z" />
-                                </svg>
-                                Pendapatan
-                            </div>
-                            <div class="salary-items">
-                                <div class="salary-item">
-                                    <span class="salary-label">Gaji Pokok:</span>
-                                    <span class="salary-value">Rp
-                                        {{ number_format($karyawan['gaji_pokok'], 0, ',', '.') }}</span>
+                                <h3 class="employee-name">
+                                    {{ $karyawan['nama_lengkap'] }}
+                                </h3>
+                                <div class="employee-badges">
+                                    <span class="badge badge-blue">
+                                        {{ $karyawan['jabatan'] }}
+                                    </span>
+                                    <span class="badge badge-purple">
+                                        {{ $karyawan['departemen'] }}
+                                    </span>
                                 </div>
+                            </div>
 
-                                <!-- BREAKDOWN TUNJANGAN - SETIAP ITEM TERPISAH -->
-                                @if(isset($karyawan['tunjangan_breakdown']) && !empty($karyawan['tunjangan_breakdown']['breakdown']))
-                                    @foreach($karyawan['tunjangan_breakdown']['breakdown'] as $item)
-                                        <div class="salary-item">
-                                            <span class="salary-label">{{ $item['label'] }}:</span>
-                                            <span class="salary-value salary-positive">Rp
-                                                {{ number_format($item['amount'], 0, ',', '.') }}</span>
-                                        </div>
-                                    @endforeach
-                                @endif
+                            <!-- Attendance Stats - Now 3x2 Grid -->
+                            <div class="attendance-stats">
+                                <div class="attendance-item">
+                                    <span class="attendance-value attendance-hadir">
+                                        {{ $karyawan['total_hadir'] }}
+                                    </span>
+                                    <span class="attendance-label">Hadir</span>
+                                </div>
+                                <div class="attendance-item">
+                                    <span class="attendance-value attendance-alfa">
+                                        {{ $karyawan['total_alfa'] }}
+                                    </span>
+                                    <span class="attendance-label">Alfa</span>
+                                </div>
+                                <div class="attendance-item">
+                                    <span class="attendance-value attendance-tidak-tepat">
+                                        {{ $karyawan['total_tidak_tepat'] }}
+                                    </span>
+                                    <span class="attendance-label">Tidak Tepat</span>
+                                </div>
+                                <div class="attendance-item">
+                                    <span class="attendance-value attendance-cuti">
+                                        {{ $karyawan['total_cuti'] }}
+                                    </span>
+                                    <span class="attendance-label">Cuti</span>
+                                </div>
+                                <div class="attendance-item">
+                                    <span class="attendance-value attendance-izin">
+                                        {{ $karyawan['total_izin'] }}
+                                    </span>
+                                    <span class="attendance-label">Izin</span>
+                                </div>
+                                <div class="attendance-item">
+                                    <span class="attendance-value attendance-lembur">
+                                        {{ $karyawan['total_lembur'] }}
+                                    </span>
+                                    <span class="attendance-label">Jam Lembur</span>
+                                </div>
+                            </div>
+                        </div>
 
-                                @if($karyawan['total_lembur'] > 0)
+                        <!-- Right Column - Salary Details -->
+                        <div class="salary-section">
+                            <!-- Income Section -->
+                            <div class="salary-group">
+                                <div class="salary-group-title">
+                                    <svg class="icon" viewBox="0 0 20 20">
+                                        <path
+                                            d="M8.433 7.418c.155-.103.346-.196.567-.267v1.698a2.305 2.305 0 01-.567-.267C8.07 8.34 8 8.114 8 8c0-.114.07-.34.433-.582zM11 12.849v-1.698c.22.071.412.164.567.267.364.243.433.468.433.582 0 .114-.07.34-.433.582a2.305 2.305 0 01-.567.267z" />
+                                        <path fill-rule="evenodd"
+                                            d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-13a1 1 0 10-2 0v.092a4.535 4.535 0 00-1.676.662C6.602 6.234 6 7.009 6 8c0 .99.602 1.765 1.324 2.246.48.32 1.054.545 1.676.662v1.941c-.391-.127-.68-.317-.843-.504a1 1 0 10-1.51 1.31c.562.649 1.413 1.076 2.353 1.253V15a1 1 0 102 0v-.092a4.535 4.535 0 001.676-.662C13.398 13.766 14 12.991 14 12c0-.99-.602-1.765-1.324-2.246A4.535 4.535 0 0011 9.092V7.151c.391.127.68.317.843.504a1 1 0 101.511-1.31c-.563-.649-1.413-1.076-2.354-1.253V5z" />
+                                    </svg>
+                                    Pendapatan
+                                </div>
+                                <div class="salary-items">
                                     <div class="salary-item">
-                                        <span class="salary-label">Upah Lembur:</span>
+                                        <span class="salary-label">Gaji Pokok:</span>
+                                        <span class="salary-value">Rp
+                                            {{ number_format($karyawan['gaji_pokok'], 0, ',', '.') }}</span>
+                                    </div>
+
+                                    <!-- BREAKDOWN TUNJANGAN - SETIAP ITEM TERPISAH -->
+                                    @if(isset($karyawan['tunjangan_breakdown']) && !empty($karyawan['tunjangan_breakdown']['breakdown']))
+                                        @foreach($karyawan['tunjangan_breakdown']['breakdown'] as $item)
+                                            <div class="salary-item">
+                                                <span class="salary-label">{{ $item['label'] }}:</span>
+                                                <span class="salary-value salary-positive">Rp
+                                                    {{ number_format($item['amount'], 0, ',', '.') }}</span>
+                                            </div>
+                                        @endforeach
+                                    @endif
+
+                                    @if($karyawan['total_lembur'] > 0)
+                                        <div class="salary-item">
+                                            <span class="salary-label">Upah Lembur:</span>
+                                            <span class="salary-value salary-positive">Rp
+                                                {{ number_format($karyawan['lembur_pay'], 0, ',', '.') }}</span>
+                                        </div>
+                                        <div class="breakdown-detail">
+                                            {{ $karyawan['total_lembur'] }} jam ({{ $karyawan['total_lembur_sessions'] }} sesi)
+                                        </div>
+                                    @endif
+
+                                    <div class="salary-item"
+                                        style="margin-top: 0.5rem; padding-top: 0.5rem; border-top: 1px solid rgb(229 231 235);">
+                                        <span class="salary-label" style="font-weight: 600;">Total Pendapatan:</span>
                                         <span class="salary-value salary-positive">Rp
-                                            {{ number_format($karyawan['lembur_pay'], 0, ',', '.') }}</span>
+                                            {{ number_format($karyawan['pph21_detail']['penghasilan_bruto'], 0, ',', '.') }}
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Deduction Section -->
+                            <div class="salary-group">
+                                <div class="salary-group-title">
+                                    <svg class="icon" viewBox="0 0 20 20">
+                                        <path fill-rule="evenodd" d="M3 10a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1z" />
+                                    </svg>
+                                    Potongan
+                                </div>
+                                <div class="salary-items">
+                                    @if($karyawan['total_alfa'] > 0)
+                                        <div class="salary-item">
+                                            <span class="salary-label">Potongan Alfa:</span>
+                                            <span class="salary-value salary-negative">Rp
+                                                {{ number_format($karyawan['potongan_detail']['alfa']['total_potongan'], 0, ',', '.') }}
+                                            </span>
+                                        </div>
+                                        <div class="breakdown-detail">
+                                            {{ $karyawan['total_alfa'] }} hari × Rp
+                                            {{ number_format($karyawan['potongan_detail']['alfa']['potongan_per_hari'], 0, ',', '.') }}/hari
+                                        </div>
+                                    @endif
+
+                                    @if($karyawan['total_tidak_tepat'] > 0)
+                                        <div class="salary-item">
+                                            <span class="salary-label">Potongan Terlambat:</span>
+                                            <span class="salary-value salary-negative">Rp
+                                                {{ number_format($karyawan['potongan_detail']['keterlambatan']['total_potongan'], 0, ',', '.') }}
+                                            </span>
+                                        </div>
+                                        <div class="breakdown-detail">
+                                            {{ $karyawan['total_tidak_tepat'] }} hari × Rp
+                                            {{ number_format($karyawan['potongan_detail']['keterlambatan']['potongan_per_hari'], 0, ',', '.') }}/hari
+                                        </div>
+                                    @endif
+
+                                    {{-- BPJS Components --}}
+                                    @if(isset($karyawan['bpjs_breakdown']) && !empty($karyawan['bpjs_breakdown']['breakdown']))
+                                        @foreach($karyawan['bpjs_breakdown']['breakdown'] as $item)
+                                            <div class="salary-item">
+                                                <span class="salary-label">{{ $item['label'] }}:</span>
+                                                <span class="salary-value salary-negative">Rp
+                                                    {{ number_format($item['amount'], 0, ',', '.') }}</span>
+                                            </div>
+                                            <div class="breakdown-detail">
+                                                {{ $item['description'] }}
+                                            </div>
+                                        @endforeach
+                                    @endif
+
+                                    {{-- PPh21 --}}
+                                    <div class="salary-item">
+                                        <span class="salary-label">Pajak PPh21:</span>
+                                        <span class="salary-value salary-negative">Rp
+                                            {{ number_format($karyawan['pph21_detail']['jumlah'], 0, ',', '.') }}</span>
                                     </div>
                                     <div class="breakdown-detail">
-                                        {{ $karyawan['total_lembur'] }} jam ({{ $karyawan['total_lembur_sessions'] }} sesi)
-                                    </div>
-                                @endif
-
-                                <div class="salary-item"
-                                    style="margin-top: 0.5rem; padding-top: 0.5rem; border-top: 1px solid rgb(229 231 235);">
-                                    <span class="salary-label" style="font-weight: 600;">Total Pendapatan:</span>
-                                    <span class="salary-value salary-positive">Rp
+                                        {{ $karyawan['pph21_detail']['tarif_persen'] }}% dari penghasilan bruto Rp
                                         {{ number_format($karyawan['pph21_detail']['penghasilan_bruto'], 0, ',', '.') }}
+                                    </div>
+                                    <div class="breakdown-detail">
+                                        PTKP: {{ $karyawan['pph21_detail']['golongan_ptkp'] }}
+                                        ({{ $karyawan['pph21_detail']['kategori_ter'] }})
+                                    </div>
+
+                                    {{-- Total Potongan --}}
+                                    <div class="salary-item"
+                                        style="margin-top: 0.5rem; padding-top: 0.5rem; border-top: 1px solid rgb(229 231 235);">
+                                        <span class="salary-label" style="font-weight: 600;">Total Potongan:</span>
+                                        <span class="salary-value salary-negative">Rp
+                                            {{ number_format($karyawan['potongan_total'], 0, ',', '.') }}</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            {{-- Penyesuaian Section - Only show if there's an adjustment --}}
+                            @if(isset($karyawan['penyesuaian']) && ($karyawan['penyesuaian'] != 0 || !empty($karyawan['catatan_penyesuaian'])))
+                                <div class="penyesuaian-section">
+                                    <div class="penyesuaian-title">
+                                        <svg class="icon" viewBox="0 0 20 20">
+                                            <path fill-rule="evenodd"
+                                                d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" />
+                                        </svg>
+                                        Penyesuaian
+                                    </div>
+                                    <div class="salary-items">
+                                        <div class="salary-item">
+                                            <span class="salary-label">Jumlah Penyesuaian:</span>
+                                            <span
+                                                class="salary-value {{ $karyawan['penyesuaian'] >= 0 ? 'salary-positive' : 'salary-negative' }}">
+                                                {{ $karyawan['penyesuaian'] >= 0 ? '+' : '' }}Rp
+                                                {{ number_format($karyawan['penyesuaian'], 0, ',', '.') }}
+                                            </span>
+                                        </div>
+                                    </div>
+                                    @if(!empty($karyawan['catatan_penyesuaian']))
+                                        <div class="penyesuaian-note">
+                                            <strong>Catatan:</strong> {{ $karyawan['catatan_penyesuaian'] }}
+                                        </div>
+                                    @endif
+                                </div>
+                            @endif
+
+                            <!-- Total Salary -->
+                            <div class="total-salary">
+                                <div class="total-salary-item">
+                                    <span class="total-salary-label">GAJI BERSIH:</span>
+                                    <span class="total-salary-value">
+                                        Rp {{ number_format($karyawan['total_gaji'], 0, ',', '.') }}
                                     </span>
                                 </div>
                             </div>
                         </div>
-
-                        <!-- Deduction Section -->
-                        <div class="salary-group">
-                            <div class="salary-group-title">
-                                <svg class="icon" viewBox="0 0 20 20">
-                                    <path fill-rule="evenodd" d="M3 10a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1z" />
-                                </svg>
-                                Potongan
-                            </div>
-                            <div class="salary-items">
-                                @if($karyawan['total_alfa'] > 0)
-                                    <div class="salary-item">
-                                        <span class="salary-label">Potongan Alfa:</span>
-                                        <span class="salary-value salary-negative">Rp
-                                            {{-- ✅ GUNAKAN DATA DARI SERVICE, BUKAN MANUAL CALCULATION --}}
-                                            {{ number_format($karyawan['potongan_detail']['alfa']['total_potongan'], 0, ',', '.') }}
-                                        </span>
-                                    </div>
-                                    <div class="breakdown-detail">
-                                        {{ $karyawan['total_alfa'] }} hari × Rp
-                                        {{ number_format($karyawan['potongan_detail']['alfa']['potongan_per_hari'], 0, ',', '.') }}/hari
-                                    </div>
-                                @endif
-
-                                @if($karyawan['total_tidak_tepat'] > 0)
-                                    <div class="salary-item">
-                                        <span class="salary-label">Potongan Terlambat:</span>
-                                        <span class="salary-value salary-negative">Rp
-                                            {{-- ✅ GUNAKAN DATA DARI SERVICE, BUKAN MANUAL CALCULATION --}}
-                                            {{ number_format($karyawan['potongan_detail']['keterlambatan']['total_potongan'], 0, ',', '.') }}
-                                        </span>
-                                    </div>
-                                    <div class="breakdown-detail">
-                                        {{ $karyawan['total_tidak_tepat'] }} hari × Rp
-                                        {{ number_format($karyawan['potongan_detail']['keterlambatan']['potongan_per_hari'], 0, ',', '.') }}/hari
-                                    </div>
-                                @endif
-
-                                {{-- BPJS Components - sudah benar --}}
-                                @if(isset($karyawan['bpjs_breakdown']) && !empty($karyawan['bpjs_breakdown']['breakdown']))
-                                    @foreach($karyawan['bpjs_breakdown']['breakdown'] as $item)
-                                        <div class="salary-item">
-                                            <span class="salary-label">{{ $item['label'] }}:</span>
-                                            <span class="salary-value salary-negative">Rp
-                                                {{ number_format($item['amount'], 0, ',', '.') }}</span>
-                                        </div>
-                                        <div class="breakdown-detail">
-                                            {{ $item['description'] }}
-                                        </div>
-                                    @endforeach
-                                @endif
-
-                                {{-- PPh21 - sudah benar --}}
-                                <div class="salary-item">
-                                    <span class="salary-label">Pajak PPh21:</span>
-                                    <span class="salary-value salary-negative">Rp
-                                        {{ number_format($karyawan['pph21_detail']['jumlah'], 0, ',', '.') }}</span>
-                                </div>
-                                <div class="breakdown-detail">
-                                    {{ $karyawan['pph21_detail']['tarif_persen'] }}% dari penghasilan bruto Rp
-                                    {{ number_format($karyawan['pph21_detail']['penghasilan_bruto'], 0, ',', '.') }}
-                                </div>
-                                <div class="breakdown-detail">
-                                    PTKP: {{ $karyawan['pph21_detail']['golongan_ptkp'] }}
-                                    ({{ $karyawan['pph21_detail']['kategori_ter'] }})
-                                </div>
-
-                                {{-- Total Potongan - gunakan dari service --}}
-                                <div class="salary-item"
-                                    style="margin-top: 0.5rem; padding-top: 0.5rem; border-top: 1px solid rgb(229 231 235);">
-                                    <span class="salary-label" style="font-weight: 600;">Total Potongan:</span>
-                                    <span class="salary-value salary-negative">Rp
-                                        {{ number_format($karyawan['potongan_total'], 0, ',', '.') }}</span>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- Total Salary -->
-                        <div class="total-salary">
-                            <div class="total-salary-item">
-                                <span class="total-salary-label">GAJI BERSIH:</span>
-                                <span class="total-salary-value">
-                                    Rp {{ number_format($karyawan['total_gaji'], 0, ',', '.') }}
-                                </span>
-                            </div>
-                        </div>
                     </div>
                 </div>
-            </div>
-        @endforeach
+            @endforeach
 
-        <!-- PAGINATION -->
-        @if(isset($pagination) && $pagination->hasPages())
-            <div class="pagination-container">
-                <div class="pagination-links">
-                    {{-- Previous Page Link --}}
-                    @if ($pagination->onFirstPage())
-                        <span class="disabled">« Sebelumnya</span>
-                    @else
-                        <a href="{{ $pagination->previousPageUrl() }}">« Sebelumnya</a>
-                    @endif
-
-                    {{-- Smart Page Numbers (show max 5 pages) --}}
-                    @php
-                        $start = max(1, $pagination->currentPage() - 2);
-                        $end = min($pagination->lastPage(), $pagination->currentPage() + 2);
-                    @endphp
-
-                    {{-- First Page --}}
-                    @if($start > 1)
-                        <a href="{{ $pagination->url(1) }}">1</a>
-                        @if($start > 2)
-                            <span class="disabled">...</span>
-                        @endif
-                    @endif
-
-                    {{-- Page Range --}}
-                    @for($i = $start; $i <= $end; $i++)
-                        @if ($i == $pagination->currentPage())
-                            <span class="current">{{ $i }}</span>
+            <!-- PAGINATION -->
+            @if(isset($pagination) && $pagination->hasPages())
+                <div class="pagination-container">
+                    <div class="pagination-links">
+                        {{-- Previous Page Link --}}
+                        @if ($pagination->onFirstPage())
+                            <span class="disabled">« Sebelumnya</span>
                         @else
-                            <a href="{{ $pagination->url($i) }}">{{ $i }}</a>
+                            <a href="{{ $pagination->previousPageUrl() }}">« Sebelumnya</a>
                         @endif
-                    @endfor
 
-                    {{-- Last Page --}}
-                    @if($end < $pagination->lastPage())
-                        @if($end < $pagination->lastPage() - 1)
-                            <span class="disabled">...</span>
+                        {{-- Smart Page Numbers (show max 5 pages) --}}
+                        @php
+                            $start = max(1, $pagination->currentPage() - 2);
+                            $end = min($pagination->lastPage(), $pagination->currentPage() + 2);
+                        @endphp
+
+                        {{-- First Page --}}
+                        @if($start > 1)
+                            <a href="{{ $pagination->url(1) }}">1</a>
+                            @if($start > 2)
+                                <span class="disabled">...</span>
+                            @endif
                         @endif
-                        <a href="{{ $pagination->url($pagination->lastPage()) }}">{{ $pagination->lastPage() }}</a>
-                    @endif
 
-                    {{-- Next Page Link --}}
-                    @if ($pagination->hasMorePages())
-                        <a href="{{ $pagination->nextPageUrl() }}">Selanjutnya »</a>
-                    @else
-                        <span class="disabled">Selanjutnya »</span>
-                    @endif
-                </div>
+                        {{-- Page Range --}}
+                        @for($i = $start; $i <= $end; $i++)
+                            @if ($i == $pagination->currentPage())
+                                <span class="current">{{ $i }}</span>
+                            @else
+                                <a href="{{ $pagination->url($i) }}">{{ $i }}</a>
+                            @endif
+                        @endfor
 
-                <div class="pagination-info">
-                    Menampilkan {{ $pagination->firstItem() }} - {{ $pagination->lastItem() }} dari
-                    {{ $pagination->total() }} karyawan
+                        {{-- Last Page --}}
+                        @if($end < $pagination->lastPage())
+                            @if($end < $pagination->lastPage() - 1)
+                                <span class="disabled">...</span>
+                            @endif
+                            <a href="{{ $pagination->url($pagination->lastPage()) }}">{{ $pagination->lastPage() }}</a>
+                        @endif
+
+                        {{-- Next Page Link --}}
+                        @if ($pagination->hasMorePages())
+                            <a href="{{ $pagination->nextPageUrl() }}">Selanjutnya »</a>
+                        @else
+                            <span class="disabled">Selanjutnya »</span>
+                        @endif
+                    </div>
+
+                    <div class="pagination-info">
+                        Menampilkan {{ $pagination->firstItem() }} - {{ $pagination->lastItem() }} dari
+                        {{ $pagination->total() }} karyawan
+                    </div>
                 </div>
-            </div>
-        @endif
+            @endif
+        </div>
     </div>
 </x-filament-widgets::widget>
