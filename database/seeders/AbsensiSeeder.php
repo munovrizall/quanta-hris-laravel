@@ -313,6 +313,8 @@ class AbsensiSeeder extends Seeder
 
     // Generate waktu pulang dengan variasi
     $probabilityPulang = $faker->numberBetween(1, 100);
+    $statusPulang = 'Tepat Waktu';
+    $durasiPulangCepat = null;
 
     if ($probabilityPulang <= 70) {
       // Pulang normal (17:00 - 17:45)
@@ -336,13 +338,22 @@ class AbsensiSeeder extends Seeder
     $koordinatMasuk = $this->generateKoordinat($faker, $cabang);
     $koordinatPulang = $this->generateKoordinat($faker, $cabang);
 
-    // Status absensi keseluruhan berdasarkan enum database: 'Hadir','Tidak Tepat','Alfa'
-    if ($statusMasuk === 'Tepat Waktu') {
+    // ✅ FIXED: Status absensi keseluruhan berdasarkan logika yang benar
+    // Status absensi = 'Hadir' HANYA jika KEDUA status masuk DAN pulang tepat waktu
+    // Jika SALAH SATU tidak tepat, maka status absensi = 'Tidak Tepat'
+    if ($statusMasuk === 'Tepat Waktu' && $statusPulang === 'Tepat Waktu') {
       $statusAbsensi = 'Hadir';
     } else {
-      // Jika terlambat lebih dari 60 menit, dianggap tidak tepat
+      // Jika ada yang tidak tepat (telat masuk ATAU pulang cepat)
+      $statusAbsensi = 'Tidak Tepat';
+    }
+
+    // ✅ SPECIAL CASE: Jika terlambat lebih dari 60 menit, langsung 'Tidak Tepat'
+    if ($statusMasuk === 'Telat') {
       $menitTerlambat = $jamMasukStandar->diffInMinutes($waktuMasuk);
-      $statusAbsensi = $menitTerlambat > 60 ? 'Tidak Tepat' : 'Hadir';
+      if ($menitTerlambat > 60) {
+        $statusAbsensi = 'Tidak Tepat';
+      }
     }
 
     return [
@@ -360,7 +371,7 @@ class AbsensiSeeder extends Seeder
       'koordinat_pulang' => $koordinatPulang,
       'foto_masuk' => 'masuk_' . $faker->randomNumber(6) . '.jpg',
       'foto_pulang' => $faker->boolean(95) ? 'pulang_' . $faker->randomNumber(6) . '.jpg' : null,
-      'status_absensi' => $statusAbsensi, // Hanya 'Hadir', 'Tidak Tepat', atau 'Alfa'
+      'status_absensi' => $statusAbsensi, // ✅ Sekarang logikanya sudah benar
       'created_at' => $waktuMasuk,
       'updated_at' => $waktuPulang,
     ];
