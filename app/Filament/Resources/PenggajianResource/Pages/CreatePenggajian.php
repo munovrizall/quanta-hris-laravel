@@ -21,16 +21,6 @@ class CreatePenggajian extends CreateRecord
 
     protected static ?string $breadcrumb = 'Tambah';
 
-    protected AbsensiService $attendanceService;
-    protected HitungGajiService $payrollService;
-
-    public function __construct()
-    {
-        parent::__construct();
-        $this->attendanceService = new AbsensiService();
-        $this->payrollService = new HitungGajiService();
-    }
-
     protected function mutateFormDataBeforeCreate(array $data): array
     {
         // Generate ID otomatis
@@ -72,12 +62,16 @@ class CreatePenggajian extends CreateRecord
             $batchSize = 50;
             $detailPenggajianData = [];
 
+            // Initialize services without constructor
+            $attendanceService = new AbsensiService();
+            $payrollService = new HitungGajiService();
+
             // Process karyawan in batches
             foreach ($karyawanList->chunk($batchSize) as $karyawanChunk) {
                 $karyawanIds = $karyawanChunk->pluck('karyawan_id');
 
                 // Get combined attendance data using service
-                $combinedData = $this->attendanceService->getCombinedDataBatch($karyawanIds, $periodeStart, $periodeEnd);
+                $combinedData = $attendanceService->getCombinedDataBatch($karyawanIds, $periodeStart, $periodeEnd);
 
                 foreach ($karyawanChunk as $karyawan) {
                     try {
@@ -92,7 +86,7 @@ class CreatePenggajian extends CreateRecord
                         ];
 
                         // Calculate salary components using service
-                        $gajiData = $this->payrollService->calculateSalaryComponents($karyawan, $attendanceData);
+                        $gajiData = $payrollService->calculateSalaryComponents($karyawan, $attendanceData);
 
                         // Prepare data for batch insert
                         $detailPenggajianData[] = [

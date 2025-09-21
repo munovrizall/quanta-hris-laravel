@@ -41,17 +41,17 @@ class DetailPenggajian extends Model
    * Memastikan semua kolom uang diperlakukan sebagai angka desimal.
    */
   protected $casts = [
-    'gaji_pokok' => 'decimal:2',
-    'total_tunjangan' => 'decimal:2',
-    'total_lembur' => 'decimal:2',
-    'penghasilan_bruto' => 'decimal:2',
-    'potongan_alfa' => 'decimal:2',
-    'potongan_terlambat' => 'decimal:2',
-    'potongan_bpjs' => 'decimal:2',
-    'potongan_pph21' => 'decimal:2',
-    'penyesuaian' => 'decimal:2',
-    'total_potongan' => 'decimal:2',
-    'gaji_bersih' => 'decimal:2',
+    'gaji_pokok' => 'float',
+    'total_tunjangan' => 'float',
+    'total_lembur' => 'float',
+    'penghasilan_bruto' => 'float',
+    'potongan_alfa' => 'float',
+    'potongan_terlambat' => 'float',
+    'potongan_bpjs' => 'float',
+    'potongan_pph21' => 'float',
+    'penyesuaian' => 'float',
+    'total_potongan' => 'float',
+    'gaji_bersih' => 'float',
   ];
 
   /**

@@ -65,7 +65,7 @@ class AbsensiService
                 $result[$karyawanId] = [
                     'total_lembur_hours' => round($totalHours, 1),
                     'total_lembur_sessions' => $stats->total_sessions,
-                    'total_lembur_insentif' => $stats->total_insentif ?? 0,
+                    'total_lembur_insentif' => intval($stats->total_insentif ?? 0),
                 ];
             } else {
                 $result[$karyawanId] = [
