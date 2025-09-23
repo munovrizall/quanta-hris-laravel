@@ -185,21 +185,6 @@ class PenggajianResource extends Resource
                         'Ditolak' => 'heroicon-m-x-circle',
                         default => 'heroicon-m-question-mark-circle',
                     }),
-
-                // Sementara comment dulu kolom yang bergantung pada slip_gaji
-                // Tables\Columns\TextColumn::make('total_karyawan')
-                //     ->label('Total Karyawan')
-                //     ->getStateUsing(fn(Penggajian $record): int => $record->slipGaji()->count())
-                //     ->alignCenter()
-                //     ->sortable(),
-
-                // Tables\Columns\TextColumn::make('total_gaji')
-                //     ->label('Total Gaji')
-                //     ->getStateUsing(fn(Penggajian $record): string => 'Rp ' . number_format($record->slipGaji()->sum('total_gaji'), 0, ',', '.'))
-                //     ->alignEnd()
-                //     ->weight(FontWeight::Bold)
-                //     ->color('success'),
-
                 // Temporary columns untuk menggantikan slip gaji dependency
                 Tables\Columns\TextColumn::make('total_karyawan')
                     ->label('Total Karyawan')
@@ -213,45 +198,14 @@ class PenggajianResource extends Resource
                     ->badge()
                     ->color('info'),
 
-                Tables\Columns\TextColumn::make('estimated_total')
-                    ->label('Estimasi Total Gaji')
-                    ->getStateUsing(function (Penggajian $record): string {
-                        // Estimasi berdasarkan total karyawan x gaji rata-rata
-                        $totalKaryawan = \App\Models\Karyawan::whereDate('tanggal_mulai_bekerja', '<=', Carbon::create($record->periode_tahun, $record->periode_bulan)->endOfMonth())->count();
-                        $averageSalary = 8000000; // Estimasi gaji rata-rata
-                        $estimatedTotal = $totalKaryawan * $averageSalary;
-                        return 'Rp ' . number_format($estimatedTotal, 0, ',', '.');
-                    })
-                    ->alignEnd()
-                    ->weight(FontWeight::Bold)
-                    ->color('success'),
-
                 Tables\Columns\TextColumn::make('verifier.nama_lengkap')
                     ->label('Diverifikasi Oleh')
-                    ->default('-')
-                    ->toggleable(isToggledHiddenByDefault: true),
+                    ->default('-'),
 
                 Tables\Columns\TextColumn::make('approver.nama_lengkap')
                     ->label('Disetujui Oleh')
-                    ->default('-')
-                    ->toggleable(isToggledHiddenByDefault: true),
+                    ->default('-'),
 
-                Tables\Columns\TextColumn::make('processor.nama_lengkap')
-                    ->label('Diproses Oleh')
-                    ->default('-')
-                    ->toggleable(isToggledHiddenByDefault: true),
-
-                Tables\Columns\TextColumn::make('created_at')
-                    ->label('Dibuat Pada')
-                    ->dateTime('d M Y H:i')
-                    ->sortable()
-                    ->toggleable(isToggledHiddenByDefault: true),
-
-                Tables\Columns\TextColumn::make('updated_at')
-                    ->label('Diperbarui Pada')
-                    ->dateTime('d M Y H:i')
-                    ->sortable()
-                    ->toggleable(isToggledHiddenByDefault: true),
             ])
             ->filters([
                 Tables\Filters\SelectFilter::make('status_penggajian')

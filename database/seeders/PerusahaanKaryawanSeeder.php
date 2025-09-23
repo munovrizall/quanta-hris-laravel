@@ -120,7 +120,7 @@ class PerusahaanKaryawanSeeder extends Seeder
         // 9. Buat 1 CEO dengan Tunjangan
         $ceoGajiPokok = 50000000;
         $ceoTunjangan = $this->calculateRealisticTunjanganBulanan($ceoGajiPokok, 'Executive');
-        
+            
         $ceoKaryawan = Karyawan::create([
             'karyawan_id' => 'K' . str_pad($counter++, 4, '0', STR_PAD_LEFT),
             'perusahaan_id' => $perusahaan->perusahaan_id,

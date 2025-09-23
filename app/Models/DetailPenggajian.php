@@ -22,6 +22,7 @@ class DetailPenggajian extends Model
   protected $fillable = [
     'penggajian_id',
     'karyawan_id',
+    'sudah_diproses',
     'gaji_pokok',
     'total_tunjangan',
     'total_lembur',

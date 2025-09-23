@@ -41,6 +41,10 @@ class Karyawan extends Authenticable implements FilamentUser, HasName
     'status_pernikahan', // Tambahkan ini jika belum ada
     'tanggal_mulai_bekerja',
     'gaji_pokok',
+    'tunjangan_jabatan',
+    'tunjangan_makan_bulanan',
+    'tunjangan_transport_bulanan',
+    'kuota_cuti_tahunan',
     'nomor_rekening',
     'nama_pemilik_rekening',
     'nomor_bpjs_kesehatan',
@@ -58,13 +62,20 @@ class Karyawan extends Authenticable implements FilamentUser, HasName
     'tanggal_lahir' => 'date',
     'tanggal_mulai_bekerja' => 'date',
     'gaji_pokok' => 'decimal:2',
-    'face_embedding' => 'array',
+    'tunjangan_jabatan',
+    'tunjangan_makan_bulanan',
+    'tunjangan_transport_bulanan',
+    'kuota_cuti_tahunan',
+    'nomor_rekening',
+    'nama_pemilik_rekening',
+    'nomor_bpjs_kesehatan',
+    'face_embedding'
   ];
 
   public function canAccessPanel(Panel $panel): bool
   {
     // Gunakan role_id langsung untuk pengecekan
-    return $this->role_id === 'R01' || $this->role?->name === 'Admin';
+    return true;
   }
 
   public function isSuperAdmin(): bool
@@ -108,7 +119,7 @@ class Karyawan extends Authenticable implements FilamentUser, HasName
   {
     return $this->hasMany(Cuti::class, 'karyawan_id', 'karyawan_id');
   }
-  
+
   public function calculatePph21Deduction(): float
   {
     $pph21Service = new Pph21Service();

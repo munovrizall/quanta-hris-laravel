@@ -17,7 +17,7 @@ class CreatePenggajian extends CreateRecord
 {
     protected static string $resource = PenggajianResource::class;
 
-    protected static ?string $title = 'Tambah Penggajian';
+    protected static ?string $title = 'Tambah Draf Penggajian';
 
     protected static ?string $breadcrumb = 'Tambah';
 

@@ -21,6 +21,8 @@ return new class extends Migration {
             // Foreign Key ke tabel karyawan
             $table->string('karyawan_id');
             $table->foreign('karyawan_id')->references('karyawan_id')->on('karyawan')->onDelete('cascade');
+            
+            $table->boolean('sudah_diproses')->default(false);
 
             // --- Komponen Pendapatan ---
             // DECIMAL digunakan untuk presisi angka keuangan
