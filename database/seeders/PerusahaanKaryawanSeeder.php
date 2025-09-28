@@ -42,9 +42,9 @@ class PerusahaanKaryawanSeeder extends Seeder
             'potongan_keterlambatan' => 50000,
 
             // Konfigurasi Potongan BPJS Karyawan
-            'persen_bpjs_kesehatan_karyawan' => 0.01, // 1%
-            'persen_bpjs_jht_karyawan' => 0.02, // 2%
-            'persen_bpjs_jp_karyawan' => 0.01, // 1%
+            'persen_bpjs_kesehatan' => 0.01, // 1%
+            'persen_bpjs_jht' => 0.02, // 2%
+            'persen_bpjs_jp' => 0.01, // 1%
 
             // Batas Atas Gaji (Salary Cap) BPJS
             'batas_gaji_bpjs_kesehatan' => 12000000,

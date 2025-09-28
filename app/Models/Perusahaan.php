@@ -23,9 +23,9 @@ class Perusahaan extends Model
     'jam_masuk',
     'jam_pulang',
     'potongan_keterlambatan',
-    'persen_bpjs_kesehatan_karyawan',
-    'persen_bpjs_jht_karyawan',
-    'persen_bpjs_jp_karyawan',
+    'persen_bpjs_kesehatan',
+    'persen_bpjs_jht',
+    'persen_bpjs_jp',
     'batas_gaji_bpjs_kesehatan',
     'batas_gaji_bpjs_pensiun',
   ];

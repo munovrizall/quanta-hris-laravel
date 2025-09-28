@@ -41,9 +41,9 @@ class BpjsService
             Log::info("=== BPJS BREAKDOWN KARYAWAN: {$karyawan->nama_lengkap} ({$karyawan->karyawan_id}) ===", [
                 'gaji_pokok' => 'Rp ' . number_format($gajiPokok, 0, ',', '.'),
                 'perusahaan_config' => [
-                    'persen_kesehatan' => $perusahaan->persen_bpjs_kesehatan_karyawan ?? 'NULL',
-                    'persen_jht' => $perusahaan->persen_bpjs_jht_karyawan ?? 'NULL',
-                    'persen_jp' => $perusahaan->persen_bpjs_jp_karyawan ?? 'NULL',
+                    'persen_kesehatan' => $perusahaan->persen_bpjs_kesehatan ?? 'NULL',
+                    'persen_jht' => $perusahaan->persen_bpjs_jht ?? 'NULL',
+                    'persen_jp' => $perusahaan->persen_bpjs_jp ?? 'NULL',
                     'batas_kesehatan' => 'Rp ' . number_format($perusahaan->batas_gaji_bpjs_kesehatan ?? 0, 0, ',', '.'),
                     'batas_pensiun' => 'Rp ' . number_format($perusahaan->batas_gaji_bpjs_pensiun ?? 0, 0, ',', '.'),
                 ],
@@ -66,9 +66,9 @@ class BpjsService
                 'total_bpjs' => $totalBpjs,
                 'breakdown' => [
                     'gaji_pokok' => $gajiPokok,
-                    'persen_kesehatan' => $perusahaan->persen_bpjs_kesehatan_karyawan ?? 1,
-                    'persen_jht' => $perusahaan->persen_bpjs_jht_karyawan ?? 2,
-                    'persen_jp' => $perusahaan->persen_bpjs_jp_karyawan ?? 1,
+                    'persen_kesehatan' => $perusahaan->persen_bpjs_kesehatan ?? 1,
+                    'persen_jht' => $perusahaan->persen_bpjs_jht ?? 2,
+                    'persen_jp' => $perusahaan->persen_bpjs_jp ?? 1,
                     'batas_kesehatan' => $perusahaan->batas_gaji_bpjs_kesehatan ?? 0,
                     'batas_pensiun' => $perusahaan->batas_gaji_bpjs_pensiun ?? 0,
                 ]
@@ -86,7 +86,7 @@ class BpjsService
     private function calculateBpjsKesehatan(float $gajiPokok, Perusahaan $perusahaan): float
     {
         // *** FIX: Gunakan nilai yang benar dari database atau default ***
-        $persenKesehatan = (float) ($perusahaan->persen_bpjs_kesehatan_karyawan ?? 0.01); // 1% (bukan 4%)
+        $persenKesehatan = (float) ($perusahaan->persen_bpjs_kesehatan ?? 0.01); // 1% (bukan 4%)
         $batasGaji = (float) ($perusahaan->batas_gaji_bpjs_kesehatan ?? 0);
 
         // Jika ada batas gaji, gunakan yang terkecil antara gaji pokok atau batas gaji
@@ -108,7 +108,7 @@ class BpjsService
     private function calculateBpjsJht(float $gajiPokok, Perusahaan $perusahaan): float
     {
         // *** FIX: Gunakan nilai yang benar dari database atau default ***
-        $persenJht = (float) ($perusahaan->persen_bpjs_jht_karyawan ?? 0.02); // 2%
+        $persenJht = (float) ($perusahaan->persen_bpjs_jht ?? 0.02); // 2%
 
         // *** FIX: Pastikan persentase tidak dalam bentuk desimal 100x ***
         if ($persenJht > 1) {
@@ -124,7 +124,7 @@ class BpjsService
     private function calculateBpjsJp(float $gajiPokok, Perusahaan $perusahaan): float
     {
         // *** FIX: Gunakan nilai yang benar dari database atau default ***
-        $persenJp = (float) ($perusahaan->persen_bpjs_jp_karyawan ?? 0.01); // 1%
+        $persenJp = (float) ($perusahaan->persen_bpjs_jp ?? 0.01); // 1%
         $batasGaji = (float) ($perusahaan->batas_gaji_bpjs_pensiun ?? 10547400);
 
         // Jika ada batas gaji, gunakan yang terkecil antara gaji pokok atau batas gaji

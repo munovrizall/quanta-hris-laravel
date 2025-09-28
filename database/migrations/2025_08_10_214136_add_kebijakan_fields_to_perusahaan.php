@@ -16,10 +16,10 @@ return new class extends Migration
             $table->decimal('potongan_keterlambatan', 15, 2)->default(50000)->after('jam_pulang');
 
             // Konfigurasi Potongan BPJS Karyawan
-            $table->decimal('persen_bpjs_kesehatan_karyawan', 5, 4)->default(0.0100)->comment('Default 1%')->after('potongan_keterlambatan');
-            $table->decimal('persen_bpjs_jht_karyawan', 5, 4)->default(0.0200)->comment('Default 2%')->after('persen_bpjs_kesehatan_karyawan');
-            $table->decimal('persen_bpjs_jp_karyawan', 5, 4)->default(0.0100)->comment('Default 1%')->after('persen_bpjs_jht_karyawan');
-            $table->bigInteger('batas_gaji_bpjs_kesehatan')->default(12000000)->after('persen_bpjs_jp_karyawan');
+            $table->decimal('persen_bpjs_kesehatan', 5, 4)->default(0.0100)->comment('Default 1%')->after('potongan_keterlambatan');
+            $table->decimal('persen_bpjs_jht', 5, 4)->default(0.0200)->comment('Default 2%')->after('persen_bpjs_kesehatan');
+            $table->decimal('persen_bpjs_jp', 5, 4)->default(0.0100)->comment('Default 1%')->after('persen_bpjs_jht');
+            $table->bigInteger('batas_gaji_bpjs_kesehatan')->default(12000000)->after('persen_bpjs_jp');
             $table->bigInteger('batas_gaji_bpjs_pensiun')->default(10547400)->after('batas_gaji_bpjs_kesehatan');
         });
     }
@@ -32,9 +32,9 @@ return new class extends Migration
         Schema::table('perusahaan', function (Blueprint $table) {
             $table->dropColumn([
                 'potongan_keterlambatan',
-                'persen_bpjs_kesehatan_karyawan',
-                'persen_bpjs_jht_karyawan',
-                'persen_bpjs_jp_karyawan',
+                'persen_bpjs_kesehatan',
+                'persen_bpjs_jht',
+                'persen_bpjs_jp',
                 'batas_gaji_bpjs_kesehatan',
                 'batas_gaji_bpjs_pensiun',
             ]);
