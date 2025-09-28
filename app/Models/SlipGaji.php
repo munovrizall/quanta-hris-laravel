@@ -5,10 +5,11 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 class SlipGaji extends Model
 {
-    use HasFactory;
+    use HasFactory, SoftDeletes;
 
     /**
      * Konfigurasi untuk Primary Key Kustom
@@ -27,11 +28,16 @@ class SlipGaji extends Model
         'karyawan_id',
         'gaji_pokok',
         'total_tunjangan',
-        'total_insentif_lembur',
-        'total_potongan_pph21',
-        'total_potongan_bpjs',
-        'total_potongan_penalty',
-        'pendapatan_bersih',
+        'total_lembur',
+        'penghasilan_bruto',
+        'potongan_alfa',
+        'potongan_terlambat',
+        'potongan_bpjs',
+        'potongan_pph21',
+        'penyesuaian',
+        'catatan_penyesuaian',
+        'total_potongan',
+        'gaji_bersih',
     ];
 
     /**
