@@ -126,6 +126,20 @@ class PermissionSeeder extends Seeder
       'restore_any_izin',
       'replicate_izin',
       'reorder_izin',
+      
+      // Penggajian permissions
+      'view_any_penggajian',
+      'view_penggajian',
+      'create_penggajian',
+      'update_penggajian',
+      'delete_penggajian',
+      'delete_any_penggajian',
+      'force_delete_penggajian',
+      'force_delete_any_penggajian',
+      'restore_penggajian',
+      'restore_any_penggajian',
+      'replicate_penggajian',
+      'reorder_penggajian',
     ];
 
     // Create permissions with custom ID format

@@ -44,7 +44,7 @@ class CreatePenggajian extends CreateRecord
     }
 
     /**
-     * Generate detail penggajian untuk semua karyawan eligible
+     * Generate detail penggajian dengan batch insert dan manual ID generation
      */
     private function generateDetailPenggajian(Penggajian $penggajian): void
     {
@@ -62,9 +62,19 @@ class CreatePenggajian extends CreateRecord
             $batchSize = 50;
             $detailPenggajianData = [];
 
-            // Initialize services without constructor
+            // Initialize services
             $attendanceService = new AbsensiService();
             $payrollService = new HitungGajiService();
+
+            // Get starting ID number for batch
+            $lastId = DetailPenggajian::withTrashed()
+                ->pluck('detail_penggajian_id')
+                ->map(function ($id) {
+                    return intval(substr($id, 2));
+                })
+                ->max() ?? 0;
+
+            $currentIdCounter = $lastId + 1;
 
             // Process karyawan in batches
             foreach ($karyawanList->chunk($batchSize) as $karyawanChunk) {
@@ -88,10 +98,15 @@ class CreatePenggajian extends CreateRecord
                         // Calculate salary components using service
                         $gajiData = $payrollService->calculateSalaryComponents($karyawan, $attendanceData);
 
+                        // Generate manual ID for batch insert
+                        $detailId = 'DP' . str_pad($currentIdCounter++, 4, '0', STR_PAD_LEFT);
+
                         // Prepare data for batch insert
                         $detailPenggajianData[] = [
+                            'detail_penggajian_id' => $detailId, // Manual ID generation
                             'penggajian_id' => $penggajian->penggajian_id,
                             'karyawan_id' => $karyawan->karyawan_id,
+                            'sudah_diproses' => false,
                             'gaji_pokok' => $gajiData['gaji_pokok'],
                             'total_tunjangan' => $gajiData['tunjangan_total'],
                             'total_lembur' => $gajiData['lembur_pay'],
@@ -100,7 +115,7 @@ class CreatePenggajian extends CreateRecord
                             'potongan_terlambat' => $gajiData['potongan_detail']['keterlambatan']['total_potongan'],
                             'potongan_bpjs' => $gajiData['potongan_detail']['bpjs'],
                             'potongan_pph21' => $gajiData['potongan_detail']['pph21'],
-                            'penyesuaian' => 0, // Default 0, bisa diubah manual nanti
+                            'penyesuaian' => 0,
                             'catatan_penyesuaian' => null,
                             'total_potongan' => $gajiData['potongan_total'],
                             'gaji_bersih' => $gajiData['total_gaji'],

@@ -131,7 +131,13 @@ class RoleSeeder extends Seeder
         'create_izin',
         'update_izin',
         'delete_izin',
-        'restore_izin'
+        'restore_izin',
+        // Penggajian permissions
+        'view_any_penggajian',
+        'view_penggajian',
+        'update_penggajian',
+        'delete_penggajian',
+        'restore_penggajian',
       ]);
 
       DB::table('role_has_permissions')->where('role_id', $managerHRDRole->role_id)->delete();
@@ -152,15 +158,6 @@ class RoleSeeder extends Seeder
         'view_karyawan',
         'create_karyawan',
         'update_karyawan',
-        // Cabang permissions
-        'view_any_cabang',
-        'view_cabang',
-        // Perusahaan permissions
-        'view_any_perusahaan',
-        'view_perusahaan',
-        // Role permissions
-        'view_any_role',
-        'view_role',
         // Absensi permissions
         'view_any_absensi',
         'view_absensi',
@@ -177,7 +174,14 @@ class RoleSeeder extends Seeder
         'create_cuti',
         'update_cuti',
         // Izin permissions
-        'view_any_izin', 'view_izin', 'create_izin', 'update_izin'
+        'view_any_izin', 'view_izin', 'create_izin', 'update_izin',
+        // Penggajian permissions
+        'view_any_penggajian',
+        'view_penggajian',
+        'create_penggajian',
+        'update_penggajian',
+        'delete_penggajian',
+        'restore_penggajian',
       ]);
 
       DB::table('role_has_permissions')->where('role_id', $staffHRDRole->role_id)->delete();
@@ -204,7 +208,13 @@ class RoleSeeder extends Seeder
         'view_any_lembur',
         'view_lembur',
         'view_any_cuti',
-        'view_cuti'
+        'view_cuti',
+        // Penggajian permissions
+        'view_any_penggajian',
+        'view_penggajian',
+        'update_penggajian',
+        'delete_penggajian',
+        'restore_penggajian',
       ]);
 
       DB::table('role_has_permissions')->where('role_id', $managerFinanceRole->role_id)->delete();
@@ -229,7 +239,13 @@ class RoleSeeder extends Seeder
         'view_any_lembur',
         'view_lembur',
         'view_any_cuti',
-        'view_cuti'
+        'view_cuti',
+        // Penggajian permissions
+        'view_any_penggajian',
+        'view_penggajian',
+        'update_penggajian',
+        'delete_penggajian',
+        'restore_penggajian',
       ]);
 
       DB::table('role_has_permissions')->where('role_id', $accountPaymentRole->role_id)->delete();

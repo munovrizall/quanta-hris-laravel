@@ -16,10 +16,19 @@ class DetailPenggajian extends Model
    */
   protected $table = 'detail_penggajian';
 
+
+  /**
+   * Primary key adalah string, bukan auto-increment
+   */
+  protected $primaryKey = 'detail_penggajian_id';
+  public $incrementing = false;
+  protected $keyType = 'string';
+
   /**
    * Kolom yang dapat diisi secara massal (mass assignable).
    */
   protected $fillable = [
+    'detail_penggajian_id',
     'penggajian_id',
     'karyawan_id',
     'sudah_diproses',
@@ -71,5 +80,37 @@ class DetailPenggajian extends Model
   public function karyawan(): BelongsTo
   {
     return $this->belongsTo(Karyawan::class, 'karyawan_id', 'karyawan_id');
+  }
+
+  /**
+   * Generate next Detail Penggajian ID
+   */
+  public static function generateNextId(): string
+  {
+    // Ambil semua ID yang ada (termasuk yang soft deleted)
+    $allIds = static::withTrashed()
+      ->pluck('detail_penggajian_id')
+      ->map(function ($id) {
+        // Ambil angka dari DP0001 -> 1
+        return intval(substr($id, 2));
+      })
+      ->max();
+
+    $nextNumber = ($allIds ?? 0) + 1;
+    return 'DP' . str_pad($nextNumber, 4, '0', STR_PAD_LEFT);
+  }
+
+  /**
+   * Boot method untuk auto-generate ID
+   */
+  protected static function boot()
+  {
+    parent::boot();
+
+    static::creating(function ($model) {
+      if (empty($model->detail_penggajian_id)) {
+        $model->detail_penggajian_id = static::generateNextId();
+      }
+    });
   }
 }

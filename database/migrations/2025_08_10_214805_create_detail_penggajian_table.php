@@ -11,7 +11,8 @@ return new class extends Migration {
     public function up(): void
     {
         Schema::create('detail_penggajian', function (Blueprint $table) {
-            $table->id(); // Primary Key auto-increment
+            $table->string('detail_penggajian_id', 6)->primary();
+            // Primary Key auto-increment
 
             // --- Relasi ke tabel lain ---
             // Foreign Key ke tabel penggajian utama
@@ -21,7 +22,7 @@ return new class extends Migration {
             // Foreign Key ke tabel karyawan
             $table->string('karyawan_id');
             $table->foreign('karyawan_id')->references('karyawan_id')->on('karyawan')->onDelete('cascade');
-            
+
             $table->boolean('sudah_diproses')->default(false);
 
             // --- Komponen Pendapatan ---
