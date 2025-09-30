@@ -3,6 +3,7 @@
 namespace App\Filament\Resources\PenggajianResource\Pages;
 
 use App\Filament\Resources\PenggajianResource;
+use App\Models\Penggajian;
 use Filament\Actions;
 use Filament\Resources\Pages\EditRecord;
 
@@ -23,12 +24,25 @@ class EditPenggajian extends EditRecord
                 ->label('Hapus')
                 ->requiresConfirmation()
                 ->modalHeading('Hapus Penggajian')
-                ->modalDescription('Apakah Anda yakin ingin menghapus penggajian ini? Tindakan ini tidak dapat dibatalkan dan akan mempengaruhi semua slip gaji terkait.')
-                ->modalSubmitActionLabel('Ya, hapus'),
+                ->modalDescription('Apakah Anda yakin ingin menghapus seluruh data penggajian untuk periode ini?')
+                ->modalSubmitActionLabel('Ya, hapus')
+                ->action(function (Penggajian $record) {
+                    Penggajian::forPeriode($record->periode_bulan, $record->periode_tahun)->delete();
+                }),
             Actions\ForceDeleteAction::make()
-                ->label('Hapus Permanen'),
+                ->label('Hapus Permanen')
+                ->action(function (Penggajian $record) {
+                    Penggajian::forPeriode($record->periode_bulan, $record->periode_tahun)
+                        ->withTrashed()
+                        ->forceDelete();
+                }),
             Actions\RestoreAction::make()
-                ->label('Pulihkan'),
+                ->label('Pulihkan')
+                ->action(function (Penggajian $record) {
+                    Penggajian::forPeriode($record->periode_bulan, $record->periode_tahun)
+                        ->withTrashed()
+                        ->restore();
+                }),
         ];
     }
 

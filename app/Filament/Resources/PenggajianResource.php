@@ -4,14 +4,12 @@ namespace App\Filament\Resources;
 
 use App\Filament\Resources\PenggajianResource\Pages;
 use App\Models\Penggajian;
-use App\Models\Karyawan;
 use Filament\Forms;
 use Filament\Forms\Form;
 use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
-use Illuminate\Database\Eloquent\SoftDeletingScope;
 use Filament\Support\Enums\FontWeight;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Forms\Components\Select;
@@ -138,13 +136,6 @@ class PenggajianResource extends Resource
     {
         return $table
             ->columns([
-                Tables\Columns\TextColumn::make('penggajian_id')
-                    ->label('ID Penggajian')
-                    ->searchable()
-                    ->sortable()
-                    ->weight(FontWeight::Bold)
-                    ->copyable(),
-
                 Tables\Columns\TextColumn::make('periode')
                     ->label('Periode')
                     ->getStateUsing(function (Penggajian $record): string {
@@ -186,13 +177,10 @@ class PenggajianResource extends Resource
                         default => 'heroicon-m-question-mark-circle',
                     }),
                 // Temporary columns untuk menggantikan slip gaji dependency
-                Tables\Columns\TextColumn::make('total_karyawan')
+                Tables\Columns\TextColumn::make('detail_count')
                     ->label('Total Karyawan')
                     ->getStateUsing(function (Penggajian $record): string {
-                        // Hitung berdasarkan jumlah karyawan yang aktif saat periode tersebut
-                        $totalKaryawan = \App\Models\Karyawan::whereDate('tanggal_mulai_bekerja', '<=', Carbon::create($record->periode_tahun, $record->periode_bulan)->endOfMonth())
-                            ->count();
-                        return (string) $totalKaryawan;
+                        return (string) ($record->detail_count ?? 0);
                     })
                     ->alignCenter()
                     ->badge()
@@ -254,16 +242,34 @@ class PenggajianResource extends Resource
                 Tables\Actions\EditAction::make()
                     ->label('Ubah'),
                 Tables\Actions\DeleteAction::make()
-                    ->label('Hapus'),
+                    ->label('Hapus')
+                    ->action(function (Penggajian $record) {
+                        Penggajian::forPeriode($record->periode_bulan, $record->periode_tahun)->delete();
+                    }),
             ])
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([
                     Tables\Actions\DeleteBulkAction::make()
-                        ->label('Hapus Terpilih'),
+                        ->label('Hapus Terpilih')
+                        ->action(function ($records) {
+                            $records->each(function (Penggajian $record) {
+                                Penggajian::forPeriode($record->periode_bulan, $record->periode_tahun)->delete();
+                            });
+                        }),
                     Tables\Actions\ForceDeleteBulkAction::make()
-                        ->label('Hapus Permanen'),
+                        ->label('Hapus Permanen')
+                        ->action(function ($records) {
+                            $records->each(function (Penggajian $record) {
+                                Penggajian::forPeriode($record->periode_bulan, $record->periode_tahun)->withTrashed()->forceDelete();
+                            });
+                        }),
                     Tables\Actions\RestoreBulkAction::make()
-                        ->label('Pulihkan'),
+                        ->label('Pulihkan')
+                        ->action(function ($records) {
+                            $records->each(function (Penggajian $record) {
+                                Penggajian::forPeriode($record->periode_bulan, $record->periode_tahun)->withTrashed()->restore();
+                            });
+                        }),
                 ]),
             ])
             ->defaultSort('created_at', 'desc');
@@ -271,10 +277,21 @@ class PenggajianResource extends Resource
 
     public static function getEloquentQuery(): Builder
     {
-        return parent::getEloquentQuery()
-            ->withoutGlobalScopes([
-                SoftDeletingScope::class,
-            ]);
+        $model = static::getModel();
+
+        return $model::query()
+            ->selectRaw('MIN(tabel_id) as tabel_id')
+            ->selectRaw('periode_bulan, periode_tahun')
+            ->selectRaw('MAX(status_penggajian) as status_penggajian')
+            ->selectRaw('MAX(verified_by) as verified_by')
+            ->selectRaw('MAX(approved_by) as approved_by')
+            ->selectRaw('MAX(processed_by) as processed_by')
+            ->selectRaw('MAX(catatan_penolakan_draf) as catatan_penolakan_draf')
+            ->selectRaw('MAX(created_at) as created_at')
+            ->selectRaw('MAX(updated_at) as updated_at')
+            ->selectRaw('MAX(deleted_at) as deleted_at')
+            ->selectRaw('COUNT(*) as detail_count')
+            ->groupBy('periode_bulan', 'periode_tahun');
     }
 
     public static function getRelations(): array
@@ -301,6 +318,6 @@ class PenggajianResource extends Resource
 
     public static function getGloballySearchableAttributes(): array
     {
-        return ['penggajian_id', 'verifier.nama_lengkap', 'approver.nama_lengkap'];
+        return ['tabel_id', 'verifier.nama_lengkap', 'approver.nama_lengkap'];
     }
 }

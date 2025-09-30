@@ -5,11 +5,10 @@ namespace App\Filament\Resources\PenggajianResource\Pages;
 use App\Filament\Resources\PenggajianResource;
 use App\Filament\Resources\PenggajianResource\Actions\EditGajiKaryawanAction;
 use App\Filament\Resources\PenggajianResource\Actions\EditKaryawanGajiAction;
-use App\Models\DetailPenggajian;
+use App\Models\Penggajian;
 use App\Services\AbsensiService;
 use App\Services\TunjanganService;
 use App\Services\BpjsService;
-use App\Services\AttendanceService;
 use Filament\Actions;
 use Filament\Resources\Pages\ViewRecord;
 use Filament\Infolists;
@@ -87,11 +86,6 @@ class ViewPenggajian extends ViewRecord
       ->schema([
         Infolists\Components\Section::make('Informasi Penggajian')
           ->schema([
-            Infolists\Components\TextEntry::make('penggajian_id')
-              ->label('ID Penggajian')
-              ->badge()
-              ->color('primary'),
-
             Infolists\Components\TextEntry::make('periode')
               ->label('Periode')
               ->getStateUsing(function ($record): string {
@@ -233,7 +227,8 @@ class ViewPenggajian extends ViewRecord
                 'karyawanData' => $karyawanData,
                 'pagination' => $paginatedDetailPenggajian,
                 'canEdit' => $this->record->status_penggajian === 'Draf',
-                'penggajianId' => $this->record->penggajian_id,
+                'periodeBulan' => $this->record->periode_bulan,
+                'periodeTahun' => $this->record->periode_tahun,
                 'livewireId' => $this->getId(),
               ])
           ])
@@ -247,8 +242,8 @@ class ViewPenggajian extends ViewRecord
    */
   private function getPaginatedDetailPenggajianFromDatabase($record): LengthAwarePaginator
   {
-    return DetailPenggajian::with(['karyawan.golonganPtkp.kategoriTer'])
-      ->where('penggajian_id', $record->penggajian_id)
+    return Penggajian::forPeriode($record->periode_bulan, $record->periode_tahun)
+      ->with(['karyawan.golonganPtkp.kategoriTer'])
       ->paginate(10, ['*'], 'page')
       ->withQueryString();
   }
@@ -277,7 +272,7 @@ class ViewPenggajian extends ViewRecord
       $karyawan = $detail->karyawan;
 
       if (!$karyawan) {
-        Log::warning("Karyawan not found for detail penggajian {$detail->id}");
+        Log::warning("Karyawan not found for penggajian {$detail->tabel_id}");
         continue;
       }
 
@@ -298,7 +293,7 @@ class ViewPenggajian extends ViewRecord
       $pph21Detail = $this->getPph21DetailForDisplay($karyawan, $detail);
 
       $processedData[] = [
-        'detail_id' => $detail->id, // Add detail ID for editing
+        'detail_id' => $detail->tabel_id, // Add detail ID for editing
         'karyawan_id' => $karyawan->karyawan_id,
         'nama_lengkap' => $karyawan->nama_lengkap,
         'jabatan' => $karyawan->jabatan,
@@ -341,36 +336,37 @@ class ViewPenggajian extends ViewRecord
   // Database calculation methods
   private function getTotalKaryawanCountFromDatabase($record): int
   {
-    return DetailPenggajian::where('penggajian_id', $record->penggajian_id)->count();
+    return Penggajian::forPeriode($record->periode_bulan, $record->periode_tahun)
+      ->count();
   }
 
   private function calculateTotalGajiFromDatabase($record): float
   {
-    return DetailPenggajian::where('penggajian_id', $record->penggajian_id)
+    return Penggajian::forPeriode($record->periode_bulan, $record->periode_tahun)
       ->sum('gaji_bersih');
   }
 
   private function calculateTotalGajiPokokFromDatabase($record): float
   {
-    return DetailPenggajian::where('penggajian_id', $record->penggajian_id)
+    return Penggajian::forPeriode($record->periode_bulan, $record->periode_tahun)
       ->sum('gaji_pokok');
   }
 
   private function calculateTotalTunjanganFromDatabase($record): float
   {
-    return DetailPenggajian::where('penggajian_id', $record->penggajian_id)
+    return Penggajian::forPeriode($record->periode_bulan, $record->periode_tahun)
       ->sum('total_tunjangan');
   }
 
   private function calculateTotalLemburFromDatabase($record): float
   {
-    return DetailPenggajian::where('penggajian_id', $record->penggajian_id)
+    return Penggajian::forPeriode($record->periode_bulan, $record->periode_tahun)
       ->sum('total_lembur');
   }
 
   private function calculateTotalPotonganFromDatabase($record): float
   {
-    return DetailPenggajian::where('penggajian_id', $record->penggajian_id)
+    return Penggajian::forPeriode($record->periode_bulan, $record->periode_tahun)
       ->sum('total_potongan');
   }
 

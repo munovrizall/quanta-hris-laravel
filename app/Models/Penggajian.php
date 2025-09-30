@@ -4,7 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Notifications\Notifiable;
 use Laravel\Sanctum\HasApiTokens;
@@ -14,54 +14,78 @@ class Penggajian extends Model
   use HasFactory, Notifiable, HasApiTokens, SoftDeletes;
 
   protected $table = 'penggajian';
-  protected $primaryKey = 'penggajian_id';
+  protected $primaryKey = 'tabel_id';
   public $incrementing = false;
   protected $keyType = 'string';
 
   protected $fillable = [
-    'penggajian_id',
+    'tabel_id',
     'periode_bulan',
     'periode_tahun',
     'status_penggajian',
     'verified_by',
     'approved_by',
     'processed_by',
-    'catatan_penolakan_draf'
+    'catatan_penolakan_draf',
+    'karyawan_id',
+    'sudah_diproses',
+    'gaji_pokok',
+    'total_tunjangan',
+    'total_lembur',
+    'penghasilan_bruto',
+    'potongan_alfa',
+    'potongan_terlambat',
+    'potongan_bpjs',
+    'potongan_pph21',
+    'penyesuaian',
+    'catatan_penyesuaian',
+    'total_potongan',
+    'gaji_bersih',
   ];
 
   protected $casts = [
     'periode_bulan' => 'integer',
     'periode_tahun' => 'integer',
+    'sudah_diproses' => 'boolean',
+    'gaji_pokok' => 'float',
+    'total_tunjangan' => 'float',
+    'total_lembur' => 'float',
+    'penghasilan_bruto' => 'float',
+    'potongan_alfa' => 'float',
+    'potongan_terlambat' => 'float',
+    'potongan_bpjs' => 'float',
+    'potongan_pph21' => 'float',
+    'penyesuaian' => 'float',
+    'total_potongan' => 'float',
+    'gaji_bersih' => 'float',
   ];
 
-  public function detailPenggajian(): HasMany
+  public function scopeForPeriode($query, int $bulan, int $tahun)
   {
-    return $this->hasMany(DetailPenggajian::class, 'penggajian_id', 'penggajian_id');
+    return $query->where('periode_bulan', $bulan)->where('periode_tahun', $tahun);
   }
 
-  public function verifier()
+  public function verifier(): BelongsTo
   {
     return $this->belongsTo(Karyawan::class, 'verified_by', 'karyawan_id');
   }
 
-  public function approver()
+  public function approver(): BelongsTo
   {
     return $this->belongsTo(Karyawan::class, 'approved_by', 'karyawan_id');
   }
 
-  public function processor()
+  public function processor(): BelongsTo
   {
     return $this->belongsTo(Karyawan::class, 'processed_by', 'karyawan_id');
   }
 
-  // Comment dulu relasi SlipGaji sampai tabel dibuat
-  // public function slipGaji()
-  // {
-  //     return $this->hasMany(SlipGaji::class, 'penggajian_id', 'penggajian_id');
-  // }
+  public function karyawan(): BelongsTo
+  {
+    return $this->belongsTo(Karyawan::class, 'karyawan_id', 'karyawan_id');
+  }
 
-  // Helper methods
-  public function getPeriodeAttribute()
+  public function getPeriodeAttribute(): string
   {
     $namaBulan = [
       1 => 'Januari',
@@ -75,20 +99,28 @@ class Penggajian extends Model
       9 => 'September',
       10 => 'Oktober',
       11 => 'November',
-      12 => 'Desember'
+      12 => 'Desember',
     ];
 
     return $namaBulan[$this->periode_bulan] . ' ' . $this->periode_tahun;
   }
 
-  // Comment dulu methods yang bergantung pada SlipGaji
-  // public function getTotalKaryawanAttribute()
-  // {
-  //     return $this->slipGaji()->count();
-  // }
+  public static function booted(): void
+  {
+    static::saved(function (self $model) {
+      static::query()
+        ->forPeriode($model->periode_bulan, $model->periode_tahun)
+        ->where('tabel_id', '!=', $model->tabel_id)
+        ->update([
+          'status_penggajian' => $model->status_penggajian,
+          'verified_by' => $model->verified_by,
+          'approved_by' => $model->approved_by,
+          'processed_by' => $model->processed_by,
+          'catatan_penolakan_draf' => $model->catatan_penolakan_draf,
+          'updated_at' => now(),
+        ]);
+    });
 
-  // public function getTotalGajiAttribute()
-  // {
-  //     return $this->slipGaji()->sum('total_gaji');
-  // }
+  }
+
 }

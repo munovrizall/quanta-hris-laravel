@@ -26,7 +26,7 @@
                             x-on:click="window.dispatchEvent(new CustomEvent('open-modal', {
                                 detail: { 
                                     action: 'editKaryawanGaji',
-                                    detailId: {{ $karyawan['detail_id'] }}
+                                    detailId: @js($karyawan['detail_id'])
                                 }
                             }))"
                             type="button"

@@ -2,7 +2,7 @@
 
 namespace App\Filament\Resources\PenggajianResource\Actions;
 
-use App\Models\DetailPenggajian;
+use App\Models\Penggajian;
 use Filament\Actions\Action;
 use Filament\Forms;
 use Filament\Notifications\Notification;
@@ -18,7 +18,7 @@ class EditGajiKaryawanAction
       ->icon('heroicon-o-pencil-square')
       ->color('warning')
       ->form([
-        Forms\Components\Hidden::make('detail_penggajian_id'),
+        Forms\Components\Hidden::make('tabel_id'),
 
         Forms\Components\Section::make('Informasi Karyawan')
           ->schema([
@@ -228,8 +228,10 @@ class EditGajiKaryawanAction
           return [];
         }
 
-        $detail = DetailPenggajian::with(['karyawan'])
-          ->find($detailId);
+        $detail = Penggajian::query()
+          ->with(['karyawan'])
+          ->where('tabel_id', $detailId)
+          ->first();
 
         if (!$detail) {
           Notification::make()
@@ -242,7 +244,9 @@ class EditGajiKaryawanAction
 
         // Debug log to check raw values from database
         Log::info('Raw Detail Penggajian Data:', [
-          'id' => $detail->id,
+          'periode_bulan' => $detail->periode_bulan,
+          'periode_tahun' => $detail->periode_tahun,
+          'tabel_id' => $detail->tabel_id,
           'gaji_pokok_raw' => $detail->getAttributes()['gaji_pokok'],
           'total_tunjangan_raw' => $detail->getAttributes()['total_tunjangan'],
           'total_lembur_raw' => $detail->getAttributes()['total_lembur'],
@@ -270,7 +274,7 @@ class EditGajiKaryawanAction
         $gajiBersih = (float) ($detail->gaji_bersih ?? 0);
 
         return [
-          'detail_penggajian_id' => $detail->id,
+          'tabel_id' => $detail->tabel_id,
           'karyawan_id' => $detail->karyawan_id,
           'nama_karyawan' => $detail->karyawan->nama_lengkap ?? 'N/A',
 
@@ -315,7 +319,9 @@ class EditGajiKaryawanAction
   protected static function handleSave(array $data): void
   {
     try {
-      $detail = DetailPenggajian::find($data['detail_penggajian_id']);
+      $detail = Penggajian::query()
+        ->where('tabel_id', $data['tabel_id'])
+        ->first();
 
       if (!$detail) {
         Notification::make()
@@ -344,7 +350,7 @@ class EditGajiKaryawanAction
       $gajiBersih = $penghasilanBruto - $totalPotongan + $penyesuaian;
 
       Log::info('Saving EditGaji with calculated values:', [
-        'detail_id' => $detail->id,
+        'detail_id' => $detail->tabel_id,
         'original_gaji_bersih' => $detail->gaji_bersih,
         'new_penghasilan_bruto' => $penghasilanBruto,
         'new_total_potongan' => $totalPotongan,
