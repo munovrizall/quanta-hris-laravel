@@ -30,6 +30,18 @@ class ViewPenggajian extends ViewRecord
   // Add this property to enable JavaScript interaction
   protected $listeners = ['editKaryawan' => 'openEditModal'];
 
+  public int $currentPage = 1;
+
+  public string $paginationPath = '';
+
+  public function mount(int|string $record): void
+  {
+    parent::mount($record);
+
+    $this->currentPage = max(1, request()->integer('page', $this->currentPage));
+    $this->paginationPath = request()->fullUrlWithoutQuery('page');
+  }
+
   public function getColumnSpan(): int|string|array
   {
     return 'full';
@@ -242,9 +254,18 @@ class ViewPenggajian extends ViewRecord
    */
   private function getPaginatedDetailPenggajianFromDatabase($record): LengthAwarePaginator
   {
+    if (request()->has('page')) {
+      $this->currentPage = max(1, request()->integer('page', $this->currentPage));
+    }
+
+    if ($this->paginationPath === '') {
+      $this->paginationPath = request()->fullUrlWithoutQuery('page');
+    }
+
     return Penggajian::forPeriode($record->periode_bulan, $record->periode_tahun)
       ->with(['karyawan.golonganPtkp.kategoriTer'])
-      ->paginate(10, ['*'], 'page')
+      ->paginate(10, ['*'], 'page', $this->currentPage)
+      ->withPath($this->paginationPath)
       ->withQueryString();
   }
 
