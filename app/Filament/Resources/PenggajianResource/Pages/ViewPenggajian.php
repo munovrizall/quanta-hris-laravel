@@ -34,14 +34,6 @@ class ViewPenggajian extends ViewRecord
 
   public string $paginationPath = '';
 
-  public function mount(int|string $record): void
-  {
-    parent::mount($record);
-
-    $this->currentPage = max(1, request()->integer('page', $this->currentPage));
-    $this->paginationPath = request()->fullUrlWithoutQuery('page');
-  }
-
   public function getColumnSpan(): int|string|array
   {
     return 'full';
@@ -52,18 +44,88 @@ class ViewPenggajian extends ViewRecord
     return '1';
   }
 
+  public function mount(int|string $record = null): void
+  {
+    // Get route parameters
+    $tahun = request()->route('tahun');
+    $bulan = request()->route('bulan');
+
+    // If using new URL format with tahun and bulan
+    if ($tahun && $bulan) {
+      $penggajian = Penggajian::forPeriode($bulan, $tahun)->first();
+
+      if (!$penggajian) {
+        abort(404, 'Penggajian tidak ditemukan untuk periode tersebut');
+      }
+
+      $this->record = $penggajian;
+    } else {
+      // Fallback to old method
+      parent::mount($record);
+    }
+
+    $this->currentPage = max(1, request()->integer('page', $this->currentPage));
+    $this->paginationPath = request()->fullUrlWithoutQuery('page');
+  }
+
+  // Override resolveRecord to handle custom route parameters
+  public function resolveRecord(int|string $key): \Illuminate\Database\Eloquent\Model
+  {
+    // Check if we already have the record from mount
+    if (isset($this->record)) {
+      return $this->record;
+    }
+
+    // Fallback to parent method for backward compatibility
+    return parent::resolveRecord($key);
+  }
+
   protected function getHeaderActions(): array
   {
     return [
       Actions\EditAction::make()
-        ->label('Ubah'),
+        ->label('Ubah')
+        ->url(fn() => static::getResource()::getUrl('edit', [
+          'tahun' => $this->record->periode_tahun,
+          'bulan' => $this->record->periode_bulan
+        ])),
       Actions\DeleteAction::make()
         ->label('Hapus')
         ->requiresConfirmation()
         ->modalHeading('Hapus Penggajian')
         ->modalDescription('Apakah Anda yakin ingin menghapus penggajian ini?')
-        ->modalSubmitActionLabel('Ya, hapus'),
+        ->modalSubmitActionLabel('Ya, hapus')
+        ->successRedirectUrl(static::getResource()::getUrl('index')),
     ];
+  }
+
+  // Add method untuk breadcrumb yang lebih informatif
+  public function getBreadcrumbs(): array
+  {
+    $namaBulan = [
+      1 => 'Januari',
+      2 => 'Februari',
+      3 => 'Maret',
+      4 => 'April',
+      5 => 'Mei',
+      6 => 'Juni',
+      7 => 'Juli',
+      8 => 'Agustus',
+      9 => 'September',
+      10 => 'Oktober',
+      11 => 'November',
+      12 => 'Desember'
+    ];
+
+    $breadcrumbs = parent::getBreadcrumbs();
+
+    // Replace the last breadcrumb with period info
+    if (isset($this->record)) {
+      $periodeName = $namaBulan[$this->record->periode_bulan] . ' ' . $this->record->periode_tahun;
+      $breadcrumbs[array_key_last($breadcrumbs)] = $periodeName;
+    }
+
+    return $breadcrumbs;
   }
 
   protected function getActions(): array

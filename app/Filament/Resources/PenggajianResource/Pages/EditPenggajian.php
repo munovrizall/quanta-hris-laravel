@@ -46,9 +46,61 @@ class EditPenggajian extends EditRecord
         ];
     }
 
+    public function mount(int|string $record = null): void
+    {
+        // Get route parameters
+        $tahun = request()->route('tahun');
+        $bulan = request()->route('bulan');
+
+        // If using new URL format with tahun and bulan
+        if ($tahun && $bulan) {
+            $penggajian = Penggajian::forPeriode($bulan, $tahun)->first();
+
+            if (!$penggajian) {
+                abort(404, 'Penggajian tidak ditemukan untuk periode tersebut');
+            }
+
+            $this->record = $penggajian;
+        } else {
+            // Fallback to old method
+            parent::mount($record);
+        }
+    }
+
+    public function resolveRecord(int|string $key): \Illuminate\Database\Eloquent\Model
+    {
+        if (isset($this->record)) {
+            return $this->record;
+        }
+
+        return parent::resolveRecord($key);
+    }
+
+    public function getBreadcrumbs(): array
+    {
+        $namaBulan = [
+            1 => 'Januari', 2 => 'Februari', 3 => 'Maret', 4 => 'April',
+            5 => 'Mei', 6 => 'Juni', 7 => 'Juli', 8 => 'Agustus',
+            9 => 'September', 10 => 'Oktober', 11 => 'November', 12 => 'Desember'
+        ];
+
+        $breadcrumbs = parent::getBreadcrumbs();
+        
+        // Replace the last breadcrumb with period info
+        if (isset($this->record)) {
+            $periodeName = $namaBulan[$this->record->periode_bulan] . ' ' . $this->record->periode_tahun;
+            $breadcrumbs[array_key_last($breadcrumbs)] = 'Edit ' . $periodeName;
+        }
+        
+        return $breadcrumbs;
+    }
+
     protected function getRedirectUrl(): string
     {
-        return $this->getResource()::getUrl('index');
+        return $this->getResource()::getUrl('view', [
+            'tahun' => $this->record->periode_tahun,
+            'bulan' => $this->record->periode_bulan
+        ]);
     }
 
     protected function getSaveFormAction(): \Filament\Actions\Action
