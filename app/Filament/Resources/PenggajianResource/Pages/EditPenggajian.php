@@ -19,7 +19,11 @@ class EditPenggajian extends EditRecord
     {
         return [
             Actions\ViewAction::make()
-                ->label('Lihat'),
+                ->label('Lihat')
+                ->url(fn () => static::getResource()::getUrl('view', [
+                    'tahun' => $this->record->periode_tahun,
+                    'bulan' => $this->record->periode_bulan
+                ])),
             Actions\DeleteAction::make()
                 ->label('Hapus')
                 ->requiresConfirmation()
@@ -27,21 +31,27 @@ class EditPenggajian extends EditRecord
                 ->modalDescription('Apakah Anda yakin ingin menghapus seluruh data penggajian untuk periode ini?')
                 ->modalSubmitActionLabel('Ya, hapus')
                 ->action(function (Penggajian $record) {
-                    Penggajian::forPeriode($record->periode_bulan, $record->periode_tahun)->delete();
-                }),
+                    Penggajian::where('periode_bulan', $record->periode_bulan)
+                             ->where('periode_tahun', $record->periode_tahun)
+                             ->delete();
+                })
+                ->successRedirectUrl(static::getResource()::getUrl('index')),
             Actions\ForceDeleteAction::make()
                 ->label('Hapus Permanen')
                 ->action(function (Penggajian $record) {
-                    Penggajian::forPeriode($record->periode_bulan, $record->periode_tahun)
-                        ->withTrashed()
-                        ->forceDelete();
-                }),
+                    Penggajian::where('periode_bulan', $record->periode_bulan)
+                             ->where('periode_tahun', $record->periode_tahun)
+                             ->withTrashed()
+                             ->forceDelete();
+                })
+                ->successRedirectUrl(static::getResource()::getUrl('index')),
             Actions\RestoreAction::make()
                 ->label('Pulihkan')
                 ->action(function (Penggajian $record) {
-                    Penggajian::forPeriode($record->periode_bulan, $record->periode_tahun)
-                        ->withTrashed()
-                        ->restore();
+                    Penggajian::where('periode_bulan', $record->periode_bulan)
+                             ->where('periode_tahun', $record->periode_tahun)
+                             ->withTrashed()
+                             ->restore();
                 }),
         ];
     }
@@ -54,7 +64,9 @@ class EditPenggajian extends EditRecord
 
         // If using new URL format with tahun and bulan
         if ($tahun && $bulan) {
-            $penggajian = Penggajian::forPeriode($bulan, $tahun)->first();
+            $penggajian = Penggajian::where('periode_bulan', $bulan)
+                                   ->where('periode_tahun', $tahun)
+                                   ->first();
 
             if (!$penggajian) {
                 abort(404, 'Penggajian tidak ditemukan untuk periode tersebut');
@@ -112,6 +124,10 @@ class EditPenggajian extends EditRecord
     protected function getCancelFormAction(): \Filament\Actions\Action
     {
         return parent::getCancelFormAction()
-            ->label('Batal');
+            ->label('Batal')
+            ->url($this->getResource()::getUrl('view', [
+                'tahun' => $this->record->periode_tahun,
+                'bulan' => $this->record->periode_bulan
+            ]));
     }
 }

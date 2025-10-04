@@ -246,15 +246,6 @@ class PenggajianResource extends Resource
                             'bulan' => $record->periode_bulan
                         ])
                     ),
-                Tables\Actions\EditAction::make()
-                    ->label('Ubah')
-                    ->url(
-                        fn(Penggajian $record): string =>
-                        static::getUrl('edit', [
-                            'tahun' => $record->periode_tahun,
-                            'bulan' => $record->periode_bulan
-                        ])
-                    ),
                 Tables\Actions\DeleteAction::make()
                     ->label('Hapus')
                     ->action(function (Penggajian $record) {
@@ -321,7 +312,6 @@ class PenggajianResource extends Resource
             'index' => Pages\ListPenggajians::route('/'),
             'create' => Pages\CreatePenggajian::route('/create'),
             'view' => Pages\ViewPenggajian::route('/{tahun}/{bulan}'),
-            'edit' => Pages\EditPenggajian::route('/{tahun}/{bulan}/edit'),
         ];
     }
 

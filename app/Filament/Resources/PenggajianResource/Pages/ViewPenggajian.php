@@ -83,12 +83,6 @@ class ViewPenggajian extends ViewRecord
   protected function getHeaderActions(): array
   {
     return [
-      Actions\EditAction::make()
-        ->label('Ubah')
-        ->url(fn() => static::getResource()::getUrl('edit', [
-          'tahun' => $this->record->periode_tahun,
-          'bulan' => $this->record->periode_bulan
-        ])),
       Actions\DeleteAction::make()
         ->label('Hapus')
         ->requiresConfirmation()
