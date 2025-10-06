@@ -211,7 +211,7 @@
                                             {{ number_format($karyawan['pph21_detail']['jumlah'], 0, ',', '.') }}</span>
                                     </div>
                                     <div class="breakdown-detail">
-                                        {{ $karyawan['pph21_detail']['tarif_persen'] }}% dari penghasilan bruto Rp
+                                        {{ $karyawan['pph21_detail']['tarif_persen'] }} dari penghasilan bruto Rp
                                         {{ number_format($karyawan['pph21_detail']['penghasilan_bruto'], 0, ',', '.') }}
                                     </div>
                                     <div class="breakdown-detail">

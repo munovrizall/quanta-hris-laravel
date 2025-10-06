@@ -36,7 +36,7 @@ class CreatePenggajian extends CreateRecord
             $firstRow = array_shift($rows);
             $record = Penggajian::create($firstRow);
 
-            if (! empty($rows)) {
+            if (!empty($rows)) {
                 Penggajian::insert($rows);
             }
 
@@ -56,6 +56,12 @@ class CreatePenggajian extends CreateRecord
             ->body('Data penggajian berhasil dibuat untuk periode yang dipilih.')
             ->success()
             ->send();
+    }
+
+    // Override the redirect after create
+    protected function getRedirectUrl(): string
+    {
+        return static::getResource()::getUrl('index');
     }
 
     /**

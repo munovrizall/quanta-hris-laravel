@@ -19,18 +19,15 @@ class LemburService
    */
   public function calculateInsentif(string $durasiLembur, Karyawan $karyawan): float
   {
-    // Guard clause: validasi input
     if (!$durasiLembur || !$karyawan) {
       Log::warning("LemburService: Invalid input - durasi atau karyawan kosong");
       return 0;
     }
 
     try {
-      // Langkah 1: Parse durasi lembur (format HH:MM:SS) ke dalam menit
       $durasi = Carbon::parse($durasiLembur);
       $totalMenit = ($durasi->hour * 60) + $durasi->minute;
 
-      // Jika ada detik, bulatkan menitnya ke atas
       if ($durasi->second > 0) {
         $totalMenit++;
       }
@@ -40,42 +37,33 @@ class LemburService
         return 0;
       }
 
-      // Langkah 2: Bulatkan total menit ke jam penuh berikutnya (sesuai aturan)
-      // Contoh: 30 menit -> 1 jam, 75 menit -> 2 jam
       $jamDihitung = (int) ceil($totalMenit / 60.0);
 
-      // Langkah 3: Hitung upah per jam dengan RUMUS RESMI (dibagi 173)
       $gajiPokok = (float) ($karyawan->gaji_pokok ?? 0);
-
-      $upahSebulan = $gajiPokok; // + tunjangan_tetap jika ada
+      $upahSebulan = $gajiPokok;
 
       if ($upahSebulan <= 0) {
         Log::warning("LemburService: Upah sebulan <= 0 untuk karyawan {$karyawan->karyawan_id}");
         return 0;
       }
 
-      // Pembagi 173 sesuai PP 35/2021
       $upahPerJam = $upahSebulan / 173;
 
-      // Langkah 4: Terapkan tarif berjenjang
-      // - Jam pertama: 1.5x upah per jam
-      // - Jam kedua dan seterusnya: 2x upah per jam
       $totalUpahLembur = 0;
 
-      // Perhitungan untuk jam pertama
       if ($jamDihitung >= 1) {
         $totalUpahLembur += (1 * 1.5 * $upahPerJam);
       }
 
-      // Perhitungan untuk jam-jam berikutnya (jika ada)
       if ($jamDihitung > 1) {
         $sisaJam = $jamDihitung - 1;
         $totalUpahLembur += ($sisaJam * 2 * $upahPerJam);
       }
 
-      $result = round($totalUpahLembur, 2);
+      // ROUND TO INTEGER - NO DECIMALS
+      $result = round($totalUpahLembur);
 
-      Log::info("LemburService: Karyawan {$karyawan->karyawan_id} - Durasi: {$durasiLembur} ({$totalMenit} menit -> {$jamDihitung} jam), Upah/jam: " . number_format($upahPerJam, 2) . ", Total: " . number_format($result, 2));
+      Log::info("LemburService: Karyawan {$karyawan->karyawan_id} - Durasi: {$durasiLembur} ({$totalMenit} menit -> {$jamDihitung} jam), Upah/jam: " . number_format($upahPerJam, 0) . ", Total: " . number_format($result, 0));
 
       return $result;
 
@@ -86,10 +74,54 @@ class LemburService
   }
 
   /**
-   * Menghitung insentif untuk model Lembur yang sudah ada
+   * Menghitung total lembur untuk periode tertentu
    *
-   * @param Lembur $lembur
-   * @return float
+   * @param Karyawan $karyawan
+   * @param Carbon $periodeStart  
+   * @param Carbon $periodeEnd
+   * @return array
+   */
+  public function calculateTotalLemburForPeriode(Karyawan $karyawan, Carbon $periodeStart, Carbon $periodeEnd): array
+  {
+    try {
+      $lemburRecords = Lembur::where('karyawan_id', $karyawan->karyawan_id)
+        ->whereBetween('tanggal_lembur', [$periodeStart, $periodeEnd])
+        ->where('status_persetujuan', 'Disetujui')
+        ->get();
+
+      $totalInsentif = 0;
+      $totalJam = 0;
+      $totalSesi = $lemburRecords->count();
+
+      foreach ($lemburRecords as $lembur) {
+        $insentif = $this->calculateInsentif($lembur->durasi_lembur, $karyawan);
+        $totalInsentif += $insentif;
+
+        // Hitung total jam
+        $durasi = Carbon::parse($lembur->durasi_lembur);
+        $totalJam += $durasi->hour + ($durasi->minute / 60);
+      }
+
+      return [
+        'total_insentif' => round($totalInsentif),
+        'total_jam' => round($totalJam, 1),
+        'total_sesi' => $totalSesi,
+        'records' => $lemburRecords
+      ];
+
+    } catch (\Exception $e) {
+      Log::error("Error calculating total lembur for karyawan {$karyawan->karyawan_id}: " . $e->getMessage());
+      return [
+        'total_insentif' => 0,
+        'total_jam' => 0,
+        'total_sesi' => 0,
+        'records' => collect([])
+      ];
+    }
+  }
+
+  /**
+   * Menghitung insentif untuk model Lembur yang sudah ada
    */
   public function calculateInsentifFromLembur(Lembur $lembur): float
   {
@@ -102,9 +134,6 @@ class LemburService
 
   /**
    * Format insentif ke format Rupiah
-   *
-   * @param float $insentif
-   * @return string
    */
   public function formatRupiah(float $insentif): string
   {
@@ -113,9 +142,6 @@ class LemburService
 
   /**
    * Validasi apakah durasi lembur valid
-   *
-   * @param string $durasiLembur
-   * @return bool
    */
   public function validateDurasi(string $durasiLembur): bool
   {

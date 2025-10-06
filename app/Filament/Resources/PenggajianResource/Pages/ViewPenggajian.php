@@ -4,11 +4,13 @@ namespace App\Filament\Resources\PenggajianResource\Pages;
 
 use App\Filament\Resources\PenggajianResource;
 use App\Filament\Resources\PenggajianResource\Actions\EditGajiKaryawanAction;
-use App\Filament\Resources\PenggajianResource\Actions\EditKaryawanGajiAction;
 use App\Models\Penggajian;
 use App\Services\AbsensiService;
 use App\Services\TunjanganService;
 use App\Services\BpjsService;
+use App\Services\LemburService;
+use App\Services\Pph21Service;
+use App\Services\PotonganService;
 use Filament\Actions;
 use Filament\Resources\Pages\ViewRecord;
 use Filament\Infolists;
@@ -27,12 +29,59 @@ class ViewPenggajian extends ViewRecord
 
   protected static ?string $breadcrumb = 'Detail';
 
-  // Add this property to enable JavaScript interaction
   protected $listeners = ['editKaryawan' => 'openEditModal'];
 
   public int $currentPage = 1;
 
   public string $paginationPath = '';
+
+  // Remove constructor and use lazy loading instead
+  private ?TunjanganService $tunjanganService = null;
+  private ?BpjsService $bpjsService = null;
+  private ?LemburService $lemburService = null;
+  private ?Pph21Service $pph21Service = null;
+  private ?PotonganService $potonganService = null;
+
+  // Lazy loading methods for services
+  private function getTunjanganService(): TunjanganService
+  {
+    if ($this->tunjanganService === null) {
+      $this->tunjanganService = new TunjanganService();
+    }
+    return $this->tunjanganService;
+  }
+
+  private function getBpjsService(): BpjsService
+  {
+    if ($this->bpjsService === null) {
+      $this->bpjsService = new BpjsService();
+    }
+    return $this->bpjsService;
+  }
+
+  private function getLemburService(): LemburService
+  {
+    if ($this->lemburService === null) {
+      $this->lemburService = new LemburService();
+    }
+    return $this->lemburService;
+  }
+
+  private function getPph21Service(): Pph21Service
+  {
+    if ($this->pph21Service === null) {
+      $this->pph21Service = new Pph21Service();
+    }
+    return $this->pph21Service;
+  }
+
+  private function getPotonganService(): PotonganService
+  {
+    if ($this->potonganService === null) {
+      $this->potonganService = new PotonganService();
+    }
+    return $this->potonganService;
+  }
 
   public function getColumnSpan(): int|string|array
   {
@@ -46,13 +95,13 @@ class ViewPenggajian extends ViewRecord
 
   public function mount(int|string $record = null): void
   {
-    // Get route parameters
     $tahun = request()->route('tahun');
     $bulan = request()->route('bulan');
 
-    // If using new URL format with tahun and bulan
     if ($tahun && $bulan) {
-      $penggajian = Penggajian::forPeriode($bulan, $tahun)->first();
+      $penggajian = Penggajian::where('periode_bulan', $bulan)
+        ->where('periode_tahun', $tahun)
+        ->first();
 
       if (!$penggajian) {
         abort(404, 'Penggajian tidak ditemukan untuk periode tersebut');
@@ -60,7 +109,6 @@ class ViewPenggajian extends ViewRecord
 
       $this->record = $penggajian;
     } else {
-      // Fallback to old method
       parent::mount($record);
     }
 
@@ -68,15 +116,12 @@ class ViewPenggajian extends ViewRecord
     $this->paginationPath = request()->fullUrlWithoutQuery('page');
   }
 
-  // Override resolveRecord to handle custom route parameters
   public function resolveRecord(int|string $key): \Illuminate\Database\Eloquent\Model
   {
-    // Check if we already have the record from mount
     if (isset($this->record)) {
       return $this->record;
     }
 
-    // Fallback to parent method for backward compatibility
     return parent::resolveRecord($key);
   }
 
@@ -89,11 +134,15 @@ class ViewPenggajian extends ViewRecord
         ->modalHeading('Hapus Penggajian')
         ->modalDescription('Apakah Anda yakin ingin menghapus penggajian ini?')
         ->modalSubmitActionLabel('Ya, hapus')
+        ->action(function () {
+          Penggajian::where('periode_bulan', $this->record->periode_bulan)
+            ->where('periode_tahun', $this->record->periode_tahun)
+            ->delete();
+        })
         ->successRedirectUrl(static::getResource()::getUrl('index')),
     ];
   }
 
-  // Add method untuk breadcrumb yang lebih informatif
   public function getBreadcrumbs(): array
   {
     $namaBulan = [
@@ -113,7 +162,6 @@ class ViewPenggajian extends ViewRecord
 
     $breadcrumbs = parent::getBreadcrumbs();
 
-    // Replace the last breadcrumb with period info
     if (isset($this->record)) {
       $periodeName = $namaBulan[$this->record->periode_bulan] . ' ' . $this->record->periode_tahun;
       $breadcrumbs[array_key_last($breadcrumbs)] = $periodeName;
@@ -125,28 +173,23 @@ class ViewPenggajian extends ViewRecord
   protected function getActions(): array
   {
     return [
-      // Change this to match the action name in the Action class
       $this->editKaryawanGajiAction(),
     ];
   }
 
-  // Add this method to register the action
   public function editKaryawanGajiAction()
   {
     return EditGajiKaryawanAction::make()
       ->visible(fn() => $this->record->status_penggajian === 'Draf');
   }
 
-  // Method to handle the modal opening from JavaScript
   public function openEditModal($detailId)
   {
-    // This should match the action name defined in EditGajiKaryawanAction
     $this->mountAction('editKaryawanGaji', ['detailId' => $detailId]);
   }
 
   public function infolist(Infolist $infolist): Infolist
   {
-    // Get paginated data from database
     $paginatedDetailPenggajian = $this->getPaginatedDetailPenggajianFromDatabase($this->record);
     $karyawanData = $this->processKaryawanDataFromDatabase($paginatedDetailPenggajian);
 
@@ -318,7 +361,8 @@ class ViewPenggajian extends ViewRecord
       $this->paginationPath = request()->fullUrlWithoutQuery('page');
     }
 
-    return Penggajian::forPeriode($record->periode_bulan, $record->periode_tahun)
+    return Penggajian::where('periode_bulan', $record->periode_bulan)
+      ->where('periode_tahun', $record->periode_tahun)
       ->with(['karyawan.golonganPtkp.kategoriTer'])
       ->paginate(10, ['*'], 'page', $this->currentPage)
       ->withPath($this->paginationPath)
@@ -326,23 +370,18 @@ class ViewPenggajian extends ViewRecord
   }
 
   /**
-   * Process karyawan data from detail_penggajian table
+   * Process karyawan data using services - FIXED VERSION WITH LAZY LOADING
    */
   private function processKaryawanDataFromDatabase(LengthAwarePaginator $paginatedDetailPenggajian): array
   {
     $processedData = [];
 
-    // Get periode for attendance data
     $periodeStart = Carbon::create($this->record->periode_tahun, $this->record->periode_bulan, 1)->startOfMonth();
     $periodeEnd = Carbon::create($this->record->periode_tahun, $this->record->periode_bulan, 1)->endOfMonth();
 
-    // Get karyawan IDs for batch operation
     $karyawanIds = collect($paginatedDetailPenggajian->items())->pluck('karyawan_id');
 
-    // Initialize attendance service
     $attendanceService = new AbsensiService();
-
-    // Get attendance data in batch
     $attendanceData = $attendanceService->getCombinedDataBatch($karyawanIds, $periodeStart, $periodeEnd);
 
     foreach ($paginatedDetailPenggajian->items() as $detail) {
@@ -353,7 +392,6 @@ class ViewPenggajian extends ViewRecord
         continue;
       }
 
-      // Get attendance data for this karyawan
       $karyawanAttendance = $attendanceData[$karyawan->karyawan_id] ?? [
         'total_hadir' => 0,
         'total_alfa' => 0,
@@ -364,13 +402,43 @@ class ViewPenggajian extends ViewRecord
         'total_lembur_sessions' => 0,
       ];
 
-      // Generate additional info for display
-      $tunjanganBreakdown = $this->getTunjanganBreakdownForDisplay($karyawan);
-      $bpjsBreakdown = $this->getBpjsBreakdownForDisplay($detail);
-      $pph21Detail = $this->getPph21DetailForDisplay($karyawan, $detail);
+      // USE SERVICES FOR ALL CALCULATIONS - WITH LAZY LOADING
+      $tunjanganData = $this->getTunjanganService()->getTunjanganBreakdown($karyawan);
+      $bpjsData = $this->getBpjsService()->calculateBpjsDeductions($karyawan);
+
+      // Calculate Pph21 using actual values from database
+      $pph21Data = $this->getPph21Service()->calculatePph21WithBreakdown(
+        $karyawan,
+        $detail->gaji_pokok,
+        $detail->total_tunjangan,
+        $detail->total_lembur
+      );
+
+      // Calculate potongan using services
+      $potonganAlfaData = $this->getPotonganService()->calculateAlfaDeduction($karyawan, $karyawanAttendance['total_alfa']);
+      $potonganTerlambatData = $this->getPotonganService()->calculateKeterlambatanDeduction($karyawan, $karyawanAttendance['total_tidak_tepat']);
+
+      // BUILD BPJS BREAKDOWN WITH DESCRIPTIONS 
+      $bpjsBreakdownWithDescriptions = [
+        [
+          'label' => 'BPJS Kesehatan',
+          'amount' => $bpjsData['bpjs_kesehatan'],
+          'description' => ((float)$bpjsData['breakdown']['persen_kesehatan'] * 100) . '% dari gaji pokok + tunjangan tetap (Rp ' . number_format($bpjsData['breakdown']['dasar_bpjs'], 0, ',', '.') . ')'
+        ],
+        [
+          'label' => 'BPJS JHT',
+          'amount' => $bpjsData['bpjs_jht'],
+          'description' => ((float)$bpjsData['breakdown']['persen_jht'] * 100) . '% dari gaji pokok (Rp ' . number_format($detail->gaji_pokok, 0, ',', '.') . ')'
+        ],
+        [
+          'label' => 'BPJS JP',
+          'amount' => $bpjsData['bpjs_jp'],
+          'description' => ((float)$bpjsData['breakdown']['persen_jp'] * 100) . '% dari gaji pokok + tunjangan tetap (Rp ' . number_format($bpjsData['breakdown']['dasar_bpjs'], 0, ',', '.') . ')'
+        ],
+      ];
 
       $processedData[] = [
-        'detail_id' => $detail->tabel_id, // Add detail ID for editing
+        'detail_id' => $detail->tabel_id,
         'karyawan_id' => $karyawan->karyawan_id,
         'nama_lengkap' => $karyawan->nama_lengkap,
         'jabatan' => $karyawan->jabatan,
@@ -384,22 +452,32 @@ class ViewPenggajian extends ViewRecord
         'total_lembur_sessions' => $karyawanAttendance['total_lembur_sessions'],
         'gaji_pokok' => $detail->gaji_pokok,
         'tunjangan_total' => $detail->total_tunjangan,
-        'tunjangan_breakdown' => $tunjanganBreakdown,
-        'bpjs_breakdown' => $bpjsBreakdown,
+        'tunjangan_breakdown' => $tunjanganData,
+        'bpjs_breakdown' => [
+          'breakdown' => $bpjsBreakdownWithDescriptions, // NOW WITH DESCRIPTIONS
+          'total_amount' => $bpjsData['total_bpjs'],
+          'info' => $bpjsData['breakdown']
+        ],
         'lembur_pay' => $detail->total_lembur,
         'potongan_total' => $detail->total_potongan,
         'total_gaji' => $detail->gaji_bersih,
         'penyesuaian' => $detail->penyesuaian,
         'catatan_penyesuaian' => $detail->catatan_penyesuaian,
-        'pph21_detail' => $pph21Detail,
+        'pph21_detail' => [
+          'jumlah' => $pph21Data['pph21_amount'],
+          'tarif_persen' => $pph21Data['tarif_info']['tarif_persen'],
+          'golongan_ptkp' => $pph21Data['ptkp_info']['golongan_ptkp'],
+          'kategori_ter' => $pph21Data['ptkp_info']['kategori_ter'],
+          'penghasilan_bruto' => $pph21Data['penghasilan_bruto'],
+        ],
         'potongan_detail' => [
           'alfa' => [
             'total_potongan' => $detail->potongan_alfa,
-            'potongan_per_hari' => $karyawanAttendance['total_alfa'] > 0 ? $detail->potongan_alfa / $karyawanAttendance['total_alfa'] : 0
+            'potongan_per_hari' => $potonganAlfaData['potongan_per_hari'] ?? 0
           ],
           'keterlambatan' => [
             'total_potongan' => $detail->potongan_terlambat,
-            'potongan_per_hari' => $karyawanAttendance['total_tidak_tepat'] > 0 ? $detail->potongan_terlambat / $karyawanAttendance['total_tidak_tepat'] : 0
+            'potongan_per_hari' => $potonganTerlambatData['potongan_per_hari'] ?? 0
           ],
           'bpjs' => $detail->potongan_bpjs,
           'pph21' => $detail->potongan_pph21,
@@ -410,109 +488,46 @@ class ViewPenggajian extends ViewRecord
     return $processedData;
   }
 
-  // Database calculation methods
+  // Database calculation methods - USE DIRECT QUERIES
   private function getTotalKaryawanCountFromDatabase($record): int
   {
-    return Penggajian::forPeriode($record->periode_bulan, $record->periode_tahun)
+    return Penggajian::where('periode_bulan', $record->periode_bulan)
+      ->where('periode_tahun', $record->periode_tahun)
       ->count();
   }
 
   private function calculateTotalGajiFromDatabase($record): float
   {
-    return Penggajian::forPeriode($record->periode_bulan, $record->periode_tahun)
+    return Penggajian::where('periode_bulan', $record->periode_bulan)
+      ->where('periode_tahun', $record->periode_tahun)
       ->sum('gaji_bersih');
   }
 
   private function calculateTotalGajiPokokFromDatabase($record): float
   {
-    return Penggajian::forPeriode($record->periode_bulan, $record->periode_tahun)
+    return Penggajian::where('periode_bulan', $record->periode_bulan)
+      ->where('periode_tahun', $record->periode_tahun)
       ->sum('gaji_pokok');
   }
 
   private function calculateTotalTunjanganFromDatabase($record): float
   {
-    return Penggajian::forPeriode($record->periode_bulan, $record->periode_tahun)
+    return Penggajian::where('periode_bulan', $record->periode_bulan)
+      ->where('periode_tahun', $record->periode_tahun)
       ->sum('total_tunjangan');
   }
 
   private function calculateTotalLemburFromDatabase($record): float
   {
-    return Penggajian::forPeriode($record->periode_bulan, $record->periode_tahun)
+    return Penggajian::where('periode_bulan', $record->periode_bulan)
+      ->where('periode_tahun', $record->periode_tahun)
       ->sum('total_lembur');
   }
 
   private function calculateTotalPotonganFromDatabase($record): float
   {
-    return Penggajian::forPeriode($record->periode_bulan, $record->periode_tahun)
+    return Penggajian::where('periode_bulan', $record->periode_bulan)
+      ->where('periode_tahun', $record->periode_tahun)
       ->sum('total_potongan');
-  }
-
-  /**
-   * Generate display breakdowns
-   */
-  private function getTunjanganBreakdownForDisplay($karyawan): array
-  {
-    $tunjanganService = new TunjanganService();
-    return $tunjanganService->getTunjanganBreakdown($karyawan);
-  }
-
-  private function getBpjsBreakdownForDisplay($detail): array
-  {
-    // Generate BPJS breakdown for display
-    $breakdown = [];
-
-    if ($detail->potongan_bpjs > 0) {
-      $breakdown[] = [
-        'label' => 'Total BPJS',
-        'amount' => $detail->potongan_bpjs,
-        'description' => 'BPJS Kesehatan + JHT + JP'
-      ];
-    }
-
-    return [
-      'breakdown' => $breakdown,
-      'total_amount' => $detail->potongan_bpjs,
-      'info' => [
-        'gaji_pokok' => $detail->gaji_pokok,
-        'total_percentage' => round(($detail->potongan_bpjs / ($detail->gaji_pokok ?: 1)) * 100, 2),
-      ]
-    ];
-  }
-
-  private function getPph21DetailForDisplay($karyawan, $detail): array
-  {
-    $golonganPtkp = $karyawan->golonganPtkp;
-
-    if (!$golonganPtkp) {
-      return [
-        'jumlah' => $detail->potongan_pph21,
-        'tarif_persen' => 0,
-        'golongan_ptkp' => 'N/A',
-        'kategori_ter' => 'N/A',
-        'penghasilan_bruto' => $detail->penghasilan_bruto,
-      ];
-    }
-
-    // Find appropriate TER tariff
-    $tarifTer = \App\Models\TarifTer::where('kategori_ter_id', $golonganPtkp->kategori_ter_id)
-      ->where('batas_bawah', '<=', $detail->penghasilan_bruto)
-      ->where('batas_atas', '>=', $detail->penghasilan_bruto)
-      ->first();
-
-    $tarifPersen = 0;
-    $kategoriTer = 'N/A';
-
-    if ($tarifTer) {
-      $tarifPersen = $tarifTer->tarif * 100;
-      $kategoriTer = $golonganPtkp->kategoriTer?->nama_kategori ?? 'TER-' . $golonganPtkp->kategori_ter_id;
-    }
-
-    return [
-      'jumlah' => $detail->potongan_pph21,
-      'tarif_persen' => $tarifPersen,
-      'golongan_ptkp' => $golonganPtkp->nama_golongan_ptkp,
-      'kategori_ter' => $kategoriTer,
-      'penghasilan_bruto' => $detail->penghasilan_bruto,
-    ];
   }
 }
