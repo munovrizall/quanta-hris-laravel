@@ -92,7 +92,8 @@ class PenggajianResource extends Resource
                                     $set('approved_by', null);
                                     $set('processed_by', null);
                                 }
-                            }),
+                            })
+                            ->hiddenOn('create'), // Hide on create page
 
                         Forms\Components\Select::make('verified_by')
                             ->label('Diverifikasi Oleh (Staff HRD)')
@@ -118,7 +119,8 @@ class PenggajianResource extends Resource
                             ->visible(fn(Forms\Get $get) => $get('status_penggajian') === 'Disetujui')
                             ->columnSpanFull(),
                     ])
-                    ->columns(2),
+                    ->columns(2)
+                    ->hiddenOn('create'), // Hide entire section on create page
 
                 Forms\Components\Section::make('Catatan')
                     ->schema([
@@ -128,7 +130,8 @@ class PenggajianResource extends Resource
                             ->visible(fn(Forms\Get $get) => $get('status_penggajian') === 'Ditolak')
                             ->columnSpanFull(),
                     ])
-                    ->visible(fn(Forms\Get $get) => $get('status_penggajian') === 'Ditolak'),
+                    ->visible(fn(Forms\Get $get) => $get('status_penggajian') === 'Ditolak')
+                    ->hiddenOn('create'), // Hide on create page
             ]);
     }
 

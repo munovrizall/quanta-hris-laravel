@@ -119,11 +119,11 @@ class CreatePenggajian extends CreateRecord
                     'penggajian_id' => $this->formatSequenceNumber($currentIdCounter++),
                     'periode_bulan' => $data['periode_bulan'],
                     'periode_tahun' => $data['periode_tahun'],
-                    'status_penggajian' => $data['status_penggajian'] ?? 'Draf',
-                    'verified_by' => $data['verified_by'] ?? null,
-                    'approved_by' => $data['approved_by'] ?? null,
-                    'processed_by' => $data['processed_by'] ?? null,
-                    'catatan_penolakan_draf' => $data['catatan_penolakan_draf'] ?? null,
+                    'status_penggajian' => 'Draf', // Always set to 'Draf' on create
+                    'verified_by' => null, // Always null on create
+                    'approved_by' => null, // Always null on create
+                    'processed_by' => null, // Always null on create
+                    'catatan_penolakan_draf' => null, // Always null on create
                     'karyawan_id' => $karyawan->karyawan_id,
                     'sudah_diproses' => false,
                     'gaji_pokok' => $gajiData['gaji_pokok'],
