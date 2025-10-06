@@ -18,7 +18,7 @@ class EditGajiKaryawanAction
       ->icon('heroicon-o-pencil-square')
       ->color('warning')
       ->form([
-        Forms\Components\Hidden::make('tabel_id'),
+        Forms\Components\Hidden::make('penggajian_id'),
 
         Forms\Components\Section::make('Informasi Karyawan')
           ->schema([
@@ -230,7 +230,7 @@ class EditGajiKaryawanAction
 
         $detail = Penggajian::query()
           ->with(['karyawan'])
-          ->where('tabel_id', $detailId)
+          ->where('penggajian_id', $detailId)
           ->first();
 
         if (!$detail) {
@@ -246,7 +246,7 @@ class EditGajiKaryawanAction
         Log::info('Raw Detail Penggajian Data:', [
           'periode_bulan' => $detail->periode_bulan,
           'periode_tahun' => $detail->periode_tahun,
-          'tabel_id' => $detail->tabel_id,
+          'penggajian_id' => $detail->penggajian_id,
           'gaji_pokok_raw' => $detail->getAttributes()['gaji_pokok'],
           'total_tunjangan_raw' => $detail->getAttributes()['total_tunjangan'],
           'total_lembur_raw' => $detail->getAttributes()['total_lembur'],
@@ -274,7 +274,7 @@ class EditGajiKaryawanAction
         $gajiBersih = (float) ($detail->gaji_bersih ?? 0);
 
         return [
-          'tabel_id' => $detail->tabel_id,
+          'penggajian_id' => $detail->penggajian_id,
           'karyawan_id' => $detail->karyawan_id,
           'nama_karyawan' => $detail->karyawan->nama_lengkap ?? 'N/A',
 
@@ -320,7 +320,7 @@ class EditGajiKaryawanAction
   {
     try {
       $detail = Penggajian::query()
-        ->where('tabel_id', $data['tabel_id'])
+        ->where('penggajian_id', $data['penggajian_id'])
         ->first();
 
       if (!$detail) {
@@ -350,7 +350,7 @@ class EditGajiKaryawanAction
       $gajiBersih = $penghasilanBruto - $totalPotongan + $penyesuaian;
 
       Log::info('Saving EditGaji with calculated values:', [
-        'detail_id' => $detail->tabel_id,
+        'detail_id' => $detail->penggajian_id,
         'original_gaji_bersih' => $detail->gaji_bersih,
         'new_penghasilan_bruto' => $penghasilanBruto,
         'new_total_potongan' => $totalPotongan,

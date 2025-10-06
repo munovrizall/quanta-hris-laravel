@@ -14,12 +14,12 @@ class Penggajian extends Model
   use HasFactory, Notifiable, HasApiTokens, SoftDeletes;
 
   protected $table = 'penggajian';
-  protected $primaryKey = 'tabel_id';
+  protected $primaryKey = 'penggajian_id';
   public $incrementing = false;
   protected $keyType = 'string';
 
   protected $fillable = [
-    'tabel_id',
+    'penggajian_id',
     'periode_bulan',
     'periode_tahun',
     'status_penggajian',
@@ -110,7 +110,7 @@ class Penggajian extends Model
     static::saved(function (self $model) {
       static::query()
         ->forPeriode($model->periode_bulan, $model->periode_tahun)
-        ->where('tabel_id', '!=', $model->tabel_id)
+        ->where('penggajian_id', '!=', $model->penggajian_id)
         ->update([
           'status_penggajian' => $model->status_penggajian,
           'verified_by' => $model->verified_by,

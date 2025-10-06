@@ -388,7 +388,7 @@ class ViewPenggajian extends ViewRecord
       $karyawan = $detail->karyawan;
 
       if (!$karyawan) {
-        Log::warning("Karyawan not found for penggajian {$detail->tabel_id}");
+        Log::warning("Karyawan not found for penggajian {$detail->penggajian_id}");
         continue;
       }
 
@@ -441,7 +441,7 @@ class ViewPenggajian extends ViewRecord
       ];
 
       $processedData[] = [
-        'detail_id' => $detail->tabel_id,
+        'detail_id' => $detail->penggajian_id,
         'karyawan_id' => $karyawan->karyawan_id,
         'nama_lengkap' => $karyawan->nama_lengkap,
         'jabatan' => $karyawan->jabatan,

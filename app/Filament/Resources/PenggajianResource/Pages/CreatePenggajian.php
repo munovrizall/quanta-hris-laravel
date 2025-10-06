@@ -116,7 +116,7 @@ class CreatePenggajian extends CreateRecord
                 }
 
                 $rows[] = [
-                    'tabel_id' => $this->formatSequenceNumber($currentIdCounter++),
+                    'penggajian_id' => $this->formatSequenceNumber($currentIdCounter++),
                     'periode_bulan' => $data['periode_bulan'],
                     'periode_tahun' => $data['periode_tahun'],
                     'status_penggajian' => $data['status_penggajian'] ?? 'Draf',
@@ -150,7 +150,7 @@ class CreatePenggajian extends CreateRecord
     private function getNextSequenceNumber(): int
     {
         $lastNumber = Penggajian::withTrashed()
-            ->pluck('tabel_id')
+            ->pluck('penggajian_id')
             ->map(function ($id) {
                 return intval(substr($id, 2));
             })

@@ -11,7 +11,7 @@ return new class extends Migration {
     public function up(): void
     {
         Schema::create('penggajian', function (Blueprint $table) {
-            $table->string('tabel_id', 10)->primary();
+            $table->string('penggajian_id', 10)->primary();
 
             $table->integer('periode_bulan');
             $table->integer('periode_tahun');

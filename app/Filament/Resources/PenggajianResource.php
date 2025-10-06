@@ -285,7 +285,7 @@ class PenggajianResource extends Resource
         $model = static::getModel();
 
         return $model::query()
-            ->selectRaw('MIN(tabel_id) as tabel_id')
+            ->selectRaw('MIN(penggajian_id) as penggajian_id')
             ->selectRaw('periode_bulan, periode_tahun')
             ->selectRaw('MAX(status_penggajian) as status_penggajian')
             ->selectRaw('MAX(verified_by) as verified_by')
@@ -322,6 +322,6 @@ class PenggajianResource extends Resource
 
     public static function getGloballySearchableAttributes(): array
     {
-        return ['tabel_id', 'verifier.nama_lengkap', 'approver.nama_lengkap'];
+        return ['penggajian_id', 'verifier.nama_lengkap', 'approver.nama_lengkap'];
     }
 }
