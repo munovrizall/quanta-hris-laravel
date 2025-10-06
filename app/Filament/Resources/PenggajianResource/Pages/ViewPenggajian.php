@@ -11,6 +11,7 @@ use App\Services\BpjsService;
 use App\Services\LemburService;
 use App\Services\Pph21Service;
 use App\Services\PotonganService;
+use App\Utils\MonthHelper;
 use Filament\Actions;
 use Filament\Resources\Pages\ViewRecord;
 use Filament\Infolists;
@@ -200,25 +201,10 @@ class ViewPenggajian extends ViewRecord
 
   public function getBreadcrumbs(): array
   {
-    $namaBulan = [
-      1 => 'Januari',
-      2 => 'Februari',
-      3 => 'Maret',
-      4 => 'April',
-      5 => 'Mei',
-      6 => 'Juni',
-      7 => 'Juli',
-      8 => 'Agustus',
-      9 => 'September',
-      10 => 'Oktober',
-      11 => 'November',
-      12 => 'Desember'
-    ];
-
     $breadcrumbs = parent::getBreadcrumbs();
 
     if (isset($this->record)) {
-      $periodeName = $namaBulan[$this->record->periode_bulan] . ' ' . $this->record->periode_tahun;
+      $periodeName = MonthHelper::getMonthName($this->record->periode_bulan) . ' ' . $this->record->periode_tahun;
       $breadcrumbs[array_key_last($breadcrumbs)] = $periodeName;
     }
 
@@ -255,21 +241,7 @@ class ViewPenggajian extends ViewRecord
             Infolists\Components\TextEntry::make('periode')
               ->label('Periode')
               ->getStateUsing(function ($record): string {
-                $namaBulan = [
-                  1 => 'Januari',
-                  2 => 'Februari',
-                  3 => 'Maret',
-                  4 => 'April',
-                  5 => 'Mei',
-                  6 => 'Juni',
-                  7 => 'Juli',
-                  8 => 'Agustus',
-                  9 => 'September',
-                  10 => 'Oktober',
-                  11 => 'November',
-                  12 => 'Desember'
-                ];
-                return $namaBulan[$record->periode_bulan] . ' ' . $record->periode_tahun;
+                return MonthHelper::formatPeriod($record->periode_bulan, $record->periode_tahun);
               }),
 
             Infolists\Components\TextEntry::make('status_penggajian')

@@ -4,6 +4,7 @@ namespace App\Filament\Resources;
 
 use App\Filament\Resources\PenggajianResource\Pages;
 use App\Models\Penggajian;
+use App\Utils\MonthHelper;
 use Filament\Forms;
 use Filament\Forms\Form;
 use Filament\Resources\Resource;
@@ -11,9 +12,6 @@ use Filament\Tables;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Filament\Support\Enums\FontWeight;
-use Filament\Tables\Columns\TextColumn;
-use Filament\Forms\Components\Select;
-use Filament\Forms\Components\Textarea;
 use Carbon\Carbon;
 
 class PenggajianResource extends Resource
@@ -38,23 +36,11 @@ class PenggajianResource extends Resource
                     ->schema([
                         Forms\Components\Select::make('periode_bulan')
                             ->label('Bulan')
-                            ->options([
-                                1 => 'Januari',
-                                2 => 'Februari',
-                                3 => 'Maret',
-                                4 => 'April',
-                                5 => 'Mei',
-                                6 => 'Juni',
-                                7 => 'Juli',
-                                8 => 'Agustus',
-                                9 => 'September',
-                                10 => 'Oktober',
-                                11 => 'November',
-                                12 => 'Desember'
-                            ])
+                            ->options(MonthHelper::getMonthOptions()) // Use helper
                             ->default(Carbon::now()->month)
                             ->required()
                             ->native(false),
+
 
                         Forms\Components\Select::make('periode_tahun')
                             ->label('Tahun')
@@ -110,24 +96,10 @@ class PenggajianResource extends Resource
             ->columns([
                 Tables\Columns\TextColumn::make('periode')
                     ->label('Periode')
-                    ->getStateUsing(function (Penggajian $record): string {
-                        $namaBulan = [
-                            1 => 'Januari',
-                            2 => 'Februari',
-                            3 => 'Maret',
-                            4 => 'April',
-                            5 => 'Mei',
-                            6 => 'Juni',
-                            7 => 'Juli',
-                            8 => 'Agustus',
-                            9 => 'September',
-                            10 => 'Oktober',
-                            11 => 'November',
-                            12 => 'Desember'
-                        ];
-                        return $namaBulan[$record->periode_bulan] . ' ' . $record->periode_tahun;
+                    ->getStateUsing(function ($record): string {
+                        return MonthHelper::formatPeriod($record->periode_bulan, $record->periode_tahun);
                     })
-                    ->searchable(['periode_bulan', 'periode_tahun'])
+                    ->searchable()
                     ->sortable(['periode_bulan', 'periode_tahun'])
                     ->weight(FontWeight::Medium),
 
@@ -180,20 +152,8 @@ class PenggajianResource extends Resource
 
                 Tables\Filters\SelectFilter::make('periode_bulan')
                     ->label('Bulan')
-                    ->options([
-                        1 => 'Januari',
-                        2 => 'Februari',
-                        3 => 'Maret',
-                        4 => 'April',
-                        5 => 'Mei',
-                        6 => 'Juni',
-                        7 => 'Juli',
-                        8 => 'Agustus',
-                        9 => 'September',
-                        10 => 'Oktober',
-                        11 => 'November',
-                        12 => 'Desember'
-                    ]),
+                    ->options(MonthHelper::getMonthOptions()), // Use helper
+
 
                 Tables\Filters\SelectFilter::make('periode_tahun')
                     ->label('Tahun')
