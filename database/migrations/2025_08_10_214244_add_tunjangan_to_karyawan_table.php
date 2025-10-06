@@ -8,9 +8,9 @@ return new class extends Migration {
     public function up(): void
     {
         Schema::table('karyawan', function (Blueprint $table) {
-            $table->decimal('tunjangan_jabatan', 15, 2)->default(0)->after('gaji_pokok');
-            $table->decimal('tunjangan_makan_bulanan', 15, 2)->default(0)->after('tunjangan_jabatan');
-            $table->decimal('tunjangan_transport_bulanan', 15, 2)->default(0)->after('tunjangan_makan_bulanan');
+            $table->double('tunjangan_jabatan')->default(0)->after('gaji_pokok');
+            $table->double('tunjangan_makan_bulanan')->default(0)->after('tunjangan_jabatan');
+            $table->double('tunjangan_transport_bulanan')->default(0)->after('tunjangan_makan_bulanan');
         });
     }
 

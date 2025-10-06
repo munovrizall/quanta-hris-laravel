@@ -23,9 +23,6 @@ class Penggajian extends Model
     'periode_bulan',
     'periode_tahun',
     'status_penggajian',
-    'verified_by',
-    'approved_by',
-    'processed_by',
     'catatan_penolakan_draf',
     'karyawan_id',
     'sudah_diproses',
@@ -65,21 +62,6 @@ class Penggajian extends Model
     return $query->where('periode_bulan', $bulan)->where('periode_tahun', $tahun);
   }
 
-  public function verifier(): BelongsTo
-  {
-    return $this->belongsTo(Karyawan::class, 'verified_by', 'karyawan_id');
-  }
-
-  public function approver(): BelongsTo
-  {
-    return $this->belongsTo(Karyawan::class, 'approved_by', 'karyawan_id');
-  }
-
-  public function processor(): BelongsTo
-  {
-    return $this->belongsTo(Karyawan::class, 'processed_by', 'karyawan_id');
-  }
-
   public function karyawan(): BelongsTo
   {
     return $this->belongsTo(Karyawan::class, 'karyawan_id', 'karyawan_id');
@@ -113,9 +95,6 @@ class Penggajian extends Model
         ->where('penggajian_id', '!=', $model->penggajian_id)
         ->update([
           'status_penggajian' => $model->status_penggajian,
-          'verified_by' => $model->verified_by,
-          'approved_by' => $model->approved_by,
-          'processed_by' => $model->processed_by,
           'catatan_penolakan_draf' => $model->catatan_penolakan_draf,
           'updated_at' => now(),
         ]);

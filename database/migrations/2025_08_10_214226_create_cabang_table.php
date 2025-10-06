@@ -15,8 +15,8 @@ return new class extends Migration {
             $table->string('perusahaan_id', 5);
             $table->string('nama_cabang', 255);
             $table->text('alamat');
-            $table->decimal('latitude', 10, 8);
-            $table->decimal('longitude', 11, 8);
+            $table->double('latitude');
+            $table->double('longitude');
             $table->integer('radius_lokasi')->comment('Dalam satuan meter');
             $table->timestamps();
 

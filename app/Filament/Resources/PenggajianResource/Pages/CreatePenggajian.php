@@ -120,9 +120,6 @@ class CreatePenggajian extends CreateRecord
                     'periode_bulan' => $data['periode_bulan'],
                     'periode_tahun' => $data['periode_tahun'],
                     'status_penggajian' => 'Draf', // Always set to 'Draf' on create
-                    'verified_by' => null, // Always null on create
-                    'approved_by' => null, // Always null on create
-                    'processed_by' => null, // Always null on create
                     'catatan_penolakan_draf' => null, // Always null on create
                     'karyawan_id' => $karyawan->karyawan_id,
                     'sudah_diproses' => false,

@@ -17,7 +17,7 @@ return new class extends Migration {
 
             $table->bigInteger('batas_bawah');
             $table->bigInteger('batas_atas');
-            $table->decimal('tarif', 5, 4);
+            $table->double('tarif');
             $table->timestamps();
         });
     }
