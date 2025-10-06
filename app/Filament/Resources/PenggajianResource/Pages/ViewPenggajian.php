@@ -20,6 +20,7 @@ use Filament\Notifications\Notification;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
+use Illuminate\Support\Facades\Auth;
 
 class ViewPenggajian extends ViewRecord
 {
@@ -128,6 +129,7 @@ class ViewPenggajian extends ViewRecord
   protected function getHeaderActions(): array
   {
     return [
+      $this->ajukanDrafHeaderAction(),
       Actions\DeleteAction::make()
         ->label('Hapus')
         ->requiresConfirmation()
@@ -141,6 +143,59 @@ class ViewPenggajian extends ViewRecord
         })
         ->successRedirectUrl(static::getResource()::getUrl('index')),
     ];
+  }
+
+  private function ajukanDrafHeaderAction()
+  {
+    return Actions\Action::make('ajukan_draf_header')
+      ->label('Ajukan Draf')
+      ->icon('heroicon-o-check-circle')
+      ->color('success')
+      ->size('sm')
+      ->action(function () {
+        try {
+          // Update all records for this period
+          $updated = Penggajian::where('periode_bulan', $this->record->periode_bulan)
+            ->where('periode_tahun', $this->record->periode_tahun)
+            ->where('status_penggajian', 'Draf')
+            ->update([
+              'status_penggajian' => 'Diverifikasi',
+              'updated_at' => now(),
+            ]);
+
+          if ($updated > 0) {
+            Notification::make()
+              ->title('Pengajuan Berhasil!')
+              ->body("Draf penggajian berhasil diajukan. {$updated} record telah diperbarui ke status 'Diverifikasi'.")
+              ->success()
+              ->duration(5000)
+              ->send();
+
+            // Simply reload the page via JavaScript
+            $this->js('window.location.reload()');
+          } else {
+            Notification::make()
+              ->title('Tidak Ada Perubahan')
+              ->body('Tidak ada record dengan status Draf yang dapat disetujui.')
+              ->warning()
+              ->send();
+          }
+        } catch (\Exception $e) {
+          Log::error('Error updating penggajian status: ' . $e->getMessage());
+
+          Notification::make()
+            ->title('Terjadi Kesalahan')
+            ->body('Gagal menyetujui draf penggajian. Silakan coba lagi.')
+            ->danger()
+            ->send();
+        }
+      })
+      ->visible(function () {
+        $user = Auth::user();
+        return $user &&
+          $user->role_id === 'R02' &&
+          $this->record->status_penggajian === 'Draf';
+      });
   }
 
   public function getBreadcrumbs(): array
