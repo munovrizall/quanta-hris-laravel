@@ -251,25 +251,6 @@ class ViewPenggajian extends ViewRecord
           ])
           ->columns(2),
 
-        Infolists\Components\Section::make('Alur Persetujuan')
-          ->schema([
-            Infolists\Components\TextEntry::make('verifier.nama_lengkap')
-              ->label('Diverifikasi Oleh (Staff HRD)')
-              ->placeholder('Belum diverifikasi')
-              ->icon('heroicon-m-clipboard-document-check'),
-
-            Infolists\Components\TextEntry::make('approver.nama_lengkap')
-              ->label('Disetujui Oleh (Manager Finance)')
-              ->placeholder('Belum disetujui')
-              ->icon('heroicon-m-check-badge'),
-
-            Infolists\Components\TextEntry::make('processor.nama_lengkap')
-              ->label('Diproses Oleh (Account Payment)')
-              ->placeholder('Belum diproses')
-              ->icon('heroicon-m-cog-6-tooth'),
-          ])
-          ->columns(1),
-
         Infolists\Components\Section::make('Statistik Penggajian')
           ->schema([
             Infolists\Components\Grid::make(4)
