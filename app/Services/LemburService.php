@@ -86,7 +86,7 @@ class LemburService
     try {
       $lemburRecords = Lembur::where('karyawan_id', $karyawan->karyawan_id)
         ->whereBetween('tanggal_lembur', [$periodeStart, $periodeEnd])
-        ->where('status_persetujuan', 'Disetujui')
+        ->where('status_lembur', 'Disetujui')
         ->get();
 
       $totalInsentif = 0;

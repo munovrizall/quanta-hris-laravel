@@ -406,6 +406,9 @@ class ViewPenggajian extends ViewRecord
       $tunjanganData = $this->getTunjanganService()->getTunjanganBreakdown($karyawan);
       $bpjsData = $this->getBpjsService()->calculateBpjsDeductions($karyawan);
 
+      // USE LEMBUR SERVICE TO CALCULATE LEMBUR DATA
+      $lemburData = $this->getLemburService()->calculateTotalLemburForPeriode($karyawan, $periodeStart, $periodeEnd);
+
       // Calculate Pph21 using actual values from database
       $pph21Data = $this->getPph21Service()->calculatePph21WithBreakdown(
         $karyawan,
@@ -423,17 +426,17 @@ class ViewPenggajian extends ViewRecord
         [
           'label' => 'BPJS Kesehatan',
           'amount' => $bpjsData['bpjs_kesehatan'],
-          'description' => ((float)$bpjsData['breakdown']['persen_kesehatan'] * 100) . '% dari gaji pokok + tunjangan tetap (Rp ' . number_format($bpjsData['breakdown']['dasar_bpjs'], 0, ',', '.') . ')'
+          'description' => ((float) $bpjsData['breakdown']['persen_kesehatan'] * 100) . '% dari gaji pokok + tunjangan tetap (Rp ' . number_format($bpjsData['breakdown']['dasar_bpjs'], 0, ',', '.') . ')'
         ],
         [
           'label' => 'BPJS JHT',
           'amount' => $bpjsData['bpjs_jht'],
-          'description' => ((float)$bpjsData['breakdown']['persen_jht'] * 100) . '% dari gaji pokok (Rp ' . number_format($detail->gaji_pokok, 0, ',', '.') . ')'
+          'description' => ((float) $bpjsData['breakdown']['persen_jht'] * 100) . '% dari gaji pokok (Rp ' . number_format($detail->gaji_pokok, 0, ',', '.') . ')'
         ],
         [
           'label' => 'BPJS JP',
           'amount' => $bpjsData['bpjs_jp'],
-          'description' => ((float)$bpjsData['breakdown']['persen_jp'] * 100) . '% dari gaji pokok + tunjangan tetap (Rp ' . number_format($bpjsData['breakdown']['dasar_bpjs'], 0, ',', '.') . ')'
+          'description' => ((float) $bpjsData['breakdown']['persen_jp'] * 100) . '% dari gaji pokok + tunjangan tetap (Rp ' . number_format($bpjsData['breakdown']['dasar_bpjs'], 0, ',', '.') . ')'
         ],
       ];
 
@@ -448,17 +451,23 @@ class ViewPenggajian extends ViewRecord
         'total_tidak_tepat' => $karyawanAttendance['total_tidak_tepat'],
         'total_cuti' => $karyawanAttendance['total_cuti'],
         'total_izin' => $karyawanAttendance['total_izin'],
-        'total_lembur' => $karyawanAttendance['total_lembur_hours'],
-        'total_lembur_sessions' => $karyawanAttendance['total_lembur_sessions'],
+        'total_lembur' => $lemburData['total_jam'], // USE LEMBUR SERVICE DATA
+        'total_lembur_sessions' => $lemburData['total_sesi'], // USE LEMBUR SERVICE DATA
         'gaji_pokok' => $detail->gaji_pokok,
         'tunjangan_total' => $detail->total_tunjangan,
         'tunjangan_breakdown' => $tunjanganData,
         'bpjs_breakdown' => [
-          'breakdown' => $bpjsBreakdownWithDescriptions, // NOW WITH DESCRIPTIONS
+          'breakdown' => $bpjsBreakdownWithDescriptions,
           'total_amount' => $bpjsData['total_bpjs'],
           'info' => $bpjsData['breakdown']
         ],
         'lembur_pay' => $detail->total_lembur,
+        'lembur_detail' => [ // ADD LEMBUR BREAKDOWN
+          'total_insentif' => $lemburData['total_insentif'],
+          'total_jam' => $lemburData['total_jam'],
+          'total_sesi' => $lemburData['total_sesi'],
+          'formatted_amount' => $this->getLemburService()->formatRupiah($lemburData['total_insentif'])
+        ],
         'potongan_total' => $detail->total_potongan,
         'total_gaji' => $detail->gaji_bersih,
         'penyesuaian' => $detail->penyesuaian,
