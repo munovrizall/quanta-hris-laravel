@@ -108,6 +108,7 @@ class PenggajianResource extends Resource
                     ->badge()
                     ->color(fn(string $state): string => match ($state) {
                         'Draf' => 'gray',
+                        'Diajukan' => 'primary',
                         'Diverifikasi' => 'warning',
                         'Disetujui' => 'success',
                         'Ditolak' => 'danger',
@@ -115,6 +116,7 @@ class PenggajianResource extends Resource
                     })
                     ->icon(fn(string $state): string => match ($state) {
                         'Draf' => 'heroicon-m-pencil-square',
+                        'Diajukan' => 'heroicon-m-arrow-up-circle',
                         'Diverifikasi' => 'heroicon-m-check-circle',
                         'Disetujui' => 'heroicon-m-check-badge',
                         'Ditolak' => 'heroicon-m-x-circle',
@@ -129,15 +131,18 @@ class PenggajianResource extends Resource
                     ->alignCenter()
                     ->badge()
                     ->color('info'),
-
-                Tables\Columns\TextColumn::make('verifier.nama_lengkap')
-                    ->label('Diverifikasi Oleh')
-                    ->default('-'),
-
-                Tables\Columns\TextColumn::make('approver.nama_lengkap')
-                    ->label('Disetujui Oleh')
-                    ->default('-'),
-
+                    
+                Tables\Columns\TextColumn::make('total_penggajian')
+                    ->label('Total Penggajian')
+                    ->getStateUsing(function ($record): string {
+                        $total = Penggajian::where('periode_bulan', $record->periode_bulan)
+                            ->where('periode_tahun', $record->periode_tahun)
+                            ->sum('gaji_bersih');
+                        return 'Rp ' . number_format($total, 0, ',', '.');
+                    })
+                    ->alignRight()
+                    ->color('success')
+                    ->weight(FontWeight::Bold),
             ])
             ->filters([
                 Tables\Filters\SelectFilter::make('status_penggajian')

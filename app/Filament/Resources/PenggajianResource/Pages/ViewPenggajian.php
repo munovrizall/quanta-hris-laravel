@@ -160,14 +160,14 @@ class ViewPenggajian extends ViewRecord
             ->where('periode_tahun', $this->record->periode_tahun)
             ->where('status_penggajian', 'Draf')
             ->update([
-              'status_penggajian' => 'Diverifikasi',
+              'status_penggajian' => 'Diajukan',
               'updated_at' => now(),
             ]);
 
           if ($updated > 0) {
             Notification::make()
               ->title('Pengajuan Berhasil!')
-              ->body("Draf penggajian berhasil diajukan. {$updated} record telah diperbarui ke status 'Diverifikasi'.")
+              ->body("Draf penggajian berhasil diajukan. {$updated} record telah diperbarui ke status 'Diajukan'.")
               ->success()
               ->duration(5000)
               ->send();
@@ -249,6 +249,7 @@ class ViewPenggajian extends ViewRecord
               ->badge()
               ->color(fn(string $state): string => match ($state) {
                 'Draf' => 'gray',
+                'Diajukan' => 'primary',
                 'Diverifikasi' => 'warning',
                 'Disetujui' => 'success',
                 'Ditolak' => 'danger',

@@ -15,7 +15,7 @@ return new class extends Migration {
 
             $table->integer('periode_bulan');
             $table->integer('periode_tahun');
-            $table->enum('status_penggajian', ['Draf', 'Diverifikasi', 'Disetujui', 'Ditolak'])->default('Draf');
+            $table->enum('status_penggajian', ['Draf', 'Diajukan', 'Diverifikasi', 'Disetujui', 'Ditolak'])->default('Draf');
             $table->text('catatan_penolakan_draf')->nullable();
 
             $table->string('karyawan_id', 5);
