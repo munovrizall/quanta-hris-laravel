@@ -131,6 +131,8 @@ class ViewPenggajian extends ViewRecord
   {
     return [
       $this->ajukanDrafHeaderAction(),
+      $this->verifikasiDrafHeaderAction(),
+      $this->tolakDrafHeaderAction(),
       Actions\DeleteAction::make()
         ->label('Hapus')
         ->requiresConfirmation()
@@ -141,6 +143,12 @@ class ViewPenggajian extends ViewRecord
           Penggajian::where('periode_bulan', $this->record->periode_bulan)
             ->where('periode_tahun', $this->record->periode_tahun)
             ->delete();
+        })
+        ->visible(function () {
+          $user = Auth::user();
+          return $user &&
+            $user->role_id === 'R02' &&
+            $this->record->status_penggajian === 'Draf';
         })
         ->successRedirectUrl(static::getResource()::getUrl('index')),
     ];
@@ -159,6 +167,7 @@ class ViewPenggajian extends ViewRecord
           $updated = Penggajian::where('periode_bulan', $this->record->periode_bulan)
             ->where('periode_tahun', $this->record->periode_tahun)
             ->where('status_penggajian', 'Draf')
+            ->orWhere('status_penggajian', 'Ditolak')
             ->update([
               'status_penggajian' => 'Diajukan',
               'updated_at' => now(),
@@ -177,7 +186,7 @@ class ViewPenggajian extends ViewRecord
           } else {
             Notification::make()
               ->title('Tidak Ada Perubahan')
-              ->body('Tidak ada record dengan status Draf yang dapat disetujui.')
+              ->body('Tidak ada record dengan status Draf yang dapat diajukan.')
               ->warning()
               ->send();
           }
@@ -186,7 +195,7 @@ class ViewPenggajian extends ViewRecord
 
           Notification::make()
             ->title('Terjadi Kesalahan')
-            ->body('Gagal menyetujui draf penggajian. Silakan coba lagi.')
+            ->body('Gagal mengajukan draf penggajian. Silakan coba lagi.')
             ->danger()
             ->send();
         }
@@ -194,8 +203,133 @@ class ViewPenggajian extends ViewRecord
       ->visible(function () {
         $user = Auth::user();
         return $user &&
-          $user->role_id === 'R02' &&
-          $this->record->status_penggajian === 'Draf';
+          $user->role_id === 'R02' && (
+          $this->record->status_penggajian === 'Draf' ||
+          $this->record->status_penggajian === 'Ditolak'
+        );
+      });
+  }
+
+  private function verifikasiDrafHeaderAction()
+  {
+    return Actions\Action::make('verifikasi_draf_header')
+      ->label('Verifikasi Draf')
+      ->icon('heroicon-o-check-circle')
+      ->color('success')
+      ->size('sm')
+      ->action(function () {
+        try {
+          // Update all records for this period
+          $updated = Penggajian::where('periode_bulan', $this->record->periode_bulan)
+            ->where('periode_tahun', $this->record->periode_tahun)
+            ->where('status_penggajian', 'Diajukan')
+            ->update([
+              'status_penggajian' => 'Diverifikasi',
+              'updated_at' => now(),
+            ]);
+
+          if ($updated > 0) {
+            Notification::make()
+              ->title('Pengajuan Berhasil!')
+              ->body("Draf penggajian berhasil diverifikasi. {$updated} record telah diperbarui ke status 'Diverifikasi'.")
+              ->success()
+              ->duration(5000)
+              ->send();
+
+            // Simply reload the page via JavaScript
+            $this->js('window.location.reload()');
+          } else {
+            Notification::make()
+              ->title('Tidak Ada Perubahan')
+              ->body('Tidak ada record dengan status Draf yang dapat diverifikasi.')
+              ->warning()
+              ->send();
+          }
+        } catch (\Exception $e) {
+          Log::error('Error updating penggajian status: ' . $e->getMessage());
+
+          Notification::make()
+            ->title('Terjadi Kesalahan')
+            ->body('Gagal memverifikasi draf penggajian. Silakan coba lagi.')
+            ->danger()
+            ->send();
+        }
+      })
+      ->visible(function () {
+        $user = Auth::user();
+        return $user &&
+          $user->role_id === 'R03' &&
+          $this->record->status_penggajian === 'Diajukan';
+      });
+  }
+
+  private function tolakDrafHeaderAction()
+  {
+    return Actions\Action::make('tolak_draf_header')
+      ->label('Tolak Draf')
+      ->icon('heroicon-o-x-circle')
+      ->color('danger')
+      ->size('sm')
+      ->form([
+        Forms\Components\Textarea::make('alasan_penolakan')
+          ->label('Alasan Penolakan')
+          ->required()
+          ->rows(3)
+          ->placeholder('Masukkan alasan penolakan draf penggajian...')
+      ])
+      ->modalSubmitActionLabel('Simpan')
+      ->modalFooterActionsAlignment('right')
+      ->action(function (array $data) {
+        try {
+          // Update all records for this period
+          $updated = Penggajian::where('periode_bulan', $this->record->periode_bulan)
+            ->where('periode_tahun', $this->record->periode_tahun)
+            ->where(function ($query) {
+            $query->where('status_penggajian', 'Diajukan')
+              ->orWhere('status_penggajian', 'Diverifikasi');
+          })
+            ->update([
+              'status_penggajian' => 'Ditolak',
+              'catatan_penolakan_draf' => $data['alasan_penolakan'],
+              'updated_at' => now(),
+            ]);
+
+          if ($updated > 0) {
+            Notification::make()
+              ->title('Pengajuan Berhasil!')
+              ->body("Draf penggajian berhasil ditolak. {$updated} record telah diperbarui ke status 'Draf'.")
+              ->success()
+              ->duration(5000)
+              ->send();
+
+            $this->js('window.location.reload()');
+          } else {
+            $reason = 'Tidak ada record dengan status Diajukan atau Diverifikasi yang dapat diubah.';
+            Log::warning("Gagal menolak draf penggajian untuk periode {$this->record->periode_bulan}-{$this->record->periode_tahun}. Alasan: {$reason}");
+
+            Notification::make()
+              ->title('Tidak Ada Perubahan')
+              ->body('Gagal melakukan perubahan. ' . $reason)
+              ->warning()
+              ->send();
+          }
+        } catch (\Exception $e) {
+          Log::error("Error updating penggajian status untuk periode {$this->record->periode_bulan}-{$this->record->periode_tahun}: " . $e->getMessage());
+
+          Notification::make()
+            ->title('Terjadi Kesalahan')
+            ->body('Gagal menyetujui draf penggajian. Silakan coba lagi. Alasan: ' . $e->getMessage())
+            ->danger()
+            ->send();
+        }
+      })
+      ->visible(function () {
+        $user = Auth::user();
+        return $user &&
+          ($user->role_id === 'R03' &&
+            $this->record->status_penggajian === 'Diajukan') ||
+          ($user->role_id === 'R04' &&
+            $this->record->status_penggajian === 'Diverifikasi');
       });
   }
 
@@ -221,7 +355,8 @@ class ViewPenggajian extends ViewRecord
   public function editKaryawanGajiAction()
   {
     return EditGajiKaryawanAction::make()
-      ->visible(fn() => $this->record->status_penggajian === 'Draf');
+      ->visible(fn() => $this->record->status_penggajian === 'Draf' ||
+        $this->record->status_penggajian === 'Ditolak');
   }
 
   public function openEditModal($detailId)
@@ -244,6 +379,15 @@ class ViewPenggajian extends ViewRecord
                 return MonthHelper::formatPeriod($record->periode_bulan, $record->periode_tahun);
               }),
 
+            Infolists\Components\TextEntry::make('total_karyawan_from_db')
+              ->label('Total Karyawan')
+              ->getStateUsing(function ($record): int {
+                return $this->getTotalKaryawanCountFromDatabase($record);
+              })
+              ->badge()
+              ->color('info'),
+
+
             Infolists\Components\TextEntry::make('status_penggajian')
               ->label('Status')
               ->badge()
@@ -256,13 +400,11 @@ class ViewPenggajian extends ViewRecord
                 default => 'gray',
               }),
 
-            Infolists\Components\TextEntry::make('total_karyawan_from_db')
-              ->label('Total Karyawan')
-              ->getStateUsing(function ($record): int {
-                return $this->getTotalKaryawanCountFromDatabase($record);
-              })
-              ->badge()
-              ->color('info'),
+            Infolists\Components\TextEntry::make('catatan_penolakan_draf')
+              ->label('Catatan Penolakan')
+              ->placeholder('Tidak ada catatan penolakan')
+              ->color('danger')
+              ->visible(fn($record) => $record->status_penggajian === 'Ditolak'),
 
             Infolists\Components\TextEntry::make('total_gaji_from_db')
               ->label('Total Gaji')
@@ -346,7 +488,7 @@ class ViewPenggajian extends ViewRecord
               ->viewData([
                 'karyawanData' => $karyawanData,
                 'pagination' => $paginatedDetailPenggajian,
-                'canEdit' => $this->record->status_penggajian === 'Draf',
+                'canEdit' => $this->record->status_penggajian === 'Draf' || $this->record->status_penggajian === 'Ditolak',
                 'periodeBulan' => $this->record->periode_bulan,
                 'periodeTahun' => $this->record->periode_tahun,
                 'livewireId' => $this->getId(),

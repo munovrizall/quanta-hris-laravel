@@ -131,7 +131,7 @@ class PenggajianResource extends Resource
                     ->alignCenter()
                     ->badge()
                     ->color('info'),
-                    
+
                 Tables\Columns\TextColumn::make('total_penggajian')
                     ->label('Total Penggajian')
                     ->getStateUsing(function ($record): string {
@@ -149,6 +149,7 @@ class PenggajianResource extends Resource
                     ->label('Status')
                     ->options([
                         'Draf' => 'Draf',
+                        'Diajukan' => 'Diajukan',
                         'Diverifikasi' => 'Diverifikasi',
                         'Disetujui' => 'Disetujui',
                         'Ditolak' => 'Ditolak',
@@ -183,11 +184,6 @@ class PenggajianResource extends Resource
                             'bulan' => $record->periode_bulan
                         ])
                     ),
-                Tables\Actions\DeleteAction::make()
-                    ->label('Hapus')
-                    ->action(function (Penggajian $record) {
-                        Penggajian::forPeriode($record->periode_bulan, $record->periode_tahun)->delete();
-                    }),
             ])
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([
