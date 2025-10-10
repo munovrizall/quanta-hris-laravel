@@ -6,8 +6,7 @@
 <x-filament-widgets::widget class="fi-karyawan-gaji-widget">
     <div x-data="{
         editModal: null
-    }" 
-    x-init="
+    }" x-init="
         window.addEventListener('open-modal', (event) => {
             if (event.detail.action === 'editKaryawanGaji') {
                 // Use Livewire to call the method
@@ -19,18 +18,26 @@
         <div class="space-y-4">
             @foreach($karyawanData as $karyawan)
                 <div class="karyawan-container">
+                    @if(
+                            isset($karyawan['status_penggajian'], $karyawan['sudah_diproses']) &&
+                            $karyawan['status_penggajian'] === 'Disetujui' &&
+                            !$karyawan['sudah_diproses'] &&
+                            (auth()->user() && auth()->user()->role_id === 'R05')
+                        )
+                        <button class="edit-button" wire:click="markKaryawanTransfer('{{ $karyawan['detail_id'] }}')"
+                            type="button" style="background-color: #22c55e; color: white;">
+                            Sudah Transfer
+                        </button>
+                    @endif
+
                     {{-- Edit Button - Updated to use Alpine.js --}}
                     @if(isset($canEdit) && $canEdit)
-                        <button 
-                            class="edit-button"
-                            x-on:click="window.dispatchEvent(new CustomEvent('open-modal', {
-                                detail: { 
-                                    action: 'editKaryawanGaji',
-                                    detailId: @js($karyawan['detail_id'])
-                                }
-                            }))"
-                            type="button"
-                        >
+                        <button class="edit-button" x-on:click="window.dispatchEvent(new CustomEvent('open-modal', {
+                                        detail: { 
+                                            action: 'editKaryawanGaji',
+                                            detailId: @js($karyawan['detail_id'])
+                                        }
+                                    }))" type="button">
                             <svg class="edit-icon" viewBox="0 0 20 20">
                                 <path
                                     d="m5.433 13.917 1.262-3.155A4 4 0 0 1 7.58 9.42l6.92-6.918a2.121 2.121 0 0 1 3 3l-6.92 6.918c-.383.383-.84.685-1.343.886l-3.154 1.262a.5.5 0 0 1-.65-.65Z" />

@@ -31,7 +31,10 @@ class ViewPenggajian extends ViewRecord
 
   protected static ?string $breadcrumb = 'Detail';
 
-  protected $listeners = ['editKaryawan' => 'openEditModal'];
+  protected $listeners = [
+    'editKaryawan' => 'openEditModal',
+    'markTransfer' => 'markKaryawanTransfer',
+  ];
 
   public int $currentPage = 1;
 
@@ -132,6 +135,8 @@ class ViewPenggajian extends ViewRecord
     return [
       $this->ajukanDrafHeaderAction(),
       $this->verifikasiDrafHeaderAction(),
+      $this->setujuiDrafHeaderAction(),
+      $this->sudahTransferDrafHeaderAction(),
       $this->tolakDrafHeaderAction(),
       Actions\DeleteAction::make()
         ->label('Hapus')
@@ -230,7 +235,7 @@ class ViewPenggajian extends ViewRecord
 
           if ($updated > 0) {
             Notification::make()
-              ->title('Pengajuan Berhasil!')
+              ->title('Verifikasi Berhasil!')
               ->body("Draf penggajian berhasil diverifikasi. {$updated} record telah diperbarui ke status 'Diverifikasi'.")
               ->success()
               ->duration(5000)
@@ -241,7 +246,7 @@ class ViewPenggajian extends ViewRecord
           } else {
             Notification::make()
               ->title('Tidak Ada Perubahan')
-              ->body('Tidak ada record dengan status Draf yang dapat diverifikasi.')
+              ->body('Tidak ada record dengan status Diajukan yang dapat diverifikasi.')
               ->warning()
               ->send();
           }
@@ -260,6 +265,113 @@ class ViewPenggajian extends ViewRecord
         return $user &&
           $user->role_id === 'R03' &&
           $this->record->status_penggajian === 'Diajukan';
+      });
+  }
+
+  private function setujuiDrafHeaderAction()
+  {
+    return Actions\Action::make('setujui_draf_header')
+      ->label('Setujui Draf')
+      ->icon('heroicon-o-check-circle')
+      ->color('success')
+      ->size('sm')
+      ->action(function () {
+        try {
+          // Update all records for this period
+          $updated = Penggajian::where('periode_bulan', $this->record->periode_bulan)
+            ->where('periode_tahun', $this->record->periode_tahun)
+            ->where('status_penggajian', 'Diverifikasi')
+            ->update([
+              'status_penggajian' => 'Disetujui',
+              'updated_at' => now(),
+            ]);
+
+          if ($updated > 0) {
+            Notification::make()
+              ->title('Setujui Berhasil!')
+              ->body("Draf penggajian berhasil disetujui. {$updated} record telah diperbarui ke status 'Disetujui'.")
+              ->success()
+              ->duration(5000)
+              ->send();
+
+            // Simply reload the page via JavaScript
+            $this->js('window.location.reload()');
+          } else {
+            Notification::make()
+              ->title('Tidak Ada Perubahan')
+              ->body('Tidak ada record dengan status Diverifikasi yang dapat disetujui.')
+              ->warning()
+              ->send();
+          }
+        } catch (\Exception $e) {
+          Log::error('Error updating penggajian status: ' . $e->getMessage());
+
+          Notification::make()
+            ->title('Terjadi Kesalahan')
+            ->body('Gagal menyetujui draf penggajian. Silakan coba lagi.')
+            ->danger()
+            ->send();
+        }
+      })
+      ->visible(function () {
+        $user = Auth::user();
+        return $user &&
+          $user->role_id === 'R04' &&
+          $this->record->status_penggajian === 'Diverifikasi';
+      });
+  }
+
+  private function sudahTransferDrafHeaderAction()
+  {
+    return Actions\Action::make('sudah_transfer_draf_header')
+      ->label('Tandai Semua Sudah Transfer')
+      ->icon('heroicon-o-check-circle')
+      ->color('success')
+      ->size('sm')
+      ->action(function () {
+        try {
+          // Update all records for this period
+          $updated = Penggajian::where('periode_bulan', $this->record->periode_bulan)
+            ->where('periode_tahun', $this->record->periode_tahun)
+            ->where('status_penggajian', 'Disetujui')
+            ->update([
+              'sudah_diproses' => true,
+              'updated_at' => now(),
+            ]);
+
+          if ($updated > 0) {
+            Notification::make()
+              ->title('Tandai Semua Sudah Transfer Berhasil!')
+              ->body("Draf penggajian berhasil ditandai sebagai sudah transfer. {$updated} record telah diperbarui.")
+              ->success()
+              ->duration(5000)
+              ->send();
+
+            // Simply reload the page via JavaScript
+            $this->js('window.location.reload()');
+          } else {
+            Notification::make()
+              ->title('Tidak Ada Perubahan')
+              ->body('Tidak ada record dengan status Disetujui yang dapat ditandai sebagai sudah transfer.')
+              ->warning()
+              ->send();
+          }
+        } catch (\Exception $e) {
+          Log::error('Error updating penggajian status: ' . $e->getMessage());
+
+          Notification::make()
+            ->title('Terjadi Kesalahan')
+            ->body('Gagal transfer draf penggajian. Silakan coba lagi.')
+            ->danger()
+            ->send();
+        }
+      })
+      ->visible(function () {
+        $user = Auth::user();
+        return $user &&
+          $user->role_id === 'R05' &&
+          $this->record->status_penggajian === 'Disetujui' &&
+          !$this->record->sudah_diproses  ;
       });
   }
 
@@ -357,6 +469,39 @@ class ViewPenggajian extends ViewRecord
     return EditGajiKaryawanAction::make()
       ->visible(fn() => $this->record->status_penggajian === 'Draf' ||
         $this->record->status_penggajian === 'Ditolak');
+  }
+
+  public function markKaryawanTransfer($detailId)
+  {
+    $user = Auth::user();
+    if (!$user || $user->role_id !== 'R05') {
+      Notification::make()
+        ->title('Akses Ditolak')
+        ->body('Anda tidak memiliki akses untuk melakukan transfer.')
+        ->danger()
+        ->send();
+      return;
+    }
+
+    $penggajian = Penggajian::find($detailId);
+    if ($penggajian && $penggajian->status_penggajian === 'Disetujui' && !$penggajian->sudah_diproses) {
+      $penggajian->sudah_diproses = true;
+      $penggajian->save();
+
+      Notification::make()
+        ->title('Berhasil')
+        ->body('Status transfer berhasil diperbarui.')
+        ->success()
+        ->send();
+
+      $this->js('window.location.reload()');
+    } else {
+      Notification::make()
+        ->title('Gagal')
+        ->body('Data penggajian tidak valid atau sudah diproses.')
+        ->danger()
+        ->send();
+    }
   }
 
   public function openEditModal($detailId)
@@ -471,15 +616,6 @@ class ViewPenggajian extends ViewRecord
           ])
           ->collapsible(),
 
-        Infolists\Components\Section::make('Catatan')
-          ->schema([
-            Infolists\Components\TextEntry::make('catatan_penolakan_draf')
-              ->label('Catatan Penolakan')
-              ->placeholder('Tidak ada catatan penolakan')
-              ->columnSpanFull(),
-          ])
-          ->visible(fn($record) => $record->status_penggajian === 'Ditolak'),
-
         Infolists\Components\Section::make('Detail Gaji Karyawan')
           ->schema([
             Infolists\Components\ViewEntry::make('karyawan_list')
@@ -488,7 +624,10 @@ class ViewPenggajian extends ViewRecord
               ->viewData([
                 'karyawanData' => $karyawanData,
                 'pagination' => $paginatedDetailPenggajian,
-                'canEdit' => $this->record->status_penggajian === 'Draf' || $this->record->status_penggajian === 'Ditolak',
+                'canEdit' => (
+                  $this->record->status_penggajian === 'Draf' ||
+                  $this->record->status_penggajian === 'Ditolak'
+                ) && (Auth::user() && Auth::user()->role_id === 'R02'),
                 'periodeBulan' => $this->record->periode_bulan,
                 'periodeTahun' => $this->record->periode_tahun,
                 'livewireId' => $this->getId(),
@@ -594,6 +733,8 @@ class ViewPenggajian extends ViewRecord
       $processedData[] = [
         'detail_id' => $detail->penggajian_id,
         'karyawan_id' => $karyawan->karyawan_id,
+        'status_penggajian' => $detail->status_penggajian,
+        'sudah_diproses' => $detail->sudah_diproses,
         'nama_lengkap' => $karyawan->nama_lengkap,
         'jabatan' => $karyawan->jabatan,
         'departemen' => $karyawan->departemen ?? 'N/A',
