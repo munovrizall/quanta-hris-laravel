@@ -335,7 +335,7 @@ class ViewPenggajian extends ViewRecord
             ->where('periode_tahun', $this->record->periode_tahun)
             ->where('status_penggajian', 'Disetujui')
             ->update([
-              'sudah_diproses' => true,
+              'sudah_ditransfer' => true,
               'updated_at' => now(),
             ]);
 
@@ -371,7 +371,7 @@ class ViewPenggajian extends ViewRecord
         return $user &&
           $user->role_id === 'R05' &&
           $this->record->status_penggajian === 'Disetujui' &&
-          !$this->record->sudah_diproses  ;
+          !$this->record->sudah_ditransfer  ;
       });
   }
 
@@ -484,8 +484,8 @@ class ViewPenggajian extends ViewRecord
     }
 
     $penggajian = Penggajian::find($detailId);
-    if ($penggajian && $penggajian->status_penggajian === 'Disetujui' && !$penggajian->sudah_diproses) {
-      $penggajian->sudah_diproses = true;
+    if ($penggajian && $penggajian->status_penggajian === 'Disetujui' && !$penggajian->sudah_ditransfer) {
+      $penggajian->sudah_ditransfer = true;
       $penggajian->save();
 
       Notification::make()
@@ -734,7 +734,7 @@ class ViewPenggajian extends ViewRecord
         'detail_id' => $detail->penggajian_id,
         'karyawan_id' => $karyawan->karyawan_id,
         'status_penggajian' => $detail->status_penggajian,
-        'sudah_diproses' => $detail->sudah_diproses,
+        'sudah_ditransfer' => $detail->sudah_ditransfer,
         'nama_lengkap' => $karyawan->nama_lengkap,
         'jabatan' => $karyawan->jabatan,
         'departemen' => $karyawan->departemen ?? 'N/A',

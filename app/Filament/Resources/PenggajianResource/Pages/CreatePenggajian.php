@@ -24,29 +24,63 @@ class CreatePenggajian extends CreateRecord
 
     protected function handleRecordCreation(array $data): Penggajian
     {
-        return DB::transaction(function () use ($data) {
-            $rows = $this->buildDetailPenggajianRows($data);
+        try {
+            // Cek apakah sudah ada data penggajian di periode yang sama
+            $exists = Penggajian::where('periode_bulan', $data['periode_bulan'])
+                ->where('periode_tahun', $data['periode_tahun'])
+                ->exists();
 
-            if (empty($rows)) {
+            if ($exists) {
+                Notification::make()
+                    ->title('Gagal Membuat Penggajian')
+                    ->body('Penggajian untuk periode ini sudah ada.')
+                    ->danger()
+                    ->send();
+
                 throw ValidationException::withMessages([
-                    'periode_bulan' => 'Tidak ada karyawan yang memenuhi kriteria periode ini.',
+                    'periode_bulan' => 'Penggajian untuk periode ini sudah ada.',
+                    'periode_tahun' => 'Penggajian untuk periode ini sudah ada.',
                 ]);
             }
 
-            $firstRow = array_shift($rows);
-            $record = Penggajian::create($firstRow);
+            return DB::transaction(function () use ($data) {
+                $rows = $this->buildDetailPenggajianRows($data);
 
-            if (!empty($rows)) {
-                Penggajian::insert($rows);
-            }
+                if (empty($rows)) {
+                    Notification::make()
+                        ->title('Gagal Membuat Penggajian')
+                        ->body('Tidak ada karyawan yang memenuhi kriteria periode ini.')
+                        ->danger()
+                        ->send();
 
-            Log::info('Detail penggajian generated successfully', [
-                'periode' => sprintf('%02d/%d', $record->periode_bulan, $record->periode_tahun),
-                'total_karyawan' => 1 + count($rows),
-            ]);
+                    throw ValidationException::withMessages([
+                        'periode_bulan' => 'Tidak ada karyawan yang memenuhi kriteria periode ini.',
+                    ]);
+                }
 
-            return $record;
-        });
+                $firstRow = array_shift($rows);
+                $record = Penggajian::create($firstRow);
+
+                if (!empty($rows)) {
+                    Penggajian::insert($rows);
+                }
+
+                Log::info('Detail penggajian generated successfully', [
+                    'periode' => sprintf('%02d/%d', $record->periode_bulan, $record->periode_tahun),
+                    'total_karyawan' => 1 + count($rows),
+                ]);
+
+                return $record;
+            });
+        } catch (\Exception $e) {
+            Notification::make()
+                ->title('Terjadi Kesalahan')
+                ->body('Gagal membuat penggajian: ' . $e->getMessage())
+                ->danger()
+                ->send();
+
+            throw $e;
+        }
     }
 
     protected function afterCreate(): void
@@ -122,7 +156,7 @@ class CreatePenggajian extends CreateRecord
                     'status_penggajian' => 'Draf', // Always set to 'Draf' on create
                     'catatan_penolakan_draf' => null, // Always null on create
                     'karyawan_id' => $karyawan->karyawan_id,
-                    'sudah_diproses' => false,
+                    'sudah_ditransfer' => false,
                     'gaji_pokok' => $gajiData['gaji_pokok'],
                     'total_tunjangan' => $gajiData['tunjangan_total'],
                     'total_lembur' => $gajiData['lembur_pay'],

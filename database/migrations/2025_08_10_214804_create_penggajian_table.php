@@ -19,7 +19,7 @@ return new class extends Migration {
             $table->text('catatan_penolakan_draf')->nullable();
 
             $table->string('karyawan_id', 5);
-            $table->boolean('sudah_diproses')->default(false);
+            $table->boolean('sudah_ditransfer')->default(false);
             $table->double('gaji_pokok')->default(0);
             $table->double('total_tunjangan')->default(0);
             $table->double('total_lembur')->default(0);

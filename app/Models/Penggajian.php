@@ -25,7 +25,7 @@ class Penggajian extends Model
     'status_penggajian',
     'catatan_penolakan_draf',
     'karyawan_id',
-    'sudah_diproses',
+    'sudah_ditransfer',
     'gaji_pokok',
     'total_tunjangan',
     'total_lembur',
@@ -43,7 +43,7 @@ class Penggajian extends Model
   protected $casts = [
     'periode_bulan' => 'integer',
     'periode_tahun' => 'integer',
-    'sudah_diproses' => 'boolean',
+    'sudah_ditransfer' => 'boolean',
     'gaji_pokok' => 'float',
     'total_tunjangan' => 'float',
     'total_lembur' => 'float',

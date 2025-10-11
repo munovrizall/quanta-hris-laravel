@@ -19,9 +19,9 @@
             @foreach($karyawanData as $karyawan)
                 <div class="karyawan-container">
                     @if(
-                            isset($karyawan['status_penggajian'], $karyawan['sudah_diproses']) &&
+                            isset($karyawan['status_penggajian'], $karyawan['sudah_ditransfer']) &&
                             $karyawan['status_penggajian'] === 'Disetujui' &&
-                            !$karyawan['sudah_diproses'] &&
+                            !$karyawan['sudah_ditransfer'] &&
                             (auth()->user() && auth()->user()->role_id === 'R05')
                         )
                         <button class="edit-button" wire:click="markKaryawanTransfer('{{ $karyawan['detail_id'] }}')"
