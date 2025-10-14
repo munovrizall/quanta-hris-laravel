@@ -9,6 +9,7 @@ use App\Models\Lembur;
 use App\Utils\MonthHelper;
 use Carbon\Carbon;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\Log;
 
 class LaporanKinerjaService
 {
@@ -164,7 +165,7 @@ class LaporanKinerjaService
             ],
             'lembur' => [
                 'sessions' => $lemburSessions,
-                'hours' => round($lemburHours, 2),
+                'hours' => round($lemburHours, 1),
             ],
             'cuti' => $cutiStats,
             'izin' => $izinStats,
@@ -257,41 +258,111 @@ class LaporanKinerjaService
         $periodStart = Carbon::createFromDate($year, $month, 1)->startOfMonth();
         $periodEnd = (clone $periodStart)->endOfMonth();
 
+        // Get attendance data
         $rawStats = Absensi::query()
             ->whereBetween('tanggal', [$periodStart->toDateString(), $periodEnd->toDateString()])
-            ->selectRaw('DATE(tanggal) as tanggal')
-            ->selectRaw('COUNT(*) as total')
-            ->selectRaw('SUM(CASE WHEN status_masuk = "Tepat Waktu" THEN 1 ELSE 0 END) as on_time')
-            ->selectRaw('SUM(CASE WHEN status_masuk = "Telat" THEN 1 ELSE 0 END) as late')
-            ->groupBy('tanggal')
-            ->orderBy('tanggal')
+            ->selectRaw('DATE(tanggal) as tanggal_date,
+                COUNT(*) as total,
+                SUM(CASE WHEN status_absensi = "Hadir" THEN 1 ELSE 0 END) as on_time,
+                SUM(CASE WHEN status_absensi = "Tidak Tepat" THEN 1 ELSE 0 END) as late')
+            ->groupByRaw('DATE(tanggal)')
+            ->orderByRaw('DATE(tanggal) ASC')
             ->get()
-            ->keyBy('tanggal');
+            ->keyBy('tanggal_date');
+
+        // Get overtime data
+        $lemburStats = Lembur::query()
+            ->where('status_lembur', 'Disetujui')
+            ->whereBetween('tanggal_lembur', [$periodStart->toDateString(), $periodEnd->toDateString()])
+            ->selectRaw('DATE(tanggal_lembur) as tanggal_date,
+                COUNT(*) as total_lembur')
+            ->groupByRaw('DATE(tanggal_lembur)')
+            ->get()
+            ->keyBy('tanggal_date');
+
+        // Get leave data (cuti)
+        $cutiStats = Cuti::query()
+            ->where('status_cuti', 'Disetujui')
+            ->where(function ($query) use ($periodStart, $periodEnd) {
+                $query->whereBetween('tanggal_mulai', [$periodStart->toDateString(), $periodEnd->toDateString()])
+                      ->orWhereBetween('tanggal_selesai', [$periodStart->toDateString(), $periodEnd->toDateString()])
+                      ->orWhere(function ($subQuery) use ($periodStart, $periodEnd) {
+                          $subQuery->where('tanggal_mulai', '<=', $periodStart->toDateString())
+                                   ->where('tanggal_selesai', '>=', $periodEnd->toDateString());
+                      });
+            })
+            ->get()
+            ->flatMap(function ($cuti) use ($periodStart, $periodEnd) {
+                $dates = [];
+                $start = Carbon::parse($cuti->tanggal_mulai)->max($periodStart);
+                $end = Carbon::parse($cuti->tanggal_selesai)->min($periodEnd);
+                
+                for ($date = $start->copy(); $date->lessThanOrEqualTo($end); $date->addDay()) {
+                    $dates[] = $date->format('Y-m-d');
+                }
+                return $dates;
+            })
+            ->countBy()
+            ->toArray();
+
+        // Get permission data (izin)
+        $izinStats = Izin::query()
+            ->where('status_izin', 'Disetujui')
+            ->where(function ($query) use ($periodStart, $periodEnd) {
+                $query->whereBetween('tanggal_mulai', [$periodStart->toDateString(), $periodEnd->toDateString()])
+                      ->orWhereBetween('tanggal_selesai', [$periodStart->toDateString(), $periodEnd->toDateString()])
+                      ->orWhere(function ($subQuery) use ($periodStart, $periodEnd) {
+                          $subQuery->where('tanggal_mulai', '<=', $periodStart->toDateString())
+                                   ->where('tanggal_selesai', '>=', $periodEnd->toDateString());
+                      });
+            })
+            ->get()
+            ->flatMap(function ($izin) use ($periodStart, $periodEnd) {
+                $dates = [];
+                $start = Carbon::parse($izin->tanggal_mulai)->max($periodStart);
+                $end = Carbon::parse($izin->tanggal_selesai)->min($periodEnd);
+                
+                for ($date = $start->copy(); $date->lessThanOrEqualTo($end); $date->addDay()) {
+                    $dates[] = $date->format('Y-m-d');
+                }
+                return $dates;
+            })
+            ->countBy()
+            ->toArray();
 
         $labels = [];
         $onTimeCounts = [];
         $lateCounts = [];
-        $totalCounts = [];
+        $lemburCounts = [];
+        $cutiCounts = [];
+        $izinCounts = [];
 
         for ($date = $periodStart->copy(); $date->lessThanOrEqualTo($periodEnd); $date->addDay()) {
             $key = $date->format('Y-m-d');
-            $stats = $rawStats->get($key);
+            $attendanceStats = $rawStats->get($key);
+            $lemburStat = $lemburStats->get($key);
 
-            $total = $stats->total ?? 0;
-            $onTime = $stats->on_time ?? 0;
-            $late = $stats->late ?? 0;
+            $onTime = $attendanceStats->on_time ?? 0;
+            $late = $attendanceStats->late ?? 0;
+            $lembur = $lemburStat->total_lembur ?? 0;
+            $cuti = $cutiStats[$key] ?? 0;
+            $izin = $izinStats[$key] ?? 0;
 
             $labels[] = $date->translatedFormat('d M');
             $onTimeCounts[] = (int) $onTime;
             $lateCounts[] = (int) $late;
-            $totalCounts[] = (int) $total;
+            $lemburCounts[] = (int) $lembur;
+            $cutiCounts[] = (int) $cuti;
+            $izinCounts[] = (int) $izin;
         }
 
         return [
             'labels' => $labels,
             'on_time' => $onTimeCounts,
             'late' => $lateCounts,
-            'total' => $totalCounts,
+            'lembur' => $lemburCounts,
+            'cuti' => $cutiCounts,
+            'izin' => $izinCounts,
         ];
     }
 }

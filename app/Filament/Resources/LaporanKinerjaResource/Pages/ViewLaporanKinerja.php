@@ -62,22 +62,6 @@ class ViewLaporanKinerja extends Page
         $this->summary = $service->getMonthlySummary($this->selectedYear, $this->selectedMonth);
     }
 
-    public function updatedSelectedPeriod(string $value): RedirectResponse
-    {
-        $segments = explode('-', $value);
-
-        if (count($segments) !== 2) {
-            return redirect()->to(static::getResource()::getUrl('index'));
-        }
-
-        [$year, $month] = $segments;
-
-        return redirect()->to(static::getResource()::getUrl('view', [
-            'tahun' => (int) $year,
-            'bulan' => (int) $month,
-        ]));
-    }
-
     protected function getHeaderWidgets(): array
     {
         return [

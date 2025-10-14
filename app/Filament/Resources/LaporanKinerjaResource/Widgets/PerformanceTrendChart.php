@@ -12,8 +12,6 @@ class PerformanceTrendChart extends ChartWidget
 
     protected static ?string $maxHeight = '320px';
 
-    protected static string $color = 'info';
-
     protected function getType(): string
     {
         return 'line';
@@ -32,18 +30,42 @@ class PerformanceTrendChart extends ChartWidget
                 [
                     'label' => 'Tepat Waktu (orang)',
                     'data' => $performance['on_time'],
-                    'borderColor' => Color::Green[500],
-                    'backgroundColor' => Color::Green[200],
-                    'fill' => false,
-                    'tension' => 0.35,
+                    'borderColor' => 'rgba(34,197,94,1)', // #22c55e
+                    'backgroundColor' => 'rgba(34,197,94,0.15)', // transparan
+                    'fill' => true,
+                    'tension' => 0.1,
                 ],
                 [
                     'label' => 'Terlambat (orang)',
                     'data' => $performance['late'],
-                    'borderColor' => Color::Amber[500],
-                    'backgroundColor' => Color::Amber[200],
-                    'fill' => false,
-                    'tension' => 0.35,
+                    'borderColor' => 'rgba(249,115,22,1)', // #f97316
+                    'backgroundColor' => 'rgba(254,215,170,0.25)', // transparan
+                    'fill' => true,
+                    'tension' => 0.1,
+                ],
+                [
+                    'label' => 'Lembur (orang)',
+                    'data' => $performance['lembur'],
+                    'borderColor' => 'rgba(139,69,19,1)', // #8b4513 brown
+                    'backgroundColor' => 'rgba(139,69,19,0.15)', // transparan
+                    'fill' => true,
+                    'tension' => 0.1,
+                ],
+                [
+                    'label' => 'Cuti (orang)',
+                    'data' => $performance['cuti'],
+                    'borderColor' => 'rgba(59,130,246,1)', // #3b82f6 blue
+                    'backgroundColor' => 'rgba(59,130,246,0.15)', // transparan
+                    'fill' => true,
+                    'tension' => 0.1,
+                ],
+                [
+                    'label' => 'Izin (orang)',
+                    'data' => $performance['izin'],
+                    'borderColor' => 'rgba(168,85,247,1)', // #a855f7 purple
+                    'backgroundColor' => 'rgba(168,85,247,0.15)', // transparan
+                    'fill' => true,
+                    'tension' => 0.1,
                 ],
             ],
         ];
