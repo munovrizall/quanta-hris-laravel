@@ -68,6 +68,7 @@ class AdminPanelProvider extends PanelProvider
             ->navigationGroups([
                 'Manajemen Absensi',
                 'Manajemen Penggajian',
+                'Laporan',
                 'Data Master',
                 'Keamanan',
             ])

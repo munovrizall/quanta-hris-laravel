@@ -65,7 +65,10 @@ class ViewLaporanKinerja extends Page
     protected function getHeaderWidgets(): array
     {
         return [
-            PerformanceTrendChart::class,
+            PerformanceTrendChart::make([
+                'year' => $this->selectedYear,
+                'month' => $this->selectedMonth,
+            ]),
         ];
     }
 }

@@ -25,9 +25,8 @@ class LaporanKinerjaResource extends Resource
 
     protected static ?string $slug = 'laporan-kinerja';
 
-    protected static ?int $navigationSort = 7;
 
-    protected static ?string $navigationGroup = 'Laporan & Analitik';
+    protected static ?string $navigationGroup = 'Laporan';
 
     public static function form(Form $form): Form
     {

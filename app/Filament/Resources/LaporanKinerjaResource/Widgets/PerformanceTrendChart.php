@@ -8,9 +8,23 @@ use Filament\Widgets\ChartWidget;
 
 class PerformanceTrendChart extends ChartWidget
 {
-    protected static ?string $heading = 'Grafik Kinerja Bulanan';
+    protected static ?string $heading = null;
 
     protected static ?string $maxHeight = '320px';
+
+    protected static string $color = 'info';
+
+    public ?int $year = null;
+    public ?int $month = null;
+
+    public function getHeading(): ?string
+    {
+        $year = $this->year ?? now()->year;
+        $month = $this->month ?? now()->month;
+        
+        $monthName = \App\Utils\MonthHelper::getMonthName($month);
+        return "Grafik Kinerja Harian - {$monthName} {$year}";
+    }
 
     protected function getType(): string
     {
@@ -19,8 +33,9 @@ class PerformanceTrendChart extends ChartWidget
 
     protected function getData(): array
     {
-        $year = (int) request()->route('tahun', now()->year);
-        $month = (int) request()->route('bulan', now()->month);
+        // Get parameters from widget properties or fallback to current date
+        $year = $this->year ?? (int) request()->route('tahun') ?? now()->year;
+        $month = $this->month ?? (int) request()->route('bulan') ?? now()->month;
 
         $performance = app(LaporanKinerjaService::class)->getDailyPerformance($year, $month);
 
