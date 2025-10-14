@@ -11,7 +11,7 @@ return new class extends Migration {
     public function up(): void
     {
         Schema::create('absensi', function (Blueprint $table) {
-            $table->string('absensi_id', 6)->primary();
+            $table->string('absensi_id', 7)->primary();
             $table->string('karyawan_id', 5);
             $table->string('cabang_id', 5);
             $table->date('tanggal');

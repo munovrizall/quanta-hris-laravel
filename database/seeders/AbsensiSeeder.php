@@ -31,7 +31,7 @@ class AbsensiSeeder extends Seeder
     }
 
     // Generate data untuk periode: bulan lalu sampai hari terakhir bulan ini
-    $startDate = Carbon::now()->subMonthNoOverflow()->startOfMonth();
+    $startDate = Carbon::now()->subMonthsNoOverflow(5)->startOfMonth();
     $endDate = Carbon::now()->endOfMonth();
 
     // ✅ CLEAR existing absensi data untuk periode ini (untuk avoid duplikasi)
