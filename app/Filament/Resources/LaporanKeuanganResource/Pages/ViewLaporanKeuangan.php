@@ -6,6 +6,7 @@ use App\Filament\Resources\LaporanKeuanganResource;
 use App\Filament\Resources\LaporanKeuanganResource\Widgets\PayrollCostTrendChart;
 use App\Services\LaporanKeuanganService;
 use Filament\Notifications\Notification;
+use Filament\Actions;
 use Filament\Resources\Pages\Page;
 use Illuminate\Http\RedirectResponse;
 
@@ -74,5 +75,30 @@ class ViewLaporanKeuangan extends Page
             'tahun' => (int) $year,
             'bulan' => (int) $month,
         ]));
+    }
+
+    protected function getHeaderActions(): array
+    {
+        return [
+            Actions\Action::make('print_report')
+                ->label('Cetak Laporan')
+                ->icon('heroicon-o-printer')
+                ->color('primary')
+                ->url(fn () => route('laporan-keuangan.cetak', [
+                    'tahun' => $this->selectedYear,
+                    'bulan' => $this->selectedMonth,
+                ]))
+                ->openUrlInNewTab()
+                ->visible(fn () => !empty($this->summary)),
+        ];
+    }
+
+    protected function getHeaderWidgets(): array
+    {
+        return [
+            PayrollCostTrendChart::make([
+                'highlightPeriod' => $this->selectedPeriod,
+            ]),
+        ];
     }
 }
