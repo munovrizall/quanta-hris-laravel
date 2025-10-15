@@ -56,7 +56,7 @@
         }
 
         .content {
-            margin-top: 80px;
+            margin-top: 200px;
         }
 
         h2 {

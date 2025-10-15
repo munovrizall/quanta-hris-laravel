@@ -17,8 +17,6 @@
                             Periode: {{ $summary['period']['range'] }}
                         </p>
                     </div>
-
-
                 </div>
             </x-filament::card>
 

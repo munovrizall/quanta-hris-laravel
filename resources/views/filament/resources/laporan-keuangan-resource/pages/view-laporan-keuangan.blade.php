@@ -17,35 +17,6 @@
                             Periode: {{ $summary['period']['range'] }}
                         </p>
                     </div>
-
-                    <div class="flex w-full flex-col gap-3 md:w-auto md:flex-row md:items-center md:gap-4">
-                        <div class="md:w-64">
-                            <label class="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">
-                                Pilih Periode
-                            </label>
-                            <select
-                                wire:model="selectedPeriod"
-                                class="block w-full rounded-lg border border-gray-300 bg-white py-2 pl-3 pr-10 text-sm shadow-sm focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-200"
-                            >
-                                @foreach ($periodOptions as $period)
-                                    <option value="{{ $period['key'] }}">
-                                        {{ $period['label'] }}
-                                    </option>
-                                @endforeach
-                            </select>
-                        </div>
-
-                        <div class="flex items-end">
-                            <a
-                                href="{{ route('laporan-keuangan.cetak', ['tahun' => $this->selectedYear, 'bulan' => $this->selectedMonth]) }}"
-                                target="_blank"
-                                class="inline-flex items-center justify-center rounded-lg bg-primary-600 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2"
-                            >
-                                <x-heroicon-o-printer class="mr-2 h-4 w-4" />
-                                Cetak Laporan
-                            </a>
-                        </div>
-                    </div>
                 </div>
             </x-filament::card>
 

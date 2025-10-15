@@ -16,6 +16,10 @@ class ViewLaporanKeuangan extends Page
 
     protected static string $view = 'filament.resources.laporan-keuangan-resource.pages.view-laporan-keuangan';
 
+    protected static ?string $title = 'Detail Laporan Keuangan';
+
+    protected static ?string $breadcrumb = 'Detail';
+
     public array $summary = [];
 
     public array $periodOptions = [];
@@ -33,7 +37,7 @@ class ViewLaporanKeuangan extends Page
         $this->periodOptions = $service->getAvailablePeriods()->all();
 
         $selectedPeriod = collect($this->periodOptions)
-            ->first(fn (array $period) => $period['tahun'] === (int) $tahun && $period['bulan'] === (int) $bulan);
+            ->first(fn(array $period) => $period['tahun'] === (int) $tahun && $period['bulan'] === (int) $bulan);
 
         if (!$selectedPeriod) {
             Notification::make()
@@ -84,12 +88,12 @@ class ViewLaporanKeuangan extends Page
                 ->label('Cetak Laporan')
                 ->icon('heroicon-o-printer')
                 ->color('primary')
-                ->url(fn () => route('laporan-keuangan.cetak', [
+                ->url(fn() => route('laporan-keuangan.cetak', [
                     'tahun' => $this->selectedYear,
                     'bulan' => $this->selectedMonth,
                 ]))
                 ->openUrlInNewTab()
-                ->visible(fn () => !empty($this->summary)),
+                ->visible(fn() => !empty($this->summary)),
         ];
     }
 

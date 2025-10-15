@@ -1,7 +1,8 @@
 <?php
 
-use App\Http\Controllers\SlipGajiController;
 use App\Http\Controllers\LaporanKeuanganController;
+use App\Http\Controllers\LaporanKinerjaController;
+use App\Http\Controllers\SlipGajiController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
@@ -16,3 +17,6 @@ Route::get('/slip-gaji/cetak-individual/{karyawan_id}/{tahun}/{bulan}', [SlipGaj
 
 Route::get('/laporan-keuangan/cetak/{tahun}/{bulan}', [LaporanKeuanganController::class, 'cetak'])
     ->name('laporan-keuangan.cetak');
+
+Route::get('/laporan-kinerja/cetak/{tahun}/{bulan}', [LaporanKinerjaController::class, 'cetak'])
+    ->name('laporan-kinerja.cetak');

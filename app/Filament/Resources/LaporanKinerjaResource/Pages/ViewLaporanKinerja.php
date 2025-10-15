@@ -5,6 +5,7 @@ namespace App\Filament\Resources\LaporanKinerjaResource\Pages;
 use App\Filament\Resources\LaporanKinerjaResource;
 use App\Filament\Resources\LaporanKinerjaResource\Widgets\PerformanceTrendChart;
 use App\Services\LaporanKinerjaService;
+use Filament\Actions;
 use Filament\Notifications\Notification;
 use Filament\Resources\Pages\Page;
 use Illuminate\Http\RedirectResponse;
@@ -14,6 +15,10 @@ class ViewLaporanKinerja extends Page
     protected static string $resource = LaporanKinerjaResource::class;
 
     protected static string $view = 'filament.resources.laporan-kinerja-resource.pages.view-laporan-kinerja';
+
+    protected static ?string $title = 'Detail Laporan Kinerja';
+
+    protected static ?string $breadcrumb = 'Detail';
 
     public array $summary = [];
 
@@ -32,7 +37,7 @@ class ViewLaporanKinerja extends Page
         $this->periodOptions = $service->getAvailablePeriods()->all();
 
         $selectedPeriod = collect($this->periodOptions)
-            ->first(fn (array $period) => $period['tahun'] === (int) $tahun && $period['bulan'] === (int) $bulan);
+            ->first(fn(array $period) => $period['tahun'] === (int) $tahun && $period['bulan'] === (int) $bulan);
 
         if (!$selectedPeriod) {
             Notification::make()
@@ -69,6 +74,22 @@ class ViewLaporanKinerja extends Page
                 'year' => $this->selectedYear,
                 'month' => $this->selectedMonth,
             ]),
+        ];
+    }
+
+    protected function getHeaderActions(): array
+    {
+        return [
+            Actions\Action::make('print_report')
+                ->label('Cetak Laporan')
+                ->icon('heroicon-o-printer')
+                ->color('primary')
+                ->url(fn() => route('laporan-kinerja.cetak', [
+                    'tahun' => $this->selectedYear,
+                    'bulan' => $this->selectedMonth,
+                ]))
+                ->openUrlInNewTab()
+                ->visible(fn() => !empty($this->summary)),
         ];
     }
 }
