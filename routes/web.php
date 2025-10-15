@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\LaporanKeuanganController;
 use App\Http\Controllers\LaporanKinerjaController;
+use App\Http\Controllers\RekapitulasiAbsensiController;
 use App\Http\Controllers\SlipGajiController;
 use Illuminate\Support\Facades\Route;
 
@@ -20,3 +21,6 @@ Route::get('/laporan-keuangan/cetak/{tahun}/{bulan}', [LaporanKeuanganController
 
 Route::get('/laporan-kinerja/cetak/{tahun}/{bulan}', [LaporanKinerjaController::class, 'cetak'])
     ->name('laporan-kinerja.cetak');
+
+Route::get('/rekapitulasi-absensi/cetak', [RekapitulasiAbsensiController::class, 'cetak'])
+    ->name('rekapitulasi-absensi.pdf');
