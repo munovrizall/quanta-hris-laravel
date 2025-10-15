@@ -120,6 +120,11 @@ class Karyawan extends Authenticable implements FilamentUser, HasName
     return $this->hasMany(Cuti::class, 'karyawan_id', 'karyawan_id');
   }
 
+  public function izin()
+  {
+    return $this->hasMany(Izin::class, 'karyawan_id', 'karyawan_id');
+  }
+
   public function calculatePph21Deduction(): float
   {
     $pph21Service = new Pph21Service();
