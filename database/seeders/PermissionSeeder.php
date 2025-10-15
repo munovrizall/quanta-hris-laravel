@@ -140,6 +140,15 @@ class PermissionSeeder extends Seeder
       'restore_any_penggajian',
       'replicate_penggajian',
       'reorder_penggajian',
+
+      // Slip Gaji permissions
+      'view_any_slip_gaji',
+      'view_slip_gaji',
+
+      // Laporan Keuangan Permissions
+      'menu_laporan_keuangan',
+      'view_any_laporan_keuangan',
+      'view_laporan_keuangan',
     ];
 
     // Create permissions with custom ID format

@@ -24,17 +24,11 @@ class SlipGajiResource extends Resource
 
     protected static ?string $slug = 'slip-gaji';
 
+    protected static ?string $title = 'Slip Gaji';
+
     protected static ?int $navigationSort = 6;
 
     protected static ?string $navigationGroup = 'Manajemen Penggajian';
-
-    public static function form(Form $form): Form
-    {
-        return $form
-            ->schema([
-                // Form tidak diperlukan karena read-only
-            ]);
-    }
 
     public static function table(Table $table): Table
     {

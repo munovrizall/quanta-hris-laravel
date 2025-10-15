@@ -70,7 +70,11 @@ class RoleSeeder extends Seeder
         'delete_role',
         'delete_any_role',
         'force_delete_role',
-        'force_delete_any_role'
+        'force_delete_any_role',
+
+        'menu_laporan_keuangan',
+        'view_any_laporan_keuangan',
+        'view_laporan_keuangan',
       ]);
 
       DB::table('role_has_permissions')->where('role_id', $ceoRole->role_id)->delete();

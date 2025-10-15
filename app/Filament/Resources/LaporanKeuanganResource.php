@@ -11,6 +11,7 @@ use Filament\Tables;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\Auth;
 
 class LaporanKeuanganResource extends Resource
 {
@@ -26,9 +27,14 @@ class LaporanKeuanganResource extends Resource
 
     protected static ?string $navigationGroup = 'Laporan';
 
-    public static function form(Form $form): Form
+    public static function shouldRegisterNavigation(): bool
     {
-        return $form;
+        return Auth::user()?->can('menu_laporan_keuangan');
+    }
+
+    public static function canViewAny(): bool
+    {
+        return Auth::user()?->can('view_any_laporan_keuangan');
     }
 
     public static function table(Table $table): Table
@@ -38,17 +44,17 @@ class LaporanKeuanganResource extends Resource
             ->columns([
                 Tables\Columns\TextColumn::make('periode')
                     ->label('Periode')
-                    ->getStateUsing(fn (Model $record): string => MonthHelper::formatPeriod(
+                    ->getStateUsing(fn(Model $record): string => MonthHelper::formatPeriod(
                         (int) $record->periode_bulan,
                         (int) $record->periode_tahun
                     ))
-                    ->sortable(query: fn (Builder $query, string $direction): Builder => $query
+                    ->sortable(query: fn(Builder $query, string $direction): Builder => $query
                         ->orderBy('periode_tahun', $direction)
                         ->orderBy('periode_bulan', $direction)),
 
                 Tables\Columns\TextColumn::make('total_gaji')
                     ->label('Total Biaya Gaji')
-                    ->formatStateUsing(fn (?float $state): string => $state !== null
+                    ->formatStateUsing(fn(?float $state): string => $state !== null
                         ? 'Rp ' . number_format($state, 0, ',', '.')
                         : 'Rp 0')
                     ->alignEnd(),
@@ -59,7 +65,7 @@ class LaporanKeuanganResource extends Resource
 
                 Tables\Columns\TextColumn::make('total_potongan')
                     ->label('Total Potongan')
-                    ->formatStateUsing(fn (?float $state): string => $state !== null
+                    ->formatStateUsing(fn(?float $state): string => $state !== null
                         ? 'Rp ' . number_format($state, 0, ',', '.')
                         : 'Rp 0')
                     ->alignEnd(),
@@ -96,7 +102,7 @@ class LaporanKeuanganResource extends Resource
             ->actions([
                 Tables\Actions\ViewAction::make()
                     ->label('Detail')
-                    ->url(fn (Model $record): string => static::getUrl('view', [
+                    ->url(fn(Model $record): string => static::getUrl('view', [
                         'tahun' => $record->periode_tahun,
                         'bulan' => $record->periode_bulan,
                     ])),

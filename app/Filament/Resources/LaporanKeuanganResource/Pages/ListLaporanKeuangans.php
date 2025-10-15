@@ -10,6 +10,13 @@ class ListLaporanKeuangans extends ListRecords
 {
     protected static string $resource = LaporanKeuanganResource::class;
 
+
+    public static function canAccess($record = null): bool
+    {
+        // konsisten dengan resource
+        return LaporanKeuanganResource::canViewAny();
+    }
+    
     protected function getHeaderWidgets(): array
     {
         return [
