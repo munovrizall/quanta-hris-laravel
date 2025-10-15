@@ -19,6 +19,8 @@ class PerusahaanResource extends Resource
 
     protected static ?string $navigationIcon = 'heroicon-o-building-office';
 
+    protected static ?string $navigationLabel = 'Kelola Perusahaan';
+
     protected static ?string $navigationGroup = 'Data Master';
 
     protected static ?int $navigationSort = 1;

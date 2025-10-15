@@ -21,7 +21,7 @@ class AbsensiResource extends Resource
 
     protected static ?string $navigationIcon = 'heroicon-o-clipboard-document-check';
 
-    protected static ?string $navigationLabel = 'Absensi';
+    protected static ?string $navigationLabel = 'Kelola Absensi';
 
     protected static ?string $pluralModelLabel = 'Absensi';
 

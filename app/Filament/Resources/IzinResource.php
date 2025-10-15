@@ -20,7 +20,7 @@ class IzinResource extends Resource
 
     protected static ?string $navigationIcon = 'heroicon-o-shield-check';
 
-    protected static ?string $navigationLabel = 'Izin';
+    protected static ?string $navigationLabel = 'Kelola Izin';
 
     protected static ?string $pluralModelLabel = 'Izin';
 
