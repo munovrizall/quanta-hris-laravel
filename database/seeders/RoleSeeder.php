@@ -64,14 +64,8 @@ class RoleSeeder extends Seeder
     // CEO gets most permissions (except some admin-specific ones)
     $ceoRole = Role::where('name', 'CEO')->first();
     if ($ceoRole) {
-      $ceoPermissions = $allPermissions->whereNotIn('name', [
-        'create_role',
-        'update_role',
-        'delete_role',
-        'delete_any_role',
-        'force_delete_role',
-        'force_delete_any_role',
-
+      $ceoPermissions = $allPermissions->whereIn('name', [
+   
         'menu_laporan_keuangan',
         'view_any_laporan_keuangan',
         'view_laporan_keuangan',
@@ -97,14 +91,6 @@ class RoleSeeder extends Seeder
         'update_karyawan',
         'delete_karyawan',
         'restore_karyawan',
-        // Cabang permissions
-        'view_any_cabang',
-        'view_cabang',
-        'create_cabang',
-        'update_cabang',
-        // Perusahaan permissions
-        'view_any_perusahaan',
-        'view_perusahaan',
         // Role permissions
         'view_any_role',
         'view_role',
@@ -201,18 +187,6 @@ class RoleSeeder extends Seeder
     $managerFinanceRole = Role::where('name', 'Manager Finance')->first();
     if ($managerFinanceRole) {
       $managerFinancePermissions = $allPermissions->whereIn('name', [
-        'view_any_karyawan',
-        'view_karyawan',
-        'view_any_cabang',
-        'view_cabang',
-        'view_any_perusahaan',
-        'view_perusahaan',
-        'view_any_absensi',
-        'view_absensi',
-        'view_any_lembur',
-        'view_lembur',
-        'view_any_cuti',
-        'view_cuti',
         // Penggajian permissions
         'view_any_penggajian',
         'view_penggajian',
@@ -234,16 +208,6 @@ class RoleSeeder extends Seeder
     $accountPaymentRole = Role::where('name', 'Account Payment')->first();
     if ($accountPaymentRole) {
       $accountPaymentPermissions = $allPermissions->whereIn('name', [
-        'view_any_karyawan',
-        'view_karyawan',
-        'view_any_cabang',
-        'view_cabang',
-        'view_any_absensi',
-        'view_absensi',
-        'view_any_lembur',
-        'view_lembur',
-        'view_any_cuti',
-        'view_cuti',
         // Penggajian permissions
         'view_any_penggajian',
         'view_penggajian',
@@ -265,9 +229,6 @@ class RoleSeeder extends Seeder
     $karyawanRole = Role::where('name', 'Karyawan')->first();
     if ($karyawanRole) {
       $karyawanPermissions = $allPermissions->whereIn('name', [
-        'view_karyawan',
-        'view_cabang',
-        'view_perusahaan',
         'view_absensi',
         'create_absensi',
         'update_absensi',

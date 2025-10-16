@@ -48,6 +48,7 @@ class AdminPanelProvider extends PanelProvider
                 ActivityOverview::class,
             ])
             ->favicon(asset('favicon.ico'))
+            ->globalSearch(false)
             ->middleware([
                 EncryptCookies::class,
                 AddQueuedCookiesToResponse::class,
