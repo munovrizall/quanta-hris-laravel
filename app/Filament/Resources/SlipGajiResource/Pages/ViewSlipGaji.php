@@ -185,6 +185,7 @@ class ViewSlipGaji extends ViewRecord
     return Penggajian::where('periode_bulan', $record->periode_bulan)
       ->where('periode_tahun', $record->periode_tahun)
       ->where('status_penggajian', 'Disetujui')
+      ->where('sudah_ditransfer', true)
       ->with(['karyawan.golonganPtkp.kategoriTer'])
       ->paginate(10, ['*'], 'page', $this->currentPage)
       ->withPath($this->paginationPath)
