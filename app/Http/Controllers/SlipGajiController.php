@@ -43,6 +43,7 @@ class SlipGajiController extends Controller
       $penggajianExists = Penggajian::where('periode_bulan', $bulan)
         ->where('periode_tahun', $tahun)
         ->where('status_penggajian', 'Disetujui')
+        ->where('sudah_ditransfer', true)
         ->exists();
 
       if (!$penggajianExists) {
@@ -53,6 +54,7 @@ class SlipGajiController extends Controller
       $penggajianData = Penggajian::where('periode_bulan', $bulan)
         ->where('periode_tahun', $tahun)
         ->where('status_penggajian', 'Disetujui')
+        ->where('sudah_ditransfer', true)
         ->with(['karyawan.golonganPtkp.kategoriTer'])
         ->orderBy('karyawan_id')
         ->get();
@@ -97,6 +99,7 @@ class SlipGajiController extends Controller
         ->where('periode_bulan', $bulan)
         ->where('periode_tahun', $tahun)
         ->where('status_penggajian', 'Disetujui')
+        ->where('sudah_ditransfer', true)
         ->with(['karyawan.golonganPtkp.kategoriTer'])
         ->first();
 
@@ -128,10 +131,10 @@ class SlipGajiController extends Controller
       $pdf->setPaper('A4', 'portrait');
       $pdf->setOptions(['dpi' => 150, 'defaultFont' => 'sans-serif']);
 
-          
+
       $namaFile = preg_replace('/[^A-Za-z0-9_]/', '', str_replace(' ', '_', $karyawanData['nama_lengkap']));
       $filename = "Slip-Gaji-{$namaFile}-{$tahun}-{$bulan}.pdf";
-   
+
       return $pdf->download($filename);
 
     } catch (\Exception $e) {
