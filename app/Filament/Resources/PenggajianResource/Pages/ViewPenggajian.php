@@ -148,6 +148,8 @@ class ViewPenggajian extends ViewRecord
           Penggajian::where('periode_bulan', $this->record->periode_bulan)
             ->where('periode_tahun', $this->record->periode_tahun)
             ->delete();
+
+          return redirect(static::getResource()::getUrl('index'));
         })
         ->visible(function () {
           $user = Auth::user();
@@ -371,7 +373,7 @@ class ViewPenggajian extends ViewRecord
         return $user &&
           $user->role_id === 'R05' &&
           $this->record->status_penggajian === 'Disetujui' &&
-          !$this->record->sudah_ditransfer  ;
+          !$this->record->sudah_ditransfer;
       });
   }
 
