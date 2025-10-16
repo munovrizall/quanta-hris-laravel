@@ -149,6 +149,10 @@ class PermissionSeeder extends Seeder
       'menu_laporan_keuangan',
       'view_any_laporan_keuangan',
       'view_laporan_keuangan',
+      
+      'menu_laporan_kinerja',
+      'view_any_laporan_kinerja',
+      'view_laporan_kinerja',
     ];
 
     // Create permissions with custom ID format

@@ -23,6 +23,11 @@ class AbsensiPolicy
      */
     public function view(Karyawan $karyawan, Absensi $absensi): bool
     {
+        // Special case untuk laporan kinerja
+        if (request()->is('admin/laporan-kinerja*')) {
+            return $karyawan->can('view_laporan_kinerja') || $karyawan->hasRole('ceo');
+        }
+
         return $karyawan->can('view_absensi');
     }
 

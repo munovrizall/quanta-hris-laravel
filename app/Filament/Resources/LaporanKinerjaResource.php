@@ -12,6 +12,7 @@ use Filament\Tables;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\Auth;
 
 class LaporanKinerjaResource extends Resource
 {
@@ -25,8 +26,17 @@ class LaporanKinerjaResource extends Resource
 
     protected static ?string $slug = 'laporan-kinerja';
 
-
     protected static ?string $navigationGroup = 'Laporan';
+
+    public static function shouldRegisterNavigation(): bool
+    {
+        return Auth::user()?->can('menu_laporan_kinerja');
+    }
+
+    public static function canViewAny(): bool
+    {
+        return Auth::user()?->can('view_any_laporan_kinerja');
+    }
 
     public static function form(Form $form): Form
     {
@@ -103,7 +113,8 @@ class LaporanKinerjaResource extends Resource
                     ->url(fn(Model $record): string => static::getUrl('view', [
                         'tahun' => $record->periode_tahun,
                         'bulan' => $record->periode_bulan,
-                    ])),
+                    ]))
+                    ->visible(fn() => Auth::user()?->can('view_laporan_kinerja')),
             ])
             ->bulkActions([]);
     }

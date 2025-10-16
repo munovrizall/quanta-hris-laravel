@@ -23,6 +23,10 @@ class PenggajianPolicy
      */
     public function view(Karyawan $karyawan, Penggajian $penggajian): bool
     {
+        if (request()->is('admin/laporan-keuangan-penggajian*')) {
+            return $karyawan->can('view_laporan_keuangan') || $karyawan->hasRole('ceo');
+        }
+
         return $karyawan->can('view_penggajian');
     }
 

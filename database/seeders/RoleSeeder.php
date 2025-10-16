@@ -65,10 +65,13 @@ class RoleSeeder extends Seeder
     $ceoRole = Role::where('name', 'CEO')->first();
     if ($ceoRole) {
       $ceoPermissions = $allPermissions->whereIn('name', [
-   
         'menu_laporan_keuangan',
         'view_any_laporan_keuangan',
         'view_laporan_keuangan',
+
+        'menu_laporan_kinerja',
+        'view_any_laporan_kinerja',
+        'view_laporan_kinerja',
       ]);
 
       DB::table('role_has_permissions')->where('role_id', $ceoRole->role_id)->delete();
@@ -164,7 +167,10 @@ class RoleSeeder extends Seeder
         'create_cuti',
         'update_cuti',
         // Izin permissions
-        'view_any_izin', 'view_izin', 'create_izin', 'update_izin',
+        'view_any_izin',
+        'view_izin',
+        'create_izin',
+        'update_izin',
         // Penggajian permissions
         'view_any_penggajian',
         'view_penggajian',

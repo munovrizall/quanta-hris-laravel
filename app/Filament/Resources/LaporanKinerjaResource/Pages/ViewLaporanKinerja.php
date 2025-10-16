@@ -9,6 +9,7 @@ use Filament\Actions;
 use Filament\Notifications\Notification;
 use Filament\Resources\Pages\Page;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Support\Facades\Auth;
 
 class ViewLaporanKinerja extends Page
 {
@@ -17,6 +18,11 @@ class ViewLaporanKinerja extends Page
     protected static string $view = 'filament.resources.laporan-kinerja-resource.pages.view-laporan-kinerja';
 
     protected static ?string $title = 'Detail Laporan Kinerja';
+
+    public static function canAccess($record = null): bool
+    {
+        return Auth::user()?->can('view_laporan_kinerja');
+    }
 
     protected static ?string $breadcrumb = 'Detail';
 

@@ -11,6 +11,12 @@ class ListLaporanKinerjas extends ListRecords
 {
     protected static string $resource = LaporanKinerjaResource::class;
 
+    public static function canAccess($record = null): bool
+    {
+        // konsisten dengan resource
+        return LaporanKinerjaResource::canViewAny();
+    }
+
     protected function getHeaderWidgets(): array
     {
         return [
