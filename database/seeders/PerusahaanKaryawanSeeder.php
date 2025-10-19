@@ -464,6 +464,36 @@ class PerusahaanKaryawanSeeder extends Seeder
             $staffKaryawan->assignRole('Karyawan');
         }
 
+         $rizalGajiPokok = 6000000; // Gaji pokok 6 juta
+        $rizalTunjangan = $this->calculateRealisticTunjanganBulanan($rizalGajiPokok, 'Staff');
+        
+        $rizalKaryawan = Karyawan::create([
+            'karyawan_id' => 'K' . str_pad($counter++, 4, '0', STR_PAD_LEFT),
+            'perusahaan_id' => $perusahaan->perusahaan_id,
+            'golongan_ptkp_id' => $ptkps->random()->golongan_ptkp_id,
+            'nik' => '3171011301900001',
+            'nama_lengkap' => 'Mohammad Novrizal',
+            'email' => 'rizal@smartcool.id',
+            'password' => Hash::make('rizal123'),
+            'tanggal_lahir' => '2002-11-13',
+            'jenis_kelamin' => 'Laki-laki',
+            'alamat' => 'Jl. Wijaya 1, Jakarta Selatan',
+            'nomor_telepon' => '081234567902',
+            'jabatan' => 'Staff IT Support',
+            'departemen' => 'Information Technology',
+            'status_kepegawaian' => 'Tetap',
+            'tanggal_mulai_bekerja' => '2024-01-15',
+            'gaji_pokok' => $rizalGajiPokok,
+            'tunjangan_jabatan' => $rizalTunjangan['jabatan'],
+            'tunjangan_makan_bulanan' => $rizalTunjangan['makan'],
+            'tunjangan_transport_bulanan' => $rizalTunjangan['transport'],
+            'kuota_cuti_tahunan' => 12,
+            'nomor_rekening' => '1234567902',
+            'nama_pemilik_rekening' => 'Mohammad Novrizal Sugiarto',
+            'role_id' => 'R07', // Role Karyawan
+        ]);
+        $rizalKaryawan->assignRole('Karyawan');
+
         $this->command->info('Berhasil membuat karyawan dengan tunjangan bulanan:');
         $this->command->info('- Admin: 1');
         $this->command->info('- CEO: 1');
