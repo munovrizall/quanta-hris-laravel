@@ -9,27 +9,31 @@ class AuthController
 {
     public function login(Request $request)
     {
-        $credentials = $request->only('email', 'password');
+        $credentials = $request->validate([
+            'email' => ['required', 'email'],
+            'password' => ['required']
+        ]);
 
-        if (Auth::attempt($credentials)) {
-            $user = Auth::user();
-            $token = $user->createToken('quanta-hris')->plainTextToken;
-
-            return ApiResponse::format(true, 200, 'Login successful', [
-                'token' => $token,
-                'user' => [
-                    'id' => $user->id,
-                    'name' => $user->name,
-                    'email' => $user->email,
-                    'role' => $user->role,
-                    'department' => $user->department,
-                    'position' => $user->position,
-                    'phone' => $user->phone,
-                ]
-            ]);
+        if (!Auth::attempt($credentials)) {
+            return ApiResponse::format(false, 401, 'Email atau password salah.', null);
         }
 
-        return ApiResponse::format(false, 401, 'Unauthorized', null);
+        $user = Auth::user();
+        $token = $user->createToken('quanta-hris')->plainTextToken;
+
+        return ApiResponse::format(true, 200, 'Login successful', [
+            'token' => $token,
+            'user' => [
+                'id' => $user->id,
+                'name' => $user->name,
+                'email' => $user->email,
+                'role' => $user->role,
+                'department' => $user->department,
+                'position' => $user->position,
+                'phone' => $user->phone,
+            ]
+        ]);
+
     }
 
     public function logout(Request $request)

@@ -5,17 +5,17 @@ namespace App\Models;
 use App\Services\Pph21Service;
 use Filament\Panel;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
-use Illuminate\Database\Eloquent\Model;
 use Illuminate\Foundation\Auth\User as Authenticable;
 use Filament\Models\Contracts\HasName;
 use Filament\Models\Contracts\FilamentUser;
 use Illuminate\Contracts\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Laravel\Sanctum\HasApiTokens;
 use Spatie\Permission\Traits\HasRoles;
 
 class Karyawan extends Authenticable implements FilamentUser, HasName
 {
-  use HasFactory, SoftDeletes, HasRoles;
+  use HasApiTokens, HasFactory, SoftDeletes, HasRoles;
 
   protected $table = 'karyawan';
   protected $primaryKey = 'karyawan_id';
