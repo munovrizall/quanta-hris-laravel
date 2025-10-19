@@ -24,13 +24,13 @@ class AuthController
         return ApiResponse::format(true, 200, 'Login successful', [
             'token' => $token,
             'user' => [
-                'id' => $user->id,
-                'name' => $user->name,
+                'karyawan_id' => $user->karyawan_id,
+                'nama_lengkap' => $user->nama_lengkap,
                 'email' => $user->email,
                 'role' => $user->role,
-                'department' => $user->department,
-                'position' => $user->position,
-                'phone' => $user->phone,
+                'departemen' => $user->departemen,
+                'jabatan' => $user->jabatan,
+                'nomor_telepon' => $user->nomor_telepon,
             ]
         ]);
 
