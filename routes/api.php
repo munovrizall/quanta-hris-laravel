@@ -19,8 +19,8 @@ Route::post('logout', [AuthController::class, 'logout'])->middleware('auth:sanct
 
 Route::middleware('auth:sanctum')->group(function () {
     // Company routes
-    Route::get('companies', [CompanyController::class, 'index']);
-    Route::get('company/{id}', [CompanyController::class, 'show']);
+    // Route::get('companies', [CompanyController::class, 'index']);
+    // Route::get('company/{id}', [CompanyController::class, 'show']);
 
     Route::get('company/operational-hours', [CompanyController::class, 'getCompanyOperationalHours']);
 
