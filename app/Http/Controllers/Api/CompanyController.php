@@ -12,46 +12,42 @@ class CompanyController extends Controller
     /**
      * Display a listing of the resource.
      */
-    public function index(Request $request)
+    // public function index(Request $request)
+    // {
+    //     if (!$request->user()) {
+    //         return ApiResponse::format(false, 401, 'Unauthorized', null);
+    //     }
+
+    //     $companies = Company::all();
+
+    //     if ($companies->isEmpty()) {
+    //         return ApiResponse::format(false, 404, 'No companies found', null);
+    //     }
+
+    //     return ApiResponse::format(
+    //         true,
+    //         200,
+    //         'Companies retrieved successfully',
+    //         $companies
+    //     );
+    // }
+
+    public function getCompanyOperationalHours(Request $request)
     {
-        if (!$request->user()) {
-            return ApiResponse::format(false, 401, 'Unauthorized', null);
+        $user = $request->user();
+
+        if (!$user || !$user->perusahaan) {
+            return ApiResponse::format(false, 404, 'Company not found for this user.', null);
         }
 
-        $companies = Company::all();
+        $company = $user->perusahaan;
 
-        if ($companies->isEmpty()) {
-            return ApiResponse::format(false, 404, 'No companies found', null);
-        }
-
-        return ApiResponse::format(
-            true,
-            200,
-            'Companies retrieved successfully',
-            $companies
-        );
-    }
-
-    /**
-     * Display the specified resource.
-     */
-    public function show(Request $request, $id)
-    {
-        if (!$request->user()) {
-            return ApiResponse::format(false, 401, 'Unauthorized', null);
-        }
-
-        $company = Company::find($id);
-
-        if (!$company) {
-            return ApiResponse::format(false, 404, 'Company not found', null);
-        }
-
-        return ApiResponse::format(
-            true,
-            200,
-            'Company retrieved successfully',
-            $company
-        );
+        return ApiResponse::format(true, 200, 'Operational hours retrieved successfully.', [
+            'company_name' => $company->nama_perusahaan,
+            'working_hours' => [
+                'start_time' => $company->jam_masuk,
+                'end_time' => $company->jam_pulang,
+            ]
+        ]);
     }
 }

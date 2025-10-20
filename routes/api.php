@@ -22,16 +22,18 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('companies', [CompanyController::class, 'index']);
     Route::get('company/{id}', [CompanyController::class, 'show']);
 
+    Route::get('operational-hours', [CompanyController::class, 'getCompanyOperationalHours']);
+
     // Site routes
     Route::get('sites', [SiteController::class, 'index']);
     Route::get('site/{id}', [SiteController::class, 'show']);
 
     // Attendance routes
     Route::post('attendance/clock-in', [AttendanceController::class, 'clockIn']);
-    Route::post('attendance/clock-out', [AttendanceController::class,'clockOut']);
-    Route::get('attendance/is-clocked-in', [AttendanceController::class,'isClockedIn']);
+    Route::post('attendance/clock-out', [AttendanceController::class, 'clockOut']);
+    Route::get('attendance/is-clocked-in', [AttendanceController::class, 'isClockedIn']);
 
-    Route::post('update-profile', [AuthController::class,'updateProfile']);
+    Route::post('update-profile', [AuthController::class, 'updateProfile']);
 
     // Permission routes
     Route::post('permission', [PermissionController::class, 'store']);
