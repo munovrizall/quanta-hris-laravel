@@ -4,8 +4,13 @@ namespace App\Http\Controllers\Api;
 
 use App\Helpers\ApiResponse;
 use App\Http\Controllers\Controller;
+use App\Models\Absensi;
 use App\Models\Attendance;
+use App\Models\Cuti;
+use App\Models\Izin;
+use App\Models\Perusahaan;
 use Illuminate\Http\Request;
+use Illuminate\Support\Carbon;
 
 class AttendanceController extends Controller
 {
@@ -22,7 +27,7 @@ class AttendanceController extends Controller
         $timeIn = $request->input('time_in', date('H:i:s'));
 
         // Get the user's company and its time_in value
-        $company = \App\Models\Company::find($user->company_id);
+        $company = Perusahaan::find($user->company_id);
 
         // Check if user is late
         $isLate = false;
@@ -31,7 +36,7 @@ class AttendanceController extends Controller
             $isLate = $timeIn > $companyTimeIn;
         }
 
-        $attendance = new Attendance;
+        $attendance = new Absensi;
         $attendance->user_id = $user->id;
         $attendance->date = $currentDate;
         $attendance->time_in = $timeIn;
@@ -55,7 +60,7 @@ class AttendanceController extends Controller
         ]);
 
         // get today attendance
-        $attendance = Attendance::where('user_id', $request->user()->id)
+        $attendance = Absensi::where('user_id', $request->user()->id)
             ->where('date', date('Y-m-d'))
             ->first();
 
@@ -85,7 +90,7 @@ class AttendanceController extends Controller
     public function isClockedIn(Request $request)
     {
 
-        $attendance = Attendance::where('user_id', $request->user()->id)
+        $attendance = Absensi::where('user_id', $request->user()->id)
             ->where('date', date('Y-m-d'))
             ->first();
 
@@ -97,5 +102,52 @@ class AttendanceController extends Controller
                 'clocked_in' => $attendance ? true : false,
             ]
         );
+    }
+
+    public function getTodayLeavesAndPermits(Request $request)
+    {
+        $today = Carbon::today();
+
+        // Get approved leaves (cuti) for today
+        $leaves = Cuti::with('karyawan')
+            ->where('status_cuti', 'Disetujui')
+            ->where('tanggal_mulai', '<=', $today)
+            ->where('tanggal_selesai', '>=', $today)
+            ->get()
+            ->map(function ($cuti) {
+                return [
+                    'nama' => $cuti->karyawan->nama_lengkap,
+                    'tipe' => 'Cuti',
+                    'alasan' => $cuti->keterangan,
+                    'jenis' => $cuti->jenis_cuti,
+                    'tanggal_mulai' => Carbon::parse($cuti->tanggal_mulai)->format('Y-m-d'),
+                    'tanggal_selesai' => Carbon::parse($cuti->tanggal_selesai)->format('Y-m-d'),
+                ];
+            });
+
+        // Get approved permits (izin) for today
+        $permits = Izin::with('karyawan')
+            ->where('status_izin', 'Disetujui')
+            ->where('tanggal_mulai', '<=', $today)
+            ->where('tanggal_selesai', '>=', $today)
+            ->get()
+            ->map(function ($izin) {
+                return [
+                    'nama' => $izin->karyawan->nama_lengkap,
+                    'tipe' => 'Izin',
+                    'alasan' => $izin->keterangan,
+                    'jenis' => $izin->jenis_izin,
+                    'tanggal_mulai' => Carbon::parse($izin->tanggal_mulai)->format('Y-m-d'),
+                    'tanggal_selesai' => Carbon::parse($izin->tanggal_selesai)->format('Y-m-d'),
+                ];
+            });
+
+        // Combine and sort by name
+        $allLeavesAndPermits = $leaves->concat($permits)->sortBy('nama')->values();
+
+        return ApiResponse::format(true, 200, 'Today\'s leaves and permits retrieved successfully.', [
+            'total' => $allLeavesAndPermits->count(),
+            'data' => $allLeavesAndPermits
+        ]);
     }
 }

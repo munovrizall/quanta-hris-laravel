@@ -32,6 +32,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('attendance/clock-in', [AttendanceController::class, 'clockIn']);
     Route::post('attendance/clock-out', [AttendanceController::class, 'clockOut']);
     Route::get('attendance/is-clocked-in', [AttendanceController::class, 'isClockedIn']);
+    Route::get('attendance/today-leaves-permits', [AttendanceController::class, 'getTodayLeavesAndPermits']);
 
     Route::post('update-profile', [AuthController::class, 'updateProfile']);
 
