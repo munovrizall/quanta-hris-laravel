@@ -47,7 +47,6 @@ class AuthController
 
     public function updateProfile(Request $request)
     {
-
         $request->validate([
             'face_embedding' => 'required',
         ]);
@@ -58,6 +57,17 @@ class AuthController
         $user->face_embedding = $face_embedding;
         $user->save();
 
-        return ApiResponse::format(true, 200, 'Profile updated', null);
+        return ApiResponse::format(true, 200, 'Profile updated', [
+            'user' => [
+                'karyawan_id' => $user->karyawan_id,
+                'nama_lengkap' => $user->nama_lengkap,
+                'email' => $user->email,
+                'role' => $user->role,
+                'departemen' => $user->departemen,
+                'jabatan' => $user->jabatan,
+                'nomor_telepon' => $user->nomor_telepon,
+                'face_embedding' => $user->face_embedding,
+            ]
+        ]);
     }
 }
