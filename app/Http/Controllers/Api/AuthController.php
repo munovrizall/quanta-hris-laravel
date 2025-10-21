@@ -31,6 +31,7 @@ class AuthController
                 'departemen' => $user->departemen,
                 'jabatan' => $user->jabatan,
                 'nomor_telepon' => $user->nomor_telepon,
+                'face_embedding' => $user->face_embedding,
             ]
         ]);
 
