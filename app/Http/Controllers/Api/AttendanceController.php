@@ -20,12 +20,11 @@ class AttendanceController extends Controller
         $request->validate([
             'latitude' => 'required|numeric',
             'longitude' => 'required|numeric',
-            'cabang_id' => 'required|exists:cabang,cabang_id',
             'foto_masuk' => 'nullable|string',
         ]);
 
         $user = $request->user();
-        $currentDate = Carbon::today()->format('Y-m-d'); // Changed to Carbon instance
+        $currentDate = Carbon::today()->format('Y-m-d');
         $currentTime = Carbon::now();
 
         // Check if already clocked in today
@@ -42,39 +41,7 @@ class AttendanceController extends Controller
             );
         }
 
-        // Get cabang and validate location
-        $cabang = Cabang::find($request->cabang_id);
-        if (!$cabang) {
-            return ApiResponse::format(
-                false,
-                404,
-                'Branch not found.',
-                null
-            );
-        }
-
-        // Calculate distance using Haversine formula
-        $distance = $this->calculateDistance(
-            $request->latitude,
-            $request->longitude,
-            $cabang->latitude,
-            $cabang->longitude
-        );
-
-        // Check if user is within the allowed radius
-        if ($distance > $cabang->radius_lokasi) {
-            return ApiResponse::format(
-                false,
-                403,
-                'You are outside the allowed location radius. Distance: ' . round($distance) . 'm, Allowed: ' . $cabang->radius_lokasi . 'm',
-                [
-                    'distance' => round($distance, 2),
-                    'allowed_radius' => $cabang->radius_lokasi,
-                ]
-            );
-        }
-
-        // Get company operational hours
+        // Get company branches
         $company = $user->perusahaan;
         if (!$company) {
             return ApiResponse::format(
@@ -82,6 +49,51 @@ class AttendanceController extends Controller
                 404,
                 'Company not found for this user.',
                 null
+            );
+        }
+
+        // Find nearest branch within radius
+        $branches = Cabang::where('perusahaan_id', $company->perusahaan_id)->get();
+
+        if ($branches->isEmpty()) {
+            return ApiResponse::format(
+                false,
+                404,
+                'No branches found for this company.',
+                null
+            );
+        }
+
+        $nearestBranch = null;
+        $shortestDistance = PHP_FLOAT_MAX;
+
+        foreach ($branches as $branch) {
+            $distance = $this->calculateDistance(
+                $request->latitude,
+                $request->longitude,
+                $branch->latitude,
+                $branch->longitude
+            );
+
+            // Check if within radius and is the nearest
+            if ($distance <= $branch->radius_lokasi && $distance < $shortestDistance) {
+                $shortestDistance = $distance;
+                $nearestBranch = $branch;
+            }
+        }
+
+        // If no branch found within radius
+        if (!$nearestBranch) {
+            return ApiResponse::format(
+                false,
+                403,
+                'You are outside the allowed location radius of all branches.',
+                [
+                    'your_location' => [
+                        'latitude' => $request->latitude,
+                        'longitude' => $request->longitude,
+                    ]
+                ]
             );
         }
 
@@ -112,7 +124,7 @@ class AttendanceController extends Controller
         $attendance = new Absensi();
         $attendance->absensi_id = $absensiId;
         $attendance->karyawan_id = $user->karyawan_id;
-        $attendance->cabang_id = $request->cabang_id;
+        $attendance->cabang_id = $nearestBranch->cabang_id; // Auto-assigned from nearest branch
         $attendance->tanggal = $currentDate;
         $attendance->waktu_masuk = $currentTime;
         $attendance->koordinat_masuk = $request->latitude . ',' . $request->longitude;
@@ -134,8 +146,12 @@ class AttendanceController extends Controller
                 'status_masuk' => $statusMasuk,
                 'status_absensi' => $attendance->status_absensi,
                 'durasi_telat' => $durasiTelat,
-                'cabang' => $cabang->nama_cabang,
-                'distance_from_branch' => round($distance, 2) . 'm',
+                'cabang' => [
+                    'cabang_id' => $nearestBranch->cabang_id,
+                    'nama_cabang' => $nearestBranch->nama_cabang,
+                    'alamat' => $nearestBranch->alamat,
+                ],
+                'distance_from_branch' => round($shortestDistance, 2) . 'm',
             ]
         );
     }
@@ -145,7 +161,7 @@ class AttendanceController extends Controller
         $request->validate([
             'latitude' => 'required|numeric',
             'longitude' => 'required|numeric',
-            'foto_pulang' => 'nullable|string', // base64 or file path
+            'foto_pulang' => 'nullable|string',
         ]);
 
         $user = $request->user();
@@ -177,7 +193,7 @@ class AttendanceController extends Controller
             );
         }
 
-        // Validate location
+        // Validate location - must be at same branch as clock in
         $cabang = Cabang::find($attendance->cabang_id);
         $distance = $this->calculateDistance(
             $request->latitude,
@@ -190,10 +206,11 @@ class AttendanceController extends Controller
             return ApiResponse::format(
                 false,
                 403,
-                'You are outside the allowed location radius. Distance: ' . round($distance) . 'm, Allowed: ' . $cabang->radius_lokasi . 'm',
+                'You are outside the allowed location radius. Please clock out from the same branch you clocked in. Distance: ' . round($distance) . 'm, Allowed: ' . $cabang->radius_lokasi . 'm',
                 [
                     'distance' => round($distance, 2),
                     'allowed_radius' => $cabang->radius_lokasi,
+                    'branch' => $cabang->nama_cabang,
                 ]
             );
         }
