@@ -91,7 +91,7 @@ class AttendanceController extends Controller
     {
 
         $attendance = Absensi::where('karyawan_id', $request->user()->id)
-            ->where('date', date('Y-m-d'))
+            ->where('tanggal', date('Y-m-d'))
             ->first();
 
         return ApiResponse::format(
