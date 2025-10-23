@@ -121,8 +121,8 @@ class AttendanceController extends Controller
         }
 
         // Determine status_masuk
-        $jamMasukToday = Carbon::today()->setTimeFromTimeString($company->jam_masuk);
-        $statusMasuk = $currentTime->gt($jamMasukToday) ? 'Telat' : 'Tepat Waktu';
+        $jamMasuk = Carbon::parse($company->jam_masuk);
+        $statusMasuk = $currentTime->format('H:i:s') > $jamMasuk->format('H:i:s') ? 'Telat' : 'Tepat Waktu';
 
         // Generate new absensi_id
         $lastAbsensi = Absensi::orderBy('absensi_id', 'desc')->first();
@@ -137,7 +137,16 @@ class AttendanceController extends Controller
         // Calculate durasi_telat if late
         $durasiTelat = null;
         if ($statusMasuk === 'Telat') {
-            $diffInMinutes = $currentTime->diffInMinutes($jamMasukToday);
+            // Gunakan diffInMinutes dengan parameter false untuk mendapatkan nilai absolut
+            $diffInMinutes = $currentTime->copy()->startOfDay()
+                ->addSeconds($currentTime->secondsSinceMidnight())
+                ->diffInMinutes(
+                    $jamMasuk->copy()->startOfDay()->addSeconds($jamMasuk->secondsSinceMidnight()),
+                    false
+                );
+
+            // Pastikan nilai positif
+            $diffInMinutes = abs($diffInMinutes);
 
             $hours = floor($diffInMinutes / 60);
             $minutes = $diffInMinutes % 60;
