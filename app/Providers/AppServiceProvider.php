@@ -5,6 +5,7 @@ namespace App\Providers;
 use Filament\Forms\Components\DateTimePicker;
 use Filament\Support\Colors\Color;
 use Filament\Support\Facades\FilamentColor;
+use Illuminate\Support\Facades\URL;
 use Illuminate\Support\ServiceProvider;
 
 class AppServiceProvider extends ServiceProvider
@@ -22,6 +23,10 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot()
     {
+        if ($this->app->environment('production')) { 
+            URL::forceScheme('https');             
+        }
+
         DateTimePicker::configureUsing(fn(DateTimePicker $component) => $component->native(false));
 
         FilamentColor::register([
