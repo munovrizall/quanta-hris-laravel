@@ -21,13 +21,13 @@ class CreateAbsensi extends CreateRecord
         $allIds = Absensi::withTrashed()
             ->pluck('absensi_id')
             ->map(function ($id) {
-                // Ambil 4 digit terakhir dari AB0001 -> 0001 -> 1
-                return intval(substr($id, 2)); // Menggunakan substr($id, 2) untuk skip "AB"
+                // Ambil 6 digit terakhir dari AB000001 -> 000001 -> 1
+                return intval(substr($id, 2, 6)); // Menggunakan substr($id, 2, 6) untuk skip "AB" dan ambil 6 digit
             })
             ->max();
 
         $nextNumber = ($allIds ?? 0) + 1;
-        $data['absensi_id'] = 'AB' . str_pad($nextNumber, 4, '0', STR_PAD_LEFT);
+        $data['absensi_id'] = 'AB' . str_pad($nextNumber, 6, '0', STR_PAD_LEFT);
 
         return $data;
     }
