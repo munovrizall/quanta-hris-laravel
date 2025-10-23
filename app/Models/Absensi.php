@@ -46,7 +46,7 @@ class Absensi extends Model
      * Ini akan mengubah kolom tanggal/waktu menjadi instance Carbon.
      */
     protected $casts = [
-        'tanggal' => 'date',
+        'tanggal' => 'datetime',
         'waktu_masuk' => 'datetime',
         'waktu_pulang' => 'datetime',
     ];
