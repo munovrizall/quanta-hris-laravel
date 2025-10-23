@@ -137,9 +137,16 @@ class AttendanceController extends Controller
         // Calculate durasi_telat if late
         $durasiTelat = null;
         if ($statusMasuk === 'Telat') {
-            // Buat Carbon instance dengan tanggal yang sama untuk perbandingan waktu
-            $jamMasukToday = Carbon::today()->setTimeFromTimeString($company->jam_masuk);
-            $diffInMinutes = $currentTime->diffInMinutes($jamMasukToday);
+            // Gunakan diffInMinutes dengan parameter false untuk mendapatkan nilai absolut
+            $diffInMinutes = $currentTime->copy()->startOfDay()
+                ->addSeconds($currentTime->secondsSinceMidnight())
+                ->diffInMinutes(
+                    $jamMasuk->copy()->startOfDay()->addSeconds($jamMasuk->secondsSinceMidnight()),
+                    false
+                );
+
+            // Pastikan nilai positif
+            $diffInMinutes = abs($diffInMinutes);
 
             $hours = floor($diffInMinutes / 60);
             $minutes = $diffInMinutes % 60;
