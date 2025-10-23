@@ -20,7 +20,7 @@ class AttendanceController extends Controller
         $request->validate([
             'latitude' => 'required|numeric',
             'longitude' => 'required|numeric',
-            'foto_masuk' => 'nullable|string',
+            'foto_masuk' => 'nullable|image|mimes:jpeg,png,jpg|max:2048', // Changed from string to image
         ]);
 
         $user = $request->user();
@@ -121,8 +121,8 @@ class AttendanceController extends Controller
         }
 
         // Determine status_masuk
-        $jamMasuk = Carbon::parse($company->jam_masuk);
-        $statusMasuk = $currentTime->format('H:i:s') > $jamMasuk->format('H:i:s') ? 'Telat' : 'Tepat Waktu';
+        $jamMasukToday = Carbon::today()->setTimeFromTimeString($company->jam_masuk);
+        $statusMasuk = $currentTime->gt($jamMasukToday) ? 'Telat' : 'Tepat Waktu';
 
         // Generate new absensi_id
         $lastAbsensi = Absensi::orderBy('absensi_id', 'desc')->first();
@@ -137,31 +137,30 @@ class AttendanceController extends Controller
         // Calculate durasi_telat if late
         $durasiTelat = null;
         if ($statusMasuk === 'Telat') {
-            // Gunakan diffInMinutes dengan parameter false untuk mendapatkan nilai absolut
-            $diffInMinutes = $currentTime->copy()->startOfDay()
-                ->addSeconds($currentTime->secondsSinceMidnight())
-                ->diffInMinutes(
-                    $jamMasuk->copy()->startOfDay()->addSeconds($jamMasuk->secondsSinceMidnight()),
-                    false
-                );
-
-            // Pastikan nilai positif
-            $diffInMinutes = abs($diffInMinutes);
+            $diffInMinutes = $currentTime->diffInMinutes($jamMasukToday);
 
             $hours = floor($diffInMinutes / 60);
             $minutes = $diffInMinutes % 60;
             $durasiTelat = sprintf('%02d:%02d:00', $hours, $minutes);
         }
 
+        // Handle foto_masuk upload
+        $fotoMasukPath = null;
+        if ($request->hasFile('foto_masuk')) {
+            $file = $request->file('foto_masuk');
+            $fileName = 'clock_in_' . $user->karyawan_id . '_' . time() . '.' . $file->getClientOriginalExtension();
+            $fotoMasukPath = $file->storeAs('attendance/clock_in', $fileName, 'public');
+        }
+
         // Create attendance record
         $attendance = new Absensi();
         $attendance->absensi_id = $absensiId;
         $attendance->karyawan_id = $user->karyawan_id;
-        $attendance->cabang_id = $nearestBranch->cabang_id; // Auto-assigned from nearest branch
+        $attendance->cabang_id = $nearestBranch->cabang_id;
         $attendance->tanggal = $currentDate;
         $attendance->waktu_masuk = $currentTime;
         $attendance->koordinat_masuk = $request->latitude . ',' . $request->longitude;
-        $attendance->foto_masuk = $request->foto_masuk ?? '';
+        $attendance->foto_masuk = $fotoMasukPath ?? '';
         $attendance->status_masuk = $statusMasuk;
         $attendance->status_absensi = 'Hadir';
         $attendance->durasi_telat = $durasiTelat;
@@ -179,6 +178,7 @@ class AttendanceController extends Controller
                 'status_masuk' => $statusMasuk,
                 'status_absensi' => $attendance->status_absensi,
                 'durasi_telat' => $durasiTelat,
+                'foto_masuk' => $fotoMasukPath ? asset('storage/' . $fotoMasukPath) : null,
                 'cabang' => [
                     'cabang_id' => $nearestBranch->cabang_id,
                     'nama_cabang' => $nearestBranch->nama_cabang,
@@ -194,7 +194,7 @@ class AttendanceController extends Controller
         $request->validate([
             'latitude' => 'required|numeric',
             'longitude' => 'required|numeric',
-            'foto_pulang' => 'nullable|string',
+            'foto_pulang' => 'nullable|image|mimes:jpeg,png,jpg|max:2048', // Changed from string to image
         ]);
 
         $user = $request->user();
@@ -306,23 +306,31 @@ class AttendanceController extends Controller
         }
 
         // Get company operational hours
-        $jamPulang = Carbon::parse($company->jam_pulang);
-        $statusPulang = $currentTime->format('H:i:s') < $jamPulang->format('H:i:s') ? 'Pulang Cepat' : 'Tepat Waktu';
+        $jamPulangToday = Carbon::today()->setTimeFromTimeString($company->jam_pulang);
+        $statusPulang = $currentTime->lt($jamPulangToday) ? 'Pulang Cepat' : 'Tepat Waktu';
 
         // Calculate durasi_pulang_cepat if early
         $durasiPulangCepat = null;
         if ($statusPulang === 'Pulang Cepat') {
-            $diffInMinutes = $jamPulang->diffInMinutes($currentTime);
+            $diffInMinutes = $jamPulangToday->diffInMinutes($currentTime);
             $hours = floor($diffInMinutes / 60);
             $minutes = $diffInMinutes % 60;
             $durasiPulangCepat = sprintf('%02d:%02d:00', $hours, $minutes);
+        }
+
+        // Handle foto_pulang upload
+        $fotoPulangPath = null;
+        if ($request->hasFile('foto_pulang')) {
+            $file = $request->file('foto_pulang');
+            $fileName = 'clock_out_' . $user->karyawan_id . '_' . time() . '.' . $file->getClientOriginalExtension();
+            $fotoPulangPath = $file->storeAs('attendance/clock_out', $fileName, 'public');
         }
 
         // Update attendance record with new branch if different
         $attendance->cabang_id = $nearestBranch->cabang_id;
         $attendance->waktu_pulang = $currentTime;
         $attendance->koordinat_pulang = $request->latitude . ',' . $request->longitude;
-        $attendance->foto_pulang = $request->foto_pulang ?? '';
+        $attendance->foto_pulang = $fotoPulangPath ?? '';
         $attendance->status_pulang = $statusPulang;
         $attendance->durasi_pulang_cepat = $durasiPulangCepat;
         $attendance->save();
@@ -336,6 +344,7 @@ class AttendanceController extends Controller
                 'waktu_pulang' => $currentTime->format('H:i:s'),
                 'status_pulang' => $statusPulang,
                 'durasi_pulang_cepat' => $durasiPulangCepat,
+                'foto_pulang' => $fotoPulangPath ? asset('storage/' . $fotoPulangPath) : null,
                 'cabang' => [
                     'cabang_id' => $nearestBranch->cabang_id,
                     'nama_cabang' => $nearestBranch->nama_cabang,
