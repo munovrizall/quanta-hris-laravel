@@ -90,7 +90,7 @@ class AttendanceController extends Controller
     public function isClockedIn(Request $request)
     {
 
-        $attendance = Absensi::where('user_id', $request->user()->id)
+        $attendance = Absensi::where('karyawan_id', $request->user()->id)
             ->where('date', date('Y-m-d'))
             ->first();
 
@@ -99,7 +99,7 @@ class AttendanceController extends Controller
             200,
             'Is today checked in retrieved successfully',
             [
-                'clocked_in' => $attendance ? true : false,
+                'is_clocked_in' => $attendance ? true : false,
             ]
         );
     }
