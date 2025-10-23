@@ -205,7 +205,7 @@ class AbsensiSeeder extends Seeder
   private function generateAbsensiCuti($faker, $karyawan, $cabang, $date, $counter): array
   {
     return [
-      'absensi_id' => 'AB' . str_pad($counter, 4, '0', STR_PAD_LEFT),
+      'absensi_id' => 'AB' . str_pad($counter, 6, '0', STR_PAD_LEFT),
       'karyawan_id' => $karyawan->karyawan_id,
       'cabang_id' => $cabang->cabang_id,
       'tanggal' => $date->format('Y-m-d'),
@@ -229,7 +229,7 @@ class AbsensiSeeder extends Seeder
   private function generateAbsensiIzin($faker, $karyawan, $cabang, $date, $counter): array
   {
     return [
-      'absensi_id' => 'AB' . str_pad($counter, 4, '0', STR_PAD_LEFT),
+      'absensi_id' => 'AB' . str_pad($counter, 6, '0', STR_PAD_LEFT),
       'karyawan_id' => $karyawan->karyawan_id,
       'cabang_id' => $cabang->cabang_id,
       'tanggal' => $date->format('Y-m-d'),
@@ -357,7 +357,7 @@ class AbsensiSeeder extends Seeder
     }
 
     return [
-      'absensi_id' => 'AB' . str_pad($counter, 4, '0', STR_PAD_LEFT),
+      'absensi_id' => 'AB' . str_pad($counter, 6, '0', STR_PAD_LEFT),
       'karyawan_id' => $karyawan->karyawan_id,
       'cabang_id' => $cabang->cabang_id,
       'tanggal' => $date->format('Y-m-d'),
@@ -388,7 +388,7 @@ class AbsensiSeeder extends Seeder
     $waktuStandarPulang = $date->copy()->setTime(17, 0, 0);
 
     return [
-      'absensi_id' => 'AB' . str_pad($counter, 4, '0', STR_PAD_LEFT),
+      'absensi_id' => 'AB' . str_pad($counter, 6, '0', STR_PAD_LEFT),
       'karyawan_id' => $karyawan->karyawan_id,
       'cabang_id' => $cabang->cabang_id,
       'tanggal' => $date->format('Y-m-d'),
