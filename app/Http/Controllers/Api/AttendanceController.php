@@ -316,13 +316,23 @@ class AttendanceController extends Controller
         }
 
         // Get company operational hours
-        $jamPulangToday = Carbon::today()->setTimeFromTimeString($company->jam_pulang);
-        $statusPulang = $currentTime->lt($jamPulangToday) ? 'Pulang Cepat' : 'Tepat Waktu';
+        $jamPulang = Carbon::parse($company->jam_pulang);
+        $statusPulang = $currentTime->format('H:i:s') < $jamPulang->format('H:i:s') ? 'Pulang Cepat' : 'Tepat Waktu';
 
         // Calculate durasi_pulang_cepat if early
         $durasiPulangCepat = null;
         if ($statusPulang === 'Pulang Cepat') {
-            $diffInMinutes = $jamPulangToday->diffInMinutes($currentTime);
+            // Gunakan diffInMinutes dengan parameter false untuk mendapatkan nilai absolut
+            $diffInMinutes = $currentTime->copy()->startOfDay()
+                ->addSeconds($currentTime->secondsSinceMidnight())
+                ->diffInMinutes(
+                    $jamPulang->copy()->startOfDay()->addSeconds($jamPulang->secondsSinceMidnight()),
+                    false
+                );
+
+            // Pastikan nilai positif
+            $diffInMinutes = abs($diffInMinutes);
+
             $hours = floor($diffInMinutes / 60);
             $minutes = $diffInMinutes % 60;
             $durasiPulangCepat = sprintf('%02d:%02d:00', $hours, $minutes);
