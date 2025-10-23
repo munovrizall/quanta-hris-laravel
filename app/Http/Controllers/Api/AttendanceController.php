@@ -127,12 +127,13 @@ class AttendanceController extends Controller
         // Generate new absensi_id
         $lastAbsensi = Absensi::orderBy('absensi_id', 'desc')->first();
         if ($lastAbsensi) {
-            $lastNumber = intval(substr($lastAbsensi->absensi_id, 3));
+            $lastNumber = intval(substr($lastAbsensi->absensi_id, 2));
             $newNumber = $lastNumber + 1;
         } else {
             $newNumber = 1;
         }
-        $absensiId = 'AB' . str_pad($newNumber, 4, '0', STR_PAD_LEFT);
+        // absensi_id length is 8, e.g. AB000001
+        $absensiId = 'AB' . str_pad($newNumber, 6, '0', STR_PAD_LEFT);
 
         // Calculate durasi_telat if late
         $durasiTelat = null;
