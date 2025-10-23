@@ -84,6 +84,24 @@ class AttendanceController extends Controller
 
         // If no branch found within radius
         if (!$nearestBranch) {
+            // Find the actual nearest branch even if outside radius
+            $nearestBranchInfo = null;
+            $shortestDistanceOverall = PHP_FLOAT_MAX;
+
+            foreach ($branches as $branch) {
+                $distance = $this->calculateDistance(
+                    $request->latitude,
+                    $request->longitude,
+                    $branch->latitude,
+                    $branch->longitude
+                );
+
+                if ($distance < $shortestDistanceOverall) {
+                    $shortestDistanceOverall = $distance;
+                    $nearestBranchInfo = $branch;
+                }
+            }
+
             return ApiResponse::format(
                 false,
                 403,
@@ -92,6 +110,11 @@ class AttendanceController extends Controller
                     'your_location' => [
                         'latitude' => $request->latitude,
                         'longitude' => $request->longitude,
+                    ],
+                    'nearest_branch' => [
+                        'nama_cabang' => $nearestBranchInfo->nama_cabang,
+                        'distance' => round($shortestDistanceOverall, 2) . 'm',
+                        'allowed_radius' => $nearestBranchInfo->radius_lokasi . 'm',
                     ]
                 ]
             );
@@ -104,12 +127,12 @@ class AttendanceController extends Controller
         // Generate new absensi_id
         $lastAbsensi = Absensi::orderBy('absensi_id', 'desc')->first();
         if ($lastAbsensi) {
-            $lastNumber = intval(substr($lastAbsensi->absensi_id, 2));
+            $lastNumber = intval(substr($lastAbsensi->absensi_id, 3));
             $newNumber = $lastNumber + 1;
         } else {
             $newNumber = 1;
         }
-        $absensiId = 'AB' . str_pad($newNumber, 6, '0', STR_PAD_LEFT);
+        $absensiId = 'AB' . str_pad($newNumber, 4, '0', STR_PAD_LEFT);
 
         // Calculate durasi_telat if late
         $durasiTelat = null;
@@ -193,30 +216,86 @@ class AttendanceController extends Controller
             );
         }
 
-        // Validate location - must be at same branch as clock in
-        $cabang = Cabang::find($attendance->cabang_id);
-        $distance = $this->calculateDistance(
-            $request->latitude,
-            $request->longitude,
-            $cabang->latitude,
-            $cabang->longitude
-        );
+        // Get company branches
+        $company = $user->perusahaan;
+        if (!$company) {
+            return ApiResponse::format(
+                false,
+                404,
+                'Company not found for this user.',
+                null
+            );
+        }
 
-        if ($distance > $cabang->radius_lokasi) {
+        // Find nearest branch within radius (can be different from clock in branch)
+        $branches = Cabang::where('perusahaan_id', $company->perusahaan_id)->get();
+
+        if ($branches->isEmpty()) {
+            return ApiResponse::format(
+                false,
+                404,
+                'No branches found for this company.',
+                null
+            );
+        }
+
+        $nearestBranch = null;
+        $shortestDistance = PHP_FLOAT_MAX;
+
+        foreach ($branches as $branch) {
+            $distance = $this->calculateDistance(
+                $request->latitude,
+                $request->longitude,
+                $branch->latitude,
+                $branch->longitude
+            );
+
+            // Check if within radius and is the nearest
+            if ($distance <= $branch->radius_lokasi && $distance < $shortestDistance) {
+                $shortestDistance = $distance;
+                $nearestBranch = $branch;
+            }
+        }
+
+        // If no branch found within radius
+        if (!$nearestBranch) {
+            // Find the actual nearest branch even if outside radius
+            $nearestBranchInfo = null;
+            $shortestDistanceOverall = PHP_FLOAT_MAX;
+
+            foreach ($branches as $branch) {
+                $distance = $this->calculateDistance(
+                    $request->latitude,
+                    $request->longitude,
+                    $branch->latitude,
+                    $branch->longitude
+                );
+
+                if ($distance < $shortestDistanceOverall) {
+                    $shortestDistanceOverall = $distance;
+                    $nearestBranchInfo = $branch;
+                }
+            }
+
             return ApiResponse::format(
                 false,
                 403,
-                'You are outside the allowed location radius. Please clock out from the same branch you clocked in. Distance: ' . round($distance) . 'm, Allowed: ' . $cabang->radius_lokasi . 'm',
+                'You are outside the allowed location radius of all branches.',
                 [
-                    'distance' => round($distance, 2),
-                    'allowed_radius' => $cabang->radius_lokasi,
-                    'branch' => $cabang->nama_cabang,
+                    'your_location' => [
+                        'latitude' => $request->latitude,
+                        'longitude' => $request->longitude,
+                    ],
+                    'nearest_branch' => [
+                        'nama_cabang' => $nearestBranchInfo->nama_cabang,
+                        'distance' => round($shortestDistanceOverall, 2) . 'm',
+                        'allowed_radius' => $nearestBranchInfo->radius_lokasi . 'm',
+                    ]
                 ]
             );
         }
 
         // Get company operational hours
-        $company = $user->perusahaan;
         $jamPulang = Carbon::parse($company->jam_pulang);
         $statusPulang = $currentTime->format('H:i:s') < $jamPulang->format('H:i:s') ? 'Pulang Cepat' : 'Tepat Waktu';
 
@@ -229,7 +308,8 @@ class AttendanceController extends Controller
             $durasiPulangCepat = sprintf('%02d:%02d:00', $hours, $minutes);
         }
 
-        // Update attendance record
+        // Update attendance record with new branch if different
+        $attendance->cabang_id = $nearestBranch->cabang_id;
         $attendance->waktu_pulang = $currentTime;
         $attendance->koordinat_pulang = $request->latitude . ',' . $request->longitude;
         $attendance->foto_pulang = $request->foto_pulang ?? '';
@@ -246,8 +326,11 @@ class AttendanceController extends Controller
                 'waktu_pulang' => $currentTime->format('H:i:s'),
                 'status_pulang' => $statusPulang,
                 'durasi_pulang_cepat' => $durasiPulangCepat,
-                'cabang' => $cabang->nama_cabang,
-                'distance_from_branch' => round($distance, 2) . 'm',
+                'cabang' => [
+                    'cabang_id' => $nearestBranch->cabang_id,
+                    'nama_cabang' => $nearestBranch->nama_cabang,
+                ],
+                'distance_from_branch' => round($shortestDistance, 2) . 'm',
             ]
         );
     }
