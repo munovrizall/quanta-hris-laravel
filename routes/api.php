@@ -6,6 +6,7 @@ use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\CompanyController;
 use App\Http\Controllers\Api\PermissionController;
 use App\Http\Controllers\Api\CutiController;
+use App\Http\Controllers\Api\IzinController;
 use App\Http\Controllers\Api\SiteController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
@@ -42,4 +43,7 @@ Route::middleware('auth:sanctum')->group(function () {
 
     // Cuti routes
     Route::post('cuti', [CutiController::class, 'store']);
+
+    // Izin routes
+    Route::post('izin', [IzinController::class, 'store']);
 });
