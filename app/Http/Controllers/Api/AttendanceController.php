@@ -376,10 +376,27 @@ class AttendanceController extends Controller
 
     public function isClockedIn(Request $request)
     {
+        $user = $request->user();
+        $today = Carbon::today();
 
-        $attendance = Absensi::where('karyawan_id', $request->user()->id)
-            ->where('tanggal', date('Y-m-d'))
+        $attendance = Absensi::where('karyawan_id', $user->karyawan_id)
+            ->whereDate('tanggal', $today->format('Y-m-d'))
             ->first();
+
+        // Check approved leave (cuti) or permit (izin) for today
+        $hasApprovedLeave = Cuti::where('karyawan_id', $user->karyawan_id)
+            ->where('status_cuti', 'Disetujui')
+            ->whereDate('tanggal_mulai', '<=', $today)
+            ->whereDate('tanggal_selesai', '>=', $today)
+            ->exists();
+
+        $hasApprovedPermit = Izin::where('karyawan_id', $user->karyawan_id)
+            ->where('status_izin', 'Disetujui')
+            ->whereDate('tanggal_mulai', '<=', $today)
+            ->whereDate('tanggal_selesai', '>=', $today)
+            ->exists();
+
+        $isEligibleAttendance = !($hasApprovedLeave || $hasApprovedPermit);
 
         return ApiResponse::format(
             true,
@@ -387,6 +404,7 @@ class AttendanceController extends Controller
             'Is today checked in retrieved successfully',
             [
                 'is_clocked_in' => $attendance ? true : false,
+                'is_eligible_attendance' => $isEligibleAttendance,
             ]
         );
     }
