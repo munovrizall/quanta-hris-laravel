@@ -49,7 +49,7 @@ Route::middleware('auth:sanctum')->group(function () {
 
     // Cuti routes
     Route::post('cuti', [CutiController::class, 'store']);
-    Route::get('cuti/quota', [CutiController::class, 'quota']);
+    Route::get('cuti/detail', [CutiController::class, 'cutiDetail']);
 
     // Izin routes
     Route::post('izin', [IzinController::class, 'store']);

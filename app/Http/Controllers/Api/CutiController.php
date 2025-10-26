@@ -104,7 +104,7 @@ class CutiController extends Controller
     /**
      * Get kuota cuti tahunan untuk karyawan login
      */
-    public function quota(Request $request)
+    public function cutiDetail(Request $request)
     {
         $user = $request->user();
         if (!$user || !$user->karyawan_id) {
@@ -112,10 +112,32 @@ class CutiController extends Controller
         }
 
         $kuota = (int) ($user->kuota_cuti_tahunan ?? 0);
-        return ApiResponse::format(true, 200, 'Kuota cuti berhasil diambil.', [
+
+        // Ambil history cuti karyawan tersebut
+        $history = Cuti::where('karyawan_id', $user->karyawan_id)
+            ->orderBy('created_at', 'desc')
+            ->get()
+            ->map(function (Cuti $cuti) {
+                $mulai = $cuti->tanggal_mulai ? Carbon::parse($cuti->tanggal_mulai) : null;
+                $selesai = $cuti->tanggal_selesai ? Carbon::parse($cuti->tanggal_selesai) : null;
+                $durasi = ($mulai && $selesai) ? ($mulai->diffInDays($selesai) + 1) : null;
+
+                return [
+                    'cuti_id' => $cuti->cuti_id,
+                    'jenis_cuti' => $cuti->jenis_cuti,
+                    'tanggal_mulai' => $cuti->tanggal_mulai,
+                    'tanggal_selesai' => $cuti->tanggal_selesai,
+                    'durasi_hari' => $durasi,
+                    'status_cuti' => $cuti->status_cuti,
+                    'alasan_penolakan' => $cuti->alasan_penolakan ?: null,
+                ];
+            });
+
+        return ApiResponse::format(true, 200, 'Ringkasan cuti berhasil diambil.', [
             'karyawan_id' => $user->karyawan_id,
-            'kuota_cuti_tahunan' => $kuota,
+            'sisa_kuota_cuti' => $kuota,
             'satuan' => 'hari',
+            'history' => $history,
         ]);
     }
 }
