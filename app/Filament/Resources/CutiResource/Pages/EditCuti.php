@@ -3,6 +3,9 @@
 namespace App\Filament\Resources\CutiResource\Pages;
 
 use App\Filament\Resources\CutiResource;
+use App\Models\Cuti;
+use App\Models\Karyawan;
+use Carbon\Carbon;
 use Filament\Actions;
 use Filament\Resources\Pages\EditRecord;
 
@@ -51,5 +54,30 @@ class EditCuti extends EditRecord
     {
         return parent::getCancelFormAction()
             ->label('Batal');
+    }
+
+    protected function afterSave(): void
+    {
+        $record = $this->record; // Cuti
+        if (!$record instanceof Cuti) {
+            return;
+        }
+
+        // Jika status berubah menjadi Disetujui dari bukan Disetujui, kurangi kuota cuti tahunan
+        if ($record->wasChanged('status_cuti') && $record->status_cuti === 'Disetujui') {
+            $original = $record->getOriginal('status_cuti');
+            if ($original !== 'Disetujui') {
+                $mulai = Carbon::parse($record->tanggal_mulai);
+                $selesai = Carbon::parse($record->tanggal_selesai);
+                $durasi = $mulai->diffInDays($selesai) + 1; // inklusif
+
+                $karyawan = $record->karyawan;
+                if ($karyawan instanceof Karyawan) {
+                    $kuota = (int) ($karyawan->kuota_cuti_tahunan ?? 0);
+                    $karyawan->kuota_cuti_tahunan = max(0, $kuota - $durasi);
+                    $karyawan->save();
+                }
+            }
+        }
     }
 }

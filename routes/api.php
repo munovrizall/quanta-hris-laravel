@@ -44,6 +44,7 @@ Route::middleware('auth:sanctum')->group(function () {
 
     // Cuti routes
     Route::post('cuti', [CutiController::class, 'store']);
+    Route::get('cuti/quota', [CutiController::class, 'quota']);
 
     // Izin routes
     Route::post('izin', [IzinController::class, 'store']);

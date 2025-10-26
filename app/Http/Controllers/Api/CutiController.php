@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api;
 use App\Helpers\ApiResponse;
 use App\Http\Controllers\Controller;
 use App\Models\Cuti;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Validator;
@@ -33,6 +34,21 @@ class CutiController extends Controller
         if ($validator->fails()) {
             return ApiResponse::format(false, 422, 'Validation error', [
                 'errors' => $validator->errors(),
+            ]);
+        }
+
+        // Validate leave duration against quota
+        $mulai = Carbon::parse($request->tanggal_mulai);
+        $selesai = Carbon::parse($request->tanggal_selesai);
+        $durasiHari = $mulai->diffInDays($selesai) + 1; // inklusif
+        $kuota = (int) ($user->kuota_cuti_tahunan ?? 0);
+        if ($kuota <= 0) {
+            return ApiResponse::format(false, 400, 'Kuota cuti tahunan habis.', null);
+        }
+        if ($durasiHari > $kuota) {
+            return ApiResponse::format(false, 400, 'Durasi cuti melebihi kuota yang tersedia.', [
+                'kuota_tersedia' => $kuota,
+                'durasi_diajukan' => $durasiHari,
             ]);
         }
 
@@ -78,10 +94,28 @@ class CutiController extends Controller
             'keterangan' => $cuti->keterangan,
             'status_cuti' => $cuti->status_cuti,
             'dokumen_pendukung' => $dokumenPath ? asset('storage/' . $dokumenPath) : null,
+            'durasi_hari' => $durasiHari,
             'created_at' => $cuti->created_at,
         ];
 
         return ApiResponse::format(true, 201, 'Pengajuan cuti berhasil diajukan.', $data);
     }
-}
 
+    /**
+     * Get kuota cuti tahunan untuk karyawan login
+     */
+    public function quota(Request $request)
+    {
+        $user = $request->user();
+        if (!$user || !$user->karyawan_id) {
+            return ApiResponse::format(false, 401, 'Unauthorized', null);
+        }
+
+        $kuota = (int) ($user->kuota_cuti_tahunan ?? 0);
+        return ApiResponse::format(true, 200, 'Kuota cuti berhasil diambil.', [
+            'karyawan_id' => $user->karyawan_id,
+            'kuota_cuti_tahunan' => $kuota,
+            'satuan' => 'hari',
+        ]);
+    }
+}
