@@ -7,6 +7,7 @@ use App\Http\Controllers\Api\CompanyController;
 use App\Http\Controllers\Api\PermissionController;
 use App\Http\Controllers\Api\CutiController;
 use App\Http\Controllers\Api\IzinController;
+use App\Http\Controllers\Api\LemburController;
 use App\Http\Controllers\Api\SiteController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
@@ -46,4 +47,8 @@ Route::middleware('auth:sanctum')->group(function () {
 
     // Izin routes
     Route::post('izin', [IzinController::class, 'store']);
+
+    // Lembur routes
+    Route::post('lembur', [LemburController::class, 'store']);
+    Route::get('lembur/eligible', [LemburController::class, 'eligible']);
 });
