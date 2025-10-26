@@ -439,6 +439,52 @@ class AttendanceController extends Controller
     }
 
     /**
+     * Get attendance history for the logged-in employee
+     * Optional query params: from (Y-m-d), to (Y-m-d)
+     */
+    public function history(Request $request)
+    {
+        $user = $request->user();
+        if (!$user || !$user->karyawan_id) {
+            return ApiResponse::format(false, 401, 'Unauthorized', null);
+        }
+
+        $from = $request->query('from');
+        $to = $request->query('to');
+
+        $query = Absensi::where('karyawan_id', $user->karyawan_id);
+
+        if ($from) {
+            $query->whereDate('tanggal', '>=', $from);
+        }
+        if ($to) {
+            $query->whereDate('tanggal', '<=', $to);
+        }
+        if (!$from && !$to) {
+            $query->whereDate('tanggal', '>=', Carbon::today()->subDays(30)->format('Y-m-d'));
+        }
+
+        $records = $query->orderBy('tanggal', 'desc')->get();
+
+        if ($records->isEmpty()) {
+            return ApiResponse::format(true, 200, 'No attendance records found for the specified period.', []);
+        }
+
+        $data = $records->map(function ($row) {
+            return [
+                'tanggal' => $row->tanggal ? Carbon::parse($row->tanggal)->format('Y-m-d') : null,
+                'jam_masuk' => $row->waktu_masuk ? Carbon::parse($row->waktu_masuk)->format('H:i:s') : null,
+                'status_masuk' => $row->status_masuk,
+                'jam_pulang' => $row->waktu_pulang ? Carbon::parse($row->waktu_pulang)->format('H:i:s') : null,
+                'status_pulang' => $row->status_pulang,
+                'status_absensi' => $row->status_absensi,
+            ];
+        });
+
+        return ApiResponse::format(true, 200, 'Attendance history retrieved successfully.', $data);
+    }
+
+    /**
      * Calculate distance between two coordinates using Haversine formula
      * Returns distance in meters
      */
