@@ -29,6 +29,7 @@ Route::middleware('auth:sanctum')->group(function () {
     // Route::get('company/{id}', [CompanyController::class, 'show']);
 
     Route::get('company/operational-hours', [CompanyController::class, 'getCompanyOperationalHours']);
+    Route::get('company/branches', [CompanyController::class, 'getCompanyBranches']);
 
     // Site routes
     Route::get('sites', [SiteController::class, 'index']);
