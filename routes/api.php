@@ -22,6 +22,8 @@ Route::post('logout', [AuthController::class, 'logout'])->middleware('auth:sanct
 
 
 Route::middleware('auth:sanctum')->group(function () {
+    // Profile
+    Route::get('profile', [AuthController::class, 'profile']);
     // Company routes
     // Route::get('companies', [CompanyController::class, 'index']);
     // Route::get('company/{id}', [CompanyController::class, 'show']);
