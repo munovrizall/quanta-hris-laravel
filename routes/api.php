@@ -8,6 +8,7 @@ use App\Http\Controllers\Api\PermissionController;
 use App\Http\Controllers\Api\CutiController;
 use App\Http\Controllers\Api\IzinController;
 use App\Http\Controllers\Api\LemburController;
+use App\Http\Controllers\Api\SlipGajiApiController;
 use App\Http\Controllers\Api\SiteController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
@@ -53,4 +54,9 @@ Route::middleware('auth:sanctum')->group(function () {
     // Lembur routes
     Route::post('lembur', [LemburController::class, 'store']);
     Route::get('lembur/eligible', [LemburController::class, 'eligible']);
+
+    // Slip Gaji routes
+    Route::get('slip-gaji', [SlipGajiApiController::class, 'index']);
+    Route::get('slip-gaji/{tahun}/{bulan}', [SlipGajiApiController::class, 'show'])->where(['tahun' => '\\d{4}', 'bulan' => '\\d{1,2}']);
+    Route::get('slip-gaji/{tahun}/{bulan}/download', [SlipGajiApiController::class, 'download'])->where(['tahun' => '\\d{4}', 'bulan' => '\\d{1,2}']);
 });
