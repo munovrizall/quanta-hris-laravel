@@ -102,13 +102,4 @@ class ViewLaporanKeuangan extends Page
                 ->visible(fn() => !empty($this->summary)),
         ];
     }
-
-    protected function getHeaderWidgets(): array
-    {
-        return [
-            PayrollCostTrendChart::make([
-                'highlightPeriod' => $this->selectedPeriod,
-            ]),
-        ];
-    }
 }
