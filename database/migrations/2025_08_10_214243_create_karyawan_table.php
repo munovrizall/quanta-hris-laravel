@@ -23,7 +23,7 @@ return new class extends Migration {
             $table->string('nomor_telepon', 20)->nullable();
             $table->string('email', 100)->unique();
             $table->timestamp('email_verified_at')->nullable();
-            $table->string('password', 20);
+            $table->string('password', 40);
             $table->rememberToken();
             $table->string('jabatan', 100)->nullable();
             $table->string('departemen', 100)->nullable();
