@@ -18,7 +18,7 @@ return new class extends Migration
             $table->date('tanggal_mulai');
             $table->date('tanggal_selesai');
             $table->text('keterangan');
-            $table->string('dokumen_pendukung', 255)->nullable();
+            $table->string('dokumen_pendukung', 100)->nullable();
             $table->enum('status_cuti', ['Diajukan', 'Disetujui', 'Ditolak'])->default('Diajukan');
             $table->text('alasan_penolakan')->nullable();
             $table->string('approved_by', 5)->nullable();

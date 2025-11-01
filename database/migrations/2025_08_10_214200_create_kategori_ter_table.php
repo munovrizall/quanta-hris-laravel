@@ -10,7 +10,7 @@ return new class extends Migration {
         Schema::create('kategori_ter', function (Blueprint $table) {
             // Diubah: Primary key menjadi string kustom (T01, T02, dst.)
             $table->string('kategori_ter_id', 3)->primary();
-            $table->string('nama_kategori');
+            $table->string('nama_kategori', 20);
             $table->text('deskripsi')->nullable();
             $table->timestamps();
         });

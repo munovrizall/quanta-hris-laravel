@@ -23,8 +23,8 @@ return new class extends Migration {
             $table->time('durasi_pulang_cepat')->nullable();
             $table->string('koordinat_masuk', 50);
             $table->string('koordinat_pulang', 50)->nullable();
-            $table->string('foto_masuk', 255);
-            $table->string('foto_pulang', 255)->nullable();
+            $table->string('foto_masuk', 100);
+            $table->string('foto_pulang', 100)->nullable();
             $table->enum('status_absensi', ['Hadir', 'Tidak Tepat', 'Alfa', 'Izin', 'Cuti']);
             $table->timestamps();
 
