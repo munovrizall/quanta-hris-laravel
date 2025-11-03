@@ -4,6 +4,8 @@ namespace App\Providers\Filament;
 
 use App\Filament\Resources\RoleResource;
 use App\Filament\Widgets\ActivityOverview;
+use App\Filament\Widgets\CutiTodayOverview;
+use App\Filament\Widgets\IzinTodayOverview;
 use App\Filament\Widgets\StatsOverview;
 use BezhanSalleh\FilamentShield\FilamentShieldPlugin;
 use Filament\Http\Middleware\Authenticate;
@@ -47,6 +49,8 @@ class AdminPanelProvider extends PanelProvider
             ->widgets([
                 StatsOverview::class,
                 ActivityOverview::class,
+                CutiTodayOverview::class,
+                IzinTodayOverview::class,
             ])
             ->favicon(asset('favicon.ico'))
             ->globalSearch(false)
