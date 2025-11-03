@@ -30,9 +30,9 @@ class AbsensiSeeder extends Seeder
       return;
     }
 
-    // Generate data untuk periode: 2 bulan sebelumnya saja (tidak termasuk bulan ini)
-    $startDate = Carbon::now()->subMonthsNoOverflow(2)->startOfMonth();
-    $endDate = Carbon::now()->subMonthNoOverflow()->endOfMonth();
+    // Generate data untuk periode: 1 bulan yang lalu sampai hari ini saja (tidak termasuk besok)
+    $startDate = Carbon::now()->subMonth()->startOfDay();
+    $endDate = Carbon::now()->endOfDay();
 
     // ✅ CLEAR existing absensi data untuk periode ini (untuk avoid duplikasi)
     $this->command->info('Clearing existing absensi data for period...');
@@ -111,7 +111,7 @@ class AbsensiSeeder extends Seeder
     $counter = 1;
     $totalAbsensiGenerated = 0;
 
-    $this->command->info("Mulai generate data absensi untuk {$karyawans->count()} karyawan selama 2 bulan sebelumnya...");
+    $this->command->info("Mulai generate data absensi untuk {$karyawans->count()} karyawan dari 1 bulan lalu sampai hari ini...");
     $this->command->info("Mengintegrasikan {$cutiDisetujui->count()} cuti dan {$izinDisetujui->count()} izin yang disetujui...");
     $this->command->info("Total reserved dates: " . count($allReservedDates));
 
