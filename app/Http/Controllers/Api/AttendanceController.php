@@ -361,13 +361,17 @@ class AttendanceController extends Controller
             'Clock out successful.' . ($statusPulang === 'Pulang Cepat' ? ' You left early today.' : ''),
             [
                 'absensi_id' => $attendance->absensi_id,
+                'karyawan_id' => $attendance->karyawan_id,
+                'tanggal' => $currentDate,
                 'waktu_pulang' => $currentTime->format('H:i:s'),
                 'status_pulang' => $statusPulang,
+                'status_absensi' => $attendance->status_absensi,
                 'durasi_pulang_cepat' => $durasiPulangCepat,
                 'foto_pulang' => $fotoPulangPath ? asset('storage/' . $fotoPulangPath) : null,
                 'cabang' => [
                     'cabang_id' => $nearestBranch->cabang_id,
                     'nama_cabang' => $nearestBranch->nama_cabang,
+                    'alamat' => $nearestBranch->alamat,
                 ],
                 'distance_from_branch' => round($shortestDistance, 2) . 'm',
             ]
