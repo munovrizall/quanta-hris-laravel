@@ -164,7 +164,7 @@
             font-size: 0.875rem;
             font-weight: 500;
             color: rgb(var(--gray-950));
-            max-width: 6rem;
+            max-width: 10rem;
             overflow: hidden;
             text-overflow: ellipsis;
             white-space: nowrap;
