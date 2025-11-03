@@ -5,6 +5,8 @@ namespace App\Filament\Resources\PenggajianResource\Pages;
 use App\Filament\Resources\PenggajianResource;
 use App\Filament\Resources\PenggajianResource\Actions\EditGajiKaryawanAction;
 use App\Models\Penggajian;
+use App\Models\Karyawan;
+use App\Models\Notifikasi;
 use App\Services\AbsensiService;
 use App\Services\TunjanganService;
 use App\Services\BpjsService;
@@ -181,6 +183,8 @@ class ViewPenggajian extends ViewRecord
             ]);
 
           if ($updated > 0) {
+            $this->notifyManagersPenggajianSubmitted($updated);
+
             Notification::make()
               ->title('Pengajuan Berhasil!')
               ->body("Draf penggajian berhasil diajukan. {$updated} record telah diperbarui ke status 'Diajukan'.")
@@ -215,6 +219,42 @@ class ViewPenggajian extends ViewRecord
           $this->record->status_penggajian === 'Ditolak'
         );
       });
+  }
+
+  private function notifyManagersPenggajianSubmitted(int $recordsUpdated): void
+  {
+    $user = Auth::user();
+
+    if (!$user || $user->role_id !== 'R02' || !$this->record) {
+      return;
+    }
+
+    $periode = MonthHelper::formatPeriod(
+      $this->record->periode_bulan,
+      $this->record->periode_tahun
+    );
+
+    $managers = Karyawan::query()
+      ->where('role_id', 'R03')
+      ->get(['karyawan_id']);
+
+    foreach ($managers as $manager) {
+      Notifikasi::create([
+        'karyawan_id' => $manager->karyawan_id,
+        'judul' => 'Pengajuan Draf Penggajian',
+        'pesan' => sprintf(
+          '%s mengajukan draf penggajian periode %s (%d data).',
+          $user->nama_lengkap ?? $user->name ?? 'Staff HR',
+          $periode,
+          $recordsUpdated
+        ),
+        'tipe' => 'penggajian',
+        'data' => [
+          'periode_bulan' => $this->record->periode_bulan,
+          'periode_tahun' => $this->record->periode_tahun,
+        ],
+      ]);
+    }
   }
 
   private function verifikasiDrafHeaderAction()
