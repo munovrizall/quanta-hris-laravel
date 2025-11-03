@@ -56,29 +56,29 @@ class PerusahaanKaryawanSeeder extends Seeder
             'cabang_id' => 'C0001',
             'perusahaan_id' => $perusahaan->perusahaan_id,
             'nama_cabang' => 'Kantor Pusat Jakarta',
-            'alamat' => 'Jl. Jend. Sudirman Kav. 52-53, Jakarta Selatan',
-            'latitude' => -6.2245,
-            'longitude' => 106.809,
-            'radius_lokasi' => 100, // 100 meter
+            'alamat' => 'Jl. Taman Margasatwa Raya, Jakarta Selatan',
+            'latitude' => -6.2916353910230844,
+            'longitude' => 106.82278662270117,
+            'radius_lokasi' => 50,
         ]);
 
-        $cabangDepok = Cabang::create([
+        $cabangCiputat = Cabang::create([
             'cabang_id' => 'C0002',
             'perusahaan_id' => $perusahaan->perusahaan_id,
-            'nama_cabang' => 'Kantor Cabang Depok',
-            'alamat' => 'Jl. Bojongsari No. 1, Depok',
-            'latitude' => -6.9218,
-            'longitude' => 107.607,
-            'radius_lokasi' => 50, // 50 meter
+            'nama_cabang' => 'Kantor Cabang Ciputat',
+            'alamat' => 'Jl. Ir H. Juanda, Ciputat',
+            'latitude' => -6.306088065952266,
+            'longitude' => 106.75274304726672,
+            'radius_lokasi' => 100,
         ]);
 
-        $cabangBandung = Cabang::create([
+        $cabangWijaya = Cabang::create([
             'cabang_id' => 'C0003',
             'perusahaan_id' => $perusahaan->perusahaan_id,
-            'nama_cabang' => 'Kantor Cabang Bandung',
-            'alamat' => 'Jl. Asia Afrika No. 8, Bandung',
-            'latitude' => -6.9218,
-            'longitude' => 107.607,
+            'nama_cabang' => 'Kantor Cabang Wijaya',
+            'alamat' => 'Jl. Wijaya 1, Jakarta Selatan',
+            'latitude' => -6.243999920356959,
+            'longitude' => 106.81263872377586,
             'radius_lokasi' => 75, // 75 meter
         ]);
 
@@ -89,7 +89,7 @@ class PerusahaanKaryawanSeeder extends Seeder
         // 8. Buat 1 Admin dengan Tunjangan Realistic
         $adminGajiPokok = 20000000;
         $adminTunjangan = $this->calculateRealisticTunjanganBulanan($adminGajiPokok, 'Executive');
-        
+
         $adminKaryawan = Karyawan::create([
             'karyawan_id' => 'K' . str_pad($counter++, 4, '0', STR_PAD_LEFT),
             'perusahaan_id' => $perusahaan->perusahaan_id,
@@ -120,7 +120,7 @@ class PerusahaanKaryawanSeeder extends Seeder
         // 9. Buat 1 CEO dengan Tunjangan
         $ceoGajiPokok = 50000000;
         $ceoTunjangan = $this->calculateRealisticTunjanganBulanan($ceoGajiPokok, 'Executive');
-            
+
         $ceoKaryawan = Karyawan::create([
             'karyawan_id' => 'K' . str_pad($counter++, 4, '0', STR_PAD_LEFT),
             'perusahaan_id' => $perusahaan->perusahaan_id,
@@ -186,7 +186,7 @@ class PerusahaanKaryawanSeeder extends Seeder
 
         foreach ($managerHRDData as $data) {
             $tunjangan = $this->calculateRealisticTunjanganBulanan($data['gaji_pokok'], 'Manager');
-            
+
             $managerHRD = Karyawan::create([
                 'karyawan_id' => 'K' . str_pad($counter++, 4, '0', STR_PAD_LEFT),
                 'perusahaan_id' => $perusahaan->perusahaan_id,
@@ -301,7 +301,7 @@ class PerusahaanKaryawanSeeder extends Seeder
 
         foreach ($staffHRDData as $data) {
             $tunjangan = $this->calculateRealisticTunjanganBulanan($data['gaji_pokok'], 'Staff');
-            
+
             $staffHRD = Karyawan::create([
                 'karyawan_id' => 'K' . str_pad($counter++, 4, '0', STR_PAD_LEFT),
                 'perusahaan_id' => $perusahaan->perusahaan_id,
@@ -333,7 +333,7 @@ class PerusahaanKaryawanSeeder extends Seeder
         // 12. Buat 1 Manager Finance dengan Tunjangan
         $managerFinanceGaji = 19000000;
         $managerFinanceTunjangan = $this->calculateRealisticTunjanganBulanan($managerFinanceGaji, 'Manager');
-        
+
         $managerFinance = Karyawan::create([
             'karyawan_id' => 'K' . str_pad($counter++, 4, '0', STR_PAD_LEFT),
             'perusahaan_id' => $perusahaan->perusahaan_id,
@@ -399,7 +399,7 @@ class PerusahaanKaryawanSeeder extends Seeder
 
         foreach ($accountPaymentData as $data) {
             $tunjangan = $this->calculateRealisticTunjanganBulanan($data['gaji_pokok'], 'Staff');
-            
+
             $accountPayment = Karyawan::create([
                 'karyawan_id' => 'K' . str_pad($counter++, 4, '0', STR_PAD_LEFT),
                 'perusahaan_id' => $perusahaan->perusahaan_id,
@@ -429,7 +429,7 @@ class PerusahaanKaryawanSeeder extends Seeder
         }
 
         // 14. Buat 100 Karyawan dengan Faker dan Tunjangan
-        $cabangIds = [$cabangUtama->cabang_id, $cabangDepok->cabang_id, $cabangBandung->cabang_id];
+        $cabangIds = [$cabangUtama->cabang_id, $cabangCiputat->cabang_id, $cabangWijaya->cabang_id];
 
         for ($i = 1; $i <= 100; $i++) {
             // Distribusi cabang: 50% Jakarta, 30% Depok, 20% Bandung
@@ -437,9 +437,9 @@ class PerusahaanKaryawanSeeder extends Seeder
             if ($cabangDistribution <= 50) {
                 $selectedCabang = $cabangUtama->cabang_id;
             } elseif ($cabangDistribution <= 80) {
-                $selectedCabang = $cabangDepok->cabang_id;
+                $selectedCabang = $cabangCiputat->cabang_id;
             } else {
-                $selectedCabang = $cabangBandung->cabang_id;
+                $selectedCabang = $cabangWijaya->cabang_id;
             }
 
             // Generate gaji pokok yang realistis untuk karyawan biasa
@@ -464,9 +464,9 @@ class PerusahaanKaryawanSeeder extends Seeder
             $staffKaryawan->assignRole('Karyawan');
         }
 
-         $rizalGajiPokok = 6000000; // Gaji pokok 6 juta
+        $rizalGajiPokok = 6000000; // Gaji pokok 6 juta
         $rizalTunjangan = $this->calculateRealisticTunjanganBulanan($rizalGajiPokok, 'Staff');
-        
+
         $rizalKaryawan = Karyawan::create([
             'karyawan_id' => 'K' . str_pad($counter++, 4, '0', STR_PAD_LEFT),
             'perusahaan_id' => $perusahaan->perusahaan_id,
@@ -503,7 +503,7 @@ class PerusahaanKaryawanSeeder extends Seeder
         $this->command->info('- Account Payment: 2');
         $this->command->info('- Karyawan: 100');
         $this->command->info('Total: 112 karyawan dengan kuota cuti 12 hari');
-        
+
         // Log contoh perhitungan tunjangan
         $this->command->info('');
         $this->command->info('Contoh Perhitungan Tunjangan BULANAN (75% Rule):');
@@ -519,7 +519,7 @@ class PerusahaanKaryawanSeeder extends Seeder
     private function calculateRealisticTunjanganBulanan(float $gajiPokok, string $level): array
     {
         // Maksimal total tunjangan agar gaji pokok tetap 75%
-        $maxTotalTunjangan = $gajiPokok * (1/0.75 - 1); // = $gajiPokok * 0.3333
+        $maxTotalTunjangan = $gajiPokok * (1 / 0.75 - 1); // = $gajiPokok * 0.3333
 
         // Distribusi tunjangan berdasarkan level jabatan - LANGSUNG BULANAN
         switch ($level) {
@@ -528,13 +528,13 @@ class PerusahaanKaryawanSeeder extends Seeder
                 $tunjanganMakanBulanan = min(1650000, $maxTotalTunjangan * 0.2); // 20% atau max 1.65jt/bulan (~75k/hari)
                 $tunjanganTransportBulanan = $maxTotalTunjangan - $tunjanganJabatan - $tunjanganMakanBulanan;
                 break;
-                
+
             case 'Manager': // Manager level
                 $tunjanganJabatan = $maxTotalTunjangan * 0.5; // 50% dari max
                 $tunjanganMakanBulanan = min(1100000, $maxTotalTunjangan * 0.25); // 25% atau max 1.1jt/bulan (~50k/hari)
                 $tunjanganTransportBulanan = $maxTotalTunjangan - $tunjanganJabatan - $tunjanganMakanBulanan;
                 break;
-                
+
             case 'Staff':
             default: // Staff dan karyawan biasa
                 $tunjanganJabatan = $maxTotalTunjangan * 0.4; // 40% dari max
@@ -557,7 +557,7 @@ class PerusahaanKaryawanSeeder extends Seeder
         if ($persentaseGajiPokok < 75) {
             $factor = 0.75 / ($persentaseGajiPokok / 100);
             $adjustedMaxTunjangan = $totalTunjangan / $factor;
-            
+
             $tunjanganJabatan = round(($tunjanganJabatan / $totalTunjangan) * $adjustedMaxTunjangan, -3);
             $tunjanganMakanBulanan = round(($tunjanganMakanBulanan / $totalTunjangan) * $adjustedMaxTunjangan, -3);
             $tunjanganTransportBulanan = round(($tunjanganTransportBulanan / $totalTunjangan) * $adjustedMaxTunjangan, -3);

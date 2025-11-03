@@ -20,7 +20,7 @@ class AttendanceController extends Controller
         $request->validate([
             'latitude' => 'required|numeric',
             'longitude' => 'required|numeric',
-            'foto_masuk' => 'nullable|image|mimes:jpeg,png,jpg|max:2048', // Changed from string to image
+            'foto_masuk' => 'nullable|image|mimes:jpeg,png,jpg|max:5000', // Changed from string to image
         ]);
 
         $user = $request->user();
