@@ -11,8 +11,10 @@ use Filament\Forms\Form;
 use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Table;
+use Filament\Notifications\Notification;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
+use Illuminate\Support\Facades\Auth;
 
 class CutiResource extends Resource
 {
@@ -259,6 +261,81 @@ class CutiResource extends Resource
                     }),
             ])
             ->actions([
+                Tables\Actions\Action::make('approve')
+                    ->label('Setujui')
+                    ->icon('heroicon-o-check-circle')
+                    ->color('success')
+                    ->visible(fn(Cuti $record): bool => $record->status_cuti === 'Diajukan')
+                    ->requiresConfirmation()
+                    ->modalHeading('Setujui Pengajuan Cuti')
+                    ->modalDescription(
+                        fn(Cuti $record): string =>
+                            "Apakah Anda yakin ingin menyetujui pengajuan cuti untuk {$record->karyawan->nama_lengkap} pada {$record->tanggal_mulai->translatedFormat('d F Y')} sampai {$record->tanggal_selesai->translatedFormat('d F Y')}?"
+                    )
+                    ->modalSubmitActionLabel('Ya, Setujui')
+                    ->action(function (Cuti $record): void {
+                        try {
+                            $record->update([
+                                'status_cuti' => 'Disetujui',
+                                'approver_id' => Auth::user()?->karyawan_id ?? 'SYSTEM',
+                                'processed_at' => now(),
+                                'alasan_penolakan' => null,
+                            ]);
+
+                            Notification::make()
+                                ->title('Cuti Berhasil Disetujui')
+                                ->body("Pengajuan cuti untuk {$record->karyawan->nama_lengkap} telah disetujui.")
+                                ->success()
+                                ->send();
+                        } catch (\Throwable $e) {
+                            Notification::make()
+                                ->title('Error')
+                                ->body('Terjadi kesalahan saat menyetujui cuti: ' . $e->getMessage())
+                                ->danger()
+                                ->send();
+                        }
+                    }),
+                Tables\Actions\Action::make('reject')
+                    ->label('Tolak')
+                    ->icon('heroicon-o-x-circle')
+                    ->color('danger')
+                    ->visible(fn(Cuti $record): bool => $record->status_cuti === 'Diajukan')
+                    ->requiresConfirmation()
+                    ->modalHeading('Tolak Pengajuan Cuti')
+                    ->modalDescription(
+                        fn(Cuti $record): string =>
+                            "Apakah Anda yakin ingin menolak pengajuan cuti untuk {$record->karyawan->nama_lengkap} pada {$record->tanggal_mulai->translatedFormat('d F Y')} sampai {$record->tanggal_selesai->translatedFormat('d F Y')}?"
+                    )
+                    ->modalSubmitActionLabel('Ya, Tolak')
+                    ->form([
+                        Forms\Components\Textarea::make('alasan_penolakan')
+                            ->label('Alasan Penolakan')
+                            ->required()
+                            ->rows(3)
+                            ->helperText('Berikan alasan yang jelas untuk penolakan ini.'),
+                    ])
+                    ->action(function (Cuti $record, array $data): void {
+                        try {
+                            $record->update([
+                                'status_cuti' => 'Ditolak',
+                                'alasan_penolakan' => $data['alasan_penolakan'],
+                                'approver_id' => Auth::user()?->karyawan_id ?? 'SYSTEM',
+                                'processed_at' => now(),
+                            ]);
+
+                            Notification::make()
+                                ->title('Cuti Berhasil Ditolak')
+                                ->body("Pengajuan cuti untuk {$record->karyawan->nama_lengkap} telah ditolak.")
+                                ->warning()
+                                ->send();
+                        } catch (\Throwable $e) {
+                            Notification::make()
+                                ->title('Error')
+                                ->body('Terjadi kesalahan saat menolak cuti: ' . $e->getMessage())
+                                ->danger()
+                                ->send();
+                        }
+                    }),
                 Tables\Actions\ViewAction::make()
                     ->label('Lihat'),
                 Tables\Actions\EditAction::make()

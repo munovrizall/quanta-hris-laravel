@@ -11,8 +11,10 @@ use Filament\Forms\Form;
 use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Table;
+use Filament\Notifications\Notification;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
+use Illuminate\Support\Facades\Auth;
 
 class IzinResource extends Resource
 {
@@ -271,6 +273,81 @@ class IzinResource extends Resource
                     }),
             ])
             ->actions([
+                Tables\Actions\Action::make('approve')
+                    ->label('Setujui')
+                    ->icon('heroicon-o-check-circle')
+                    ->color('success')
+                    ->visible(fn(Izin $record): bool => $record->status_izin === 'Diajukan')
+                    ->requiresConfirmation()
+                    ->modalHeading('Setujui Pengajuan Izin')
+                    ->modalDescription(
+                        fn(Izin $record): string =>
+                            "Apakah Anda yakin ingin menyetujui pengajuan izin untuk {$record->karyawan->nama_lengkap} pada {$record->tanggal_mulai->translatedFormat('d F Y')} sampai {$record->tanggal_selesai->translatedFormat('d F Y')}?"
+                    )
+                    ->modalSubmitActionLabel('Ya, Setujui')
+                    ->action(function (Izin $record): void {
+                        try {
+                            $record->update([
+                                'status_izin' => 'Disetujui',
+                                'approver_id' => Auth::user()?->karyawan_id ?? 'SYSTEM',
+                                'processed_at' => now(),
+                                'alasan_penolakan' => null,
+                            ]);
+
+                            Notification::make()
+                                ->title('Izin Berhasil Disetujui')
+                                ->body("Pengajuan izin untuk {$record->karyawan->nama_lengkap} telah disetujui.")
+                                ->success()
+                                ->send();
+                        } catch (\Throwable $e) {
+                            Notification::make()
+                                ->title('Error')
+                                ->body('Terjadi kesalahan saat menyetujui izin: ' . $e->getMessage())
+                                ->danger()
+                                ->send();
+                        }
+                    }),
+                Tables\Actions\Action::make('reject')
+                    ->label('Tolak')
+                    ->icon('heroicon-o-x-circle')
+                    ->color('danger')
+                    ->visible(fn(Izin $record): bool => $record->status_izin === 'Diajukan')
+                    ->requiresConfirmation()
+                    ->modalHeading('Tolak Pengajuan Izin')
+                    ->modalDescription(
+                        fn(Izin $record): string =>
+                            "Apakah Anda yakin ingin menolak pengajuan izin untuk {$record->karyawan->nama_lengkap} pada {$record->tanggal_mulai->translatedFormat('d F Y')} sampai {$record->tanggal_selesai->translatedFormat('d F Y')}?"
+                    )
+                    ->modalSubmitActionLabel('Ya, Tolak')
+                    ->form([
+                        Forms\Components\Textarea::make('alasan_penolakan')
+                            ->label('Alasan Penolakan')
+                            ->required()
+                            ->rows(3)
+                            ->helperText('Berikan alasan yang jelas untuk penolakan ini.'),
+                    ])
+                    ->action(function (Izin $record, array $data): void {
+                        try {
+                            $record->update([
+                                'status_izin' => 'Ditolak',
+                                'alasan_penolakan' => $data['alasan_penolakan'],
+                                'approver_id' => Auth::user()?->karyawan_id ?? 'SYSTEM',
+                                'processed_at' => now(),
+                            ]);
+
+                            Notification::make()
+                                ->title('Izin Berhasil Ditolak')
+                                ->body("Pengajuan izin untuk {$record->karyawan->nama_lengkap} telah ditolak.")
+                                ->warning()
+                                ->send();
+                        } catch (\Throwable $e) {
+                            Notification::make()
+                                ->title('Error')
+                                ->body('Terjadi kesalahan saat menolak izin: ' . $e->getMessage())
+                                ->danger()
+                                ->send();
+                        }
+                    }),
                 Tables\Actions\ViewAction::make()
                     ->label('Lihat'),
                 Tables\Actions\EditAction::make()
