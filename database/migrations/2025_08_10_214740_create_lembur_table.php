@@ -17,7 +17,7 @@ return new class extends Migration {
             $table->date('tanggal_lembur');
             $table->time('durasi_lembur');
             $table->text('deskripsi_pekerjaan');
-            $table->string('dokumen_pendukung', 255)->nullable();
+            $table->string('dokumen_pendukung', 100)->nullable();
             $table->enum('status_lembur', ['Diajukan', 'Disetujui', 'Ditolak'])->default('Diajukan');
             $table->text('alasan_penolakan')->nullable();
             $table->string('approved_by', 5)->nullable();

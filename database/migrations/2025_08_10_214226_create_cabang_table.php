@@ -13,7 +13,7 @@ return new class extends Migration {
         Schema::create('cabang', function (Blueprint $table) {
             $table->string('cabang_id', 5)->primary();
             $table->string('perusahaan_id', 5);
-            $table->string('nama_cabang', 255);
+            $table->string('nama_cabang', 50);
             $table->text('alamat');
             $table->double('latitude');
             $table->double('longitude');
