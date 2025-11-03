@@ -420,9 +420,6 @@
                     {{ $this->getTotalAbsensiHariIni() }}/{{ $this->getTotalKaryawan() }}
                 </span>
             </div>
-            <div class="date-info">
-                {{ now()->locale('id')->translatedFormat('l, d F Y') }}
-            </div>
         </div>
 
         {{-- Company Operational Hours Info --}}

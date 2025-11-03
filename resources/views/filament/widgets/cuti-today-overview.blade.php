@@ -285,12 +285,6 @@
                 <h3 class="widget-title">
                     {{ $this->getHeading() }}
                 </h3>
-                <span class="attendance-badge">
-                    {{ $this->getTotalCutiHariIni() }}/{{ $this->getTotalKaryawan() }}
-                </span>
-            </div>
-            <div class="date-info">
-                {{ now()->locale('id')->translatedFormat('l, d F Y') }}
             </div>
         </div>
 
@@ -308,7 +302,7 @@
 
                             <div class="employee-info">
                                 <p class="employee-name" title="{{ $cuti['nama_lengkap'] }}">
-                                    {{ Str::limit($cuti['nama_lengkap'], 12) }}
+                                    {{ Str::limit($cuti['nama_lengkap'], 18) }}
                                 </p>
                                 <p class="employee-time">
                                     {{ $cuti['periode'] }}
@@ -337,16 +331,5 @@
                 </p>
             </div>
         @endif
-
-        <div class="legend-container">
-            <div class="legend-items">
-                <div class="legend-item">
-                    <div class="legend-dot status-cuti"></div>
-                    <span class="legend-text">
-                        Sedang Cuti
-                    </span>
-                </div>
-            </div>
-        </div>
     </div>
 </x-filament-widgets::widget>
