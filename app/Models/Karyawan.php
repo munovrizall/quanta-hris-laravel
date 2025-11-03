@@ -10,12 +10,13 @@ use Filament\Models\Contracts\HasName;
 use Filament\Models\Contracts\FilamentUser;
 use Illuminate\Contracts\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Notifications\Notifiable;
 use Laravel\Sanctum\HasApiTokens;
 use Spatie\Permission\Traits\HasRoles;
 
 class Karyawan extends Authenticable implements FilamentUser, HasName
 {
-  use HasApiTokens, HasFactory, SoftDeletes, HasRoles;
+  use HasApiTokens, HasFactory, SoftDeletes, HasRoles, Notifiable;
 
   protected $table = 'karyawan';
   protected $primaryKey = 'karyawan_id';

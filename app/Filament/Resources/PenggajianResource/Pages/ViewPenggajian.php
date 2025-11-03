@@ -4,9 +4,9 @@ namespace App\Filament\Resources\PenggajianResource\Pages;
 
 use App\Filament\Resources\PenggajianResource;
 use App\Filament\Resources\PenggajianResource\Actions\EditGajiKaryawanAction;
-use App\Models\Penggajian;
 use App\Models\Karyawan;
-use App\Models\Notifikasi;
+use App\Models\Penggajian;
+use App\Notifications\PenggajianSubmittedNotification;
 use App\Services\AbsensiService;
 use App\Services\TunjanganService;
 use App\Services\BpjsService;
@@ -236,24 +236,22 @@ class ViewPenggajian extends ViewRecord
 
     $managers = Karyawan::query()
       ->where('role_id', 'R03')
-      ->get(['karyawan_id']);
+      ->get();
+
+    if ($managers->isEmpty()) {
+      return;
+    }
+
+    $submittedBy = $user->nama_lengkap ?? $user->name ?? 'Staff HR';
 
     foreach ($managers as $manager) {
-      Notifikasi::create([
-        'karyawan_id' => $manager->karyawan_id,
-        'judul' => 'Pengajuan Draf Penggajian',
-        'pesan' => sprintf(
-          '%s mengajukan draf penggajian periode %s (%d data).',
-          $user->nama_lengkap ?? $user->name ?? 'Staff HR',
-          $periode,
-          $recordsUpdated
-        ),
-        'tipe' => 'penggajian',
-        'data' => [
-          'periode_bulan' => $this->record->periode_bulan,
-          'periode_tahun' => $this->record->periode_tahun,
-        ],
-      ]);
+      $manager->notify(new PenggajianSubmittedNotification(
+        $submittedBy,
+        $periode,
+        $recordsUpdated,
+        $this->record->periode_bulan,
+        $this->record->periode_tahun
+      ));
     }
   }
 
