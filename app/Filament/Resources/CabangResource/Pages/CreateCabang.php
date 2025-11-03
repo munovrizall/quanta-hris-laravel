@@ -10,6 +10,7 @@ use Filament\Resources\Pages\CreateRecord;
 class CreateCabang extends CreateRecord
 {
     protected static string $resource = CabangResource::class;
+    protected static bool $canCreateAnother = false;
 
     protected static ?string $title = 'Tambah Cabang';
 

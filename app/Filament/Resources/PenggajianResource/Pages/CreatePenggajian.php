@@ -17,6 +17,7 @@ use Illuminate\Validation\ValidationException;
 class CreatePenggajian extends CreateRecord
 {
     protected static string $resource = PenggajianResource::class;
+    protected static bool $canCreateAnother = false;
 
     protected static ?string $title = 'Tambah Draf Penggajian';
 

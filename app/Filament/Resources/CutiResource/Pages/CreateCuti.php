@@ -10,6 +10,7 @@ use Filament\Resources\Pages\CreateRecord;
 class CreateCuti extends CreateRecord
 {
     protected static string $resource = CutiResource::class;
+    protected static bool $canCreateAnother = false;
 
     protected static ?string $title = 'Tambah Cuti';
 

@@ -10,6 +10,7 @@ use Filament\Resources\Pages\CreateRecord;
 class CreatePerusahaan extends CreateRecord
 {
     protected static string $resource = PerusahaanResource::class;
+    protected static bool $canCreateAnother = false;
 
     protected static ?string $title = 'Tambah Perusahaan';
 

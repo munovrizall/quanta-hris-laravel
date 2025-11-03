@@ -10,6 +10,7 @@ use Filament\Resources\Pages\CreateRecord;
 class CreateAbsensi extends CreateRecord
 {
     protected static string $resource = AbsensiResource::class;
+    protected static bool $canCreateAnother = false;
 
     protected static ?string $title = 'Tambah Absensi';
 

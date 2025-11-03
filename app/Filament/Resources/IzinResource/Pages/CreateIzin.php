@@ -10,6 +10,7 @@ use Filament\Resources\Pages\CreateRecord;
 class CreateIzin extends CreateRecord
 {
     protected static string $resource = IzinResource::class;
+    protected static bool $canCreateAnother = false;
 
     protected static ?string $title = 'Tambah Izin';
 

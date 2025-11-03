@@ -10,6 +10,7 @@ use Filament\Resources\Pages\CreateRecord;
 class CreateLembur extends CreateRecord
 {
     protected static string $resource = LemburResource::class;
+    protected static bool $canCreateAnother = false;
 
     protected static ?string $title = 'Tambah Lembur';
 
