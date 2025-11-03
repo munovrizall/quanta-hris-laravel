@@ -1,19 +1,7 @@
 @php
     use Filament\Support\Enums\IconSize;
-    use Illuminate\Support\Str;
 
     $user = auth()->user();
-    $recentNotifications = collect();
-    $totalUnreadNotifications = 0;
-
-    if ($user) {
-        $recentNotifications = $user->notifications()
-            ->latest()
-            ->limit(5)
-            ->get();
-
-        $totalUnreadNotifications = $user->unreadNotifications()->count();
-    }
 @endphp
 
 @props([
@@ -89,41 +77,4 @@
         @endif
     </span>
 
-    @if($user)
-        <div class="mt-2 w-full text-xs text-gray-600 dark:text-gray-300">
-            <div class="flex items-center justify-between">
-                <span class="font-semibold">Notifikasi</span>
-                <span class="text-[11px] text-gray-500 dark:text-gray-400">
-                    {{ $totalUnreadNotifications }} belum dibaca
-                </span>
-            </div>
-
-            <ul class="mt-1 space-y-1">
-                @forelse($recentNotifications as $notification)
-                    <li class="flex items-start gap-2 rounded bg-gray-100 p-2 text-[11px] text-gray-700 dark:bg-gray-800/60 dark:text-gray-300">
-                        <span class="mt-1 h-1.5 w-1.5 flex-none rounded-full {{ $notification->read_at ? 'bg-gray-400' : 'bg-primary-500 dark:bg-primary-400' }}"></span>
-                        <div class="space-y-0.5">
-                            <p class="font-medium">
-                                {{ data_get($notification->data, 'title', Str::headline(class_basename($notification->type))) }}
-                            </p>
-
-                            @if(data_get($notification->data, 'message'))
-                                <p class="text-gray-600 dark:text-gray-400">
-                                    {{ Str::limit(data_get($notification->data, 'message'), 80) }}
-                                </p>
-                            @endif
-
-                            <p class="text-[10px] text-gray-500 dark:text-gray-500">
-                                {{ optional($notification->created_at)->diffForHumans() }}
-                            </p>
-                        </div>
-                    </li>
-                @empty
-                    <li class="rounded bg-gray-50 p-2 text-[11px] text-gray-500 dark:bg-gray-800/40 dark:text-gray-400">
-                        Belum ada notifikasi.
-                    </li>
-                @endforelse
-            </ul>
-        </div>
-    @endif
 </{{ $tag }}>

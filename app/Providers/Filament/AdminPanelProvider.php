@@ -34,6 +34,7 @@ class AdminPanelProvider extends PanelProvider
             ->brandName('Quanta HRIS')
             ->font('Poppins')
             ->authGuard('web')
+            ->databaseNotifications(true, false)
             ->colors([
                 'primary' => Color::Cyan,
             ])

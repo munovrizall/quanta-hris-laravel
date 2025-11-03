@@ -6,7 +6,6 @@ use App\Filament\Resources\PenggajianResource;
 use App\Filament\Resources\PenggajianResource\Actions\EditGajiKaryawanAction;
 use App\Models\Karyawan;
 use App\Models\Penggajian;
-use App\Notifications\PenggajianSubmittedNotification;
 use App\Services\AbsensiService;
 use App\Services\TunjanganService;
 use App\Services\BpjsService;
@@ -243,16 +242,20 @@ class ViewPenggajian extends ViewRecord
     }
 
     $submittedBy = $user->nama_lengkap ?? $user->name ?? 'Staff HR';
+    $message = sprintf(
+      '%s mengajukan draf penggajian periode %s (total %d data).',
+      $submittedBy,
+      $periode,
+      $recordsUpdated
+    );
 
-    foreach ($managers as $manager) {
-      $manager->notify(new PenggajianSubmittedNotification(
-        $submittedBy,
-        $periode,
-        $recordsUpdated,
-        $this->record->periode_bulan,
-        $this->record->periode_tahun
-      ));
-    }
+    Notification::make()
+      ->title('Pengajuan Draf Penggajian')
+      ->body($message)
+      ->icon('heroicon-o-paper-airplane')
+      ->iconColor('primary')
+      ->color('info')
+      ->sendToDatabase($managers);
   }
 
   private function verifikasiDrafHeaderAction()
