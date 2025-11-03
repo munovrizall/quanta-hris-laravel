@@ -331,36 +331,6 @@ class LemburResource extends Resource
                         }
                     }),
 
-                // ACTION: Reset Status (untuk admin)
-                Tables\Actions\Action::make('reset')
-                    ->label('Reset Status')
-                    ->icon('heroicon-o-arrow-path')
-                    ->color('gray')
-                    ->visible(
-                        fn(Lembur $record): bool =>
-                        in_array($record->status_lembur, ['Disetujui', 'Ditolak']) &&
-                        Auth::user()?->hasRole(['Admin', 'CEO'])
-                    )
-                    ->requiresConfirmation()
-                    ->modalHeading('Reset Status Lembur')
-                    ->modalDescription('Apakah Anda yakin ingin mereset status lembur ini kembali ke "Diajukan"?')
-                    ->modalSubmitActionLabel('Ya, Reset')
-                    ->action(function (Lembur $record): void {
-                        $record->update([
-                            'status_lembur' => 'Diajukan',
-                            'total_insentif' => null,
-                            'approver_id' => null,
-                            'processed_at' => null,
-                            'alasan_penolakan' => null,
-                        ]);
-
-                        Notification::make()
-                            ->title('Status Berhasil Direset')
-                            ->body('Status lembur telah direset ke "Diajukan".')
-                            ->info()
-                            ->send();
-                    }),
-
                 Tables\Actions\ViewAction::make()
                     ->label('Lihat'),
                 Tables\Actions\EditAction::make()
