@@ -23,6 +23,7 @@ use Carbon\Carbon;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Str;
 
 class ViewPenggajian extends ViewRecord
 {
@@ -304,6 +305,39 @@ class ViewPenggajian extends ViewRecord
     );
   }
 
+  private function notifyStaffPenggajianRejected(int $recordsUpdated, string $reason): void
+  {
+    $user = Auth::user();
+
+    if (
+      !$user ||
+      !in_array($user->role_id, ['R03', 'R04'], true) ||
+      !$this->record
+    ) {
+      return;
+    }
+
+    $periode = $this->getPeriodeLabel();
+    $rejectedBy = $user->nama_lengkap ?? $user->name ?? 'Atasan';
+
+    $message = sprintf(
+      '%s menolak draf penggajian periode %s (%d data). Alasan: %s',
+      $rejectedBy,
+      $periode,
+      $recordsUpdated,
+      Str::limit($reason, 120)
+    );
+
+    $this->sendNotificationToRole(
+      roleId: 'R02',
+      title: 'Penggajian Ditolak',
+      body: $message,
+      icon: 'heroicon-o-x-circle',
+      iconColor: 'danger',
+      color: 'danger'
+    );
+  }
+
   private function sendNotificationToRole(
     string $roleId,
     string $title,
@@ -533,6 +567,8 @@ class ViewPenggajian extends ViewRecord
             ]);
 
           if ($updated > 0) {
+            $this->notifyStaffPenggajianRejected($updated, $data['alasan_penolakan']);
+
             Notification::make()
               ->title('Pengajuan Berhasil!')
               ->body("Draf penggajian berhasil ditolak. {$updated} record telah diperbarui ke status 'Draf'.")
