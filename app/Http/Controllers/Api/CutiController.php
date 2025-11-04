@@ -51,6 +51,8 @@ class CutiController extends Controller
 
         return ApiResponse::format(true, 200, 'Riwayat cuti berhasil diambil.', [
             'karyawan_id' => $user->karyawan_id,
+            'sisa_kuota_cuti' => (int) ($user->kuota_cuti_tahunan ?? 0),
+            'satuan_kuota' => 'hari',
             'total_pengajuan' => $history->count(),
             'riwayat' => $history,
         ]);
@@ -143,45 +145,5 @@ class CutiController extends Controller
         ];
 
         return ApiResponse::format(true, 201, 'Pengajuan cuti berhasil diajukan.', $data);
-    }
-
-    /**
-     * Get kuota cuti tahunan untuk karyawan login
-     */
-    public function cutiDetail(Request $request)
-    {
-        $user = $request->user();
-        if (!$user || !$user->karyawan_id) {
-            return ApiResponse::format(false, 401, 'Unauthorized', null);
-        }
-
-        $kuota = (int) ($user->kuota_cuti_tahunan ?? 0);
-
-        // Ambil history cuti karyawan tersebut
-        $history = Cuti::where('karyawan_id', $user->karyawan_id)
-            ->orderBy('created_at', 'desc')
-            ->get()
-            ->map(function (Cuti $cuti) {
-                $mulai = $cuti->tanggal_mulai ? Carbon::parse($cuti->tanggal_mulai) : null;
-                $selesai = $cuti->tanggal_selesai ? Carbon::parse($cuti->tanggal_selesai) : null;
-                $durasi = ($mulai && $selesai) ? ($mulai->diffInDays($selesai) + 1) : null;
-
-                return [
-                    'cuti_id' => $cuti->cuti_id,
-                    'jenis_cuti' => $cuti->jenis_cuti,
-                    'tanggal_mulai' => $cuti->tanggal_mulai,
-                    'tanggal_selesai' => $cuti->tanggal_selesai,
-                    'durasi_hari' => $durasi,
-                    'status_cuti' => $cuti->status_cuti,
-                    'alasan_penolakan' => $cuti->alasan_penolakan ?: null,
-                ];
-            });
-
-        return ApiResponse::format(true, 200, 'Ringkasan cuti berhasil diambil.', [
-            'karyawan_id' => $user->karyawan_id,
-            'sisa_kuota_cuti' => $kuota,
-            'satuan' => 'hari',
-            'history' => $history,
-        ]);
     }
 }
