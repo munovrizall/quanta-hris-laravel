@@ -47,26 +47,6 @@ class BpjsService
             $bpjsJp = round($bpjsJp);
             $totalBpjs = round($totalBpjs);
 
-            // *** DEBUG LOG - DETAILED BPJS BREAKDOWN ***
-            Log::info("=== BPJS BREAKDOWN KARYAWAN: {$karyawan->nama_lengkap} ({$karyawan->karyawan_id}) ===", [
-                'gaji_pokok' => 'Rp ' . number_format($gajiPokok, 0, ',', '.'),
-                'tunjangan_tetap' => 'Rp ' . number_format($tunjanganTetap, 0, ',', '.'),
-                'dasar_bpjs' => 'Rp ' . number_format($dasarBpjs, 0, ',', '.'),
-                'perusahaan_config' => [
-                    'persen_kesehatan' => $perusahaan->persen_bpjs_kesehatan ?? 'NULL',
-                    'persen_jht' => $perusahaan->persen_bpjs_jht ?? 'NULL',
-                    'persen_jp' => $perusahaan->persen_bpjs_jp ?? 'NULL',
-                    'batas_kesehatan' => 'Rp ' . number_format($perusahaan->batas_gaji_bpjs_kesehatan ?? 0, 0, ',', '.'),
-                    'batas_pensiun' => 'Rp ' . number_format($perusahaan->batas_gaji_bpjs_pensiun ?? 0, 0, ',', '.'),
-                ],
-                'calculations' => [
-                    'bpjs_kesehatan' => 'Rp ' . number_format($bpjsKesehatan, 0, ',', '.'),
-                    'bpjs_jht' => 'Rp ' . number_format($bpjsJht, 0, ',', '.') . ' (basis: gaji pokok)',
-                    'bpjs_jp' => 'Rp ' . number_format($bpjsJp, 0, ',', '.'),
-                    'total_bpjs' => 'Rp ' . number_format($totalBpjs, 0, ',', '.'),
-                ],
-            ]);
-
             return [
                 'bpjs_kesehatan' => $bpjsKesehatan,
                 'bpjs_jht' => $bpjsJht,

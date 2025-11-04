@@ -124,8 +124,8 @@ class AttendanceController extends Controller
         $jamMasuk = Carbon::parse($company->jam_masuk);
         $statusMasuk = $currentTime->format('H:i:s') > $jamMasuk->format('H:i:s') ? 'Telat' : 'Tepat Waktu';
 
-        // Generate new absensi_id
-        $lastAbsensi = Absensi::orderBy('absensi_id', 'desc')->first();
+        // Generate new absensi_id (include soft deleted records to avoid duplicate)
+        $lastAbsensi = Absensi::withTrashed()->orderBy('absensi_id', 'desc')->first();
         if ($lastAbsensi) {
             $lastNumber = intval(substr($lastAbsensi->absensi_id, 2));
             $newNumber = $lastNumber + 1;

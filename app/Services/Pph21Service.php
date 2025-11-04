@@ -57,24 +57,6 @@ class Pph21Service
     // 4. Hitung PPh 21 dari PENGHASILAN BRUTO
     $potonganPph21 = $penghasilanBruto * $tarifTer->tarif;
 
-    // *** DEBUG LOG - DETAILED PPh21 CALCULATION ***
-    Log::info("=== PPh21 CALCULATION: {$karyawan->nama_lengkap} ({$karyawan->karyawan_id}) ===", [
-      'penghasilan_bruto' => 'Rp ' . number_format($penghasilanBruto, 0, ',', '.'),
-      'golongan_ptkp' => $golonganPtkp->golongan ?? 'N/A',
-      'kategori_ter_id' => $kategoriTerId,
-      'tarif_ter' => [
-        'id' => $tarifTer->id,
-        'tarif' => $tarifTer->tarif,
-        'tarif_persen' => ($tarifTer->tarif * 100) . '%',
-        'batas_bawah' => 'Rp ' . number_format($tarifTer->batas_bawah, 0, ',', '.'),
-        'batas_atas' => $tarifTer->batas_atas ? 'Rp ' . number_format($tarifTer->batas_atas, 0, ',', '.') : 'Unlimited',
-      ],
-      'calculation' => [
-        'formula' => "Rp " . number_format($penghasilanBruto, 0, ',', '.') . " × " . ($tarifTer->tarif * 100) . "%",
-        'result' => 'Rp ' . number_format($potonganPph21, 0, ',', '.'),
-      ]
-    ]);
-
     // Kembalikan hasil perhitungan, dibulatkan ke rupiah terdekat
     return round($potonganPph21);
   }
@@ -98,13 +80,6 @@ class Pph21Service
       $totalLembur = 0;
 
       $penghasilanBruto = $gajiPokok + $totalTunjangan + $totalLembur;
-
-      Log::info("PPh21 PenghasilanBruto Calculation for {$karyawan->karyawan_id}:", [
-        'gaji_pokok' => $gajiPokok,
-        'total_tunjangan' => $totalTunjangan,
-        'total_lembur' => $totalLembur,
-        'penghasilan_bruto' => $penghasilanBruto
-      ]);
 
       return $penghasilanBruto;
 

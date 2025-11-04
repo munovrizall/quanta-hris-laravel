@@ -20,9 +20,10 @@ use Filament\Infolists\Infolist;
 use Filament\Forms;
 use Filament\Notifications\Notification;
 use Carbon\Carbon;
-use Illuminate\Support\Facades\Log;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 
 class ViewPenggajian extends ViewRecord
@@ -374,14 +375,32 @@ class ViewPenggajian extends ViewRecord
     }
 
     try {
-      $notification = Notification::make()
-        ->title($title)
-        ->body($body)
-        ->icon($icon)
-        ->iconColor($iconColor)
-        ->color($color);
+      $timestamp = now();
+      $insertPayload = [];
+      $notificationData = [
+        'title' => $title,
+        'body' => $body,
+        'icon' => $icon,
+        'iconColor' => $iconColor,
+        'color' => $color,
+        'duration' => 'persistent',
+        'format' => 'filament',
+      ];
 
-      $notification->sendToDatabase($recipients);
+      foreach ($recipients as $recipient) {
+        $insertPayload[] = [
+          'id' => (string) Str::uuid(),
+          'type' => \Filament\Notifications\DatabaseNotification::class,
+          'notifiable_type' => $recipient::class,
+          'notifiable_id' => $recipient->getKey(),
+          'data' => json_encode($notificationData),
+          'read_at' => null,
+          'created_at' => $timestamp,
+          'updated_at' => $timestamp,
+        ];
+      }
+
+      DB::table('notifications')->insert($insertPayload);
 
       Log::info('Penggajian notification dispatched.', [
         'role_id' => $roleId,
