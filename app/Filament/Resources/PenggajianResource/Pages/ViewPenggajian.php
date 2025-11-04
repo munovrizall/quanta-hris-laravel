@@ -228,20 +228,9 @@ class ViewPenggajian extends ViewRecord
       return;
     }
 
-    $periode = MonthHelper::formatPeriod(
-      $this->record->periode_bulan,
-      $this->record->periode_tahun
-    );
-
-    $managers = Karyawan::query()
-      ->where('role_id', 'R03')
-      ->get();
-
-    if ($managers->isEmpty()) {
-      return;
-    }
-
+    $periode = $this->getPeriodeLabel();
     $submittedBy = $user->nama_lengkap ?? $user->name ?? 'Staff HR';
+
     $message = sprintf(
       '%s mengajukan draf penggajian periode %s (total %d data).',
       $submittedBy,
@@ -249,13 +238,103 @@ class ViewPenggajian extends ViewRecord
       $recordsUpdated
     );
 
+    $this->sendNotificationToRole(
+      roleId: 'R03',
+      title: 'Pengajuan Draf Penggajian',
+      body: $message,
+      icon: 'heroicon-o-paper-airplane',
+      iconColor: 'primary',
+      color: 'info'
+    );
+  }
+
+  private function notifyFinanceManagersPenggajianVerified(int $recordsUpdated): void
+  {
+    $user = Auth::user();
+
+    if (!$user || $user->role_id !== 'R03' || !$this->record) {
+      return;
+    }
+
+    $periode = $this->getPeriodeLabel();
+    $verifiedBy = $user->nama_lengkap ?? $user->name ?? 'Manager HR';
+
+    $message = sprintf(
+      '%s memverifikasi draf penggajian periode %s (%d data) dan menunggu persetujuan Anda.',
+      $verifiedBy,
+      $periode,
+      $recordsUpdated
+    );
+
+    $this->sendNotificationToRole(
+      roleId: 'R04',
+      title: 'Penggajian Siap Disetujui',
+      body: $message,
+      icon: 'heroicon-o-clipboard-document-check',
+      iconColor: 'warning',
+      color: 'warning'
+    );
+  }
+
+  private function notifyAccountPaymentsPenggajianApproved(int $recordsUpdated): void
+  {
+    $user = Auth::user();
+
+    if (!$user || $user->role_id !== 'R04' || !$this->record) {
+      return;
+    }
+
+    $periode = $this->getPeriodeLabel();
+    $approvedBy = $user->nama_lengkap ?? $user->name ?? 'Manager Finance';
+
+    $message = sprintf(
+      '%s menyetujui draf penggajian periode %s (%d data). Silakan proses transfer.',
+      $approvedBy,
+      $periode,
+      $recordsUpdated
+    );
+
+    $this->sendNotificationToRole(
+      roleId: 'R05',
+      title: 'Penggajian Siap Ditransfer',
+      body: $message,
+      icon: 'heroicon-o-banknotes',
+      iconColor: 'success',
+      color: 'success'
+    );
+  }
+
+  private function sendNotificationToRole(
+    string $roleId,
+    string $title,
+    string $body,
+    string $icon = 'heroicon-o-bell',
+    string $iconColor = 'primary',
+    string $color = 'info'
+  ): void {
+    $recipients = Karyawan::query()
+      ->where('role_id', $roleId)
+      ->get();
+
+    if ($recipients->isEmpty()) {
+      return;
+    }
+
     Notification::make()
-      ->title('Pengajuan Draf Penggajian')
-      ->body($message)
-      ->icon('heroicon-o-paper-airplane')
-      ->iconColor('primary')
-      ->color('info')
-      ->sendToDatabase($managers);
+      ->title($title)
+      ->body($body)
+      ->icon($icon)
+      ->iconColor($iconColor)
+      ->color($color)
+      ->sendToDatabase($recipients);
+  }
+
+  private function getPeriodeLabel(): string
+  {
+    return MonthHelper::formatPeriod(
+      $this->record->periode_bulan,
+      $this->record->periode_tahun
+    );
   }
 
   private function verifikasiDrafHeaderAction()
@@ -277,6 +356,8 @@ class ViewPenggajian extends ViewRecord
             ]);
 
           if ($updated > 0) {
+            $this->notifyFinanceManagersPenggajianVerified($updated);
+
             Notification::make()
               ->title('Verifikasi Berhasil!')
               ->body("Draf penggajian berhasil diverifikasi. {$updated} record telah diperbarui ke status 'Diverifikasi'.")
@@ -330,6 +411,8 @@ class ViewPenggajian extends ViewRecord
             ]);
 
           if ($updated > 0) {
+            $this->notifyAccountPaymentsPenggajianApproved($updated);
+
             Notification::make()
               ->title('Setujui Berhasil!')
               ->body("Draf penggajian berhasil disetujui. {$updated} record telah diperbarui ke status 'Disetujui'.")

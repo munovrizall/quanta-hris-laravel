@@ -44,9 +44,6 @@ Route::middleware('auth:sanctum')->group(function () {
 
     Route::post('update-profile', [AuthController::class, 'updateProfile']);
 
-    // Permission routes
-    Route::post('permission', [PermissionController::class, 'store']);
-
     // Cuti routes
     Route::post('cuti', [CutiController::class, 'store']);
     Route::get('cuti/detail', [CutiController::class, 'cutiDetail']);
