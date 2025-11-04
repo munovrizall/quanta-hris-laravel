@@ -172,7 +172,9 @@ class AttendanceController extends Controller
         $attendance->koordinat_masuk = $request->latitude . ',' . $request->longitude;
         $attendance->foto_masuk = $fotoMasukPath ?? '';
         $attendance->status_masuk = $statusMasuk;
-        $attendance->status_absensi = 'Hadir';
+        $attendance->status_absensi = $statusMasuk === 'Tepat Waktu'
+            ? 'Hadir'
+            : 'Tidak Tepat';
         $attendance->durasi_telat = $durasiTelat;
         $attendance->save();
 
@@ -359,6 +361,16 @@ class AttendanceController extends Controller
         $attendance->foto_pulang = $fotoPulangPath ?? '';
         $attendance->status_pulang = $statusPulang;
         $attendance->durasi_pulang_cepat = $durasiPulangCepat;
+
+        if (in_array($attendance->status_absensi, ['Hadir', 'Tidak Tepat'], true)) {
+            $attendance->status_absensi = (
+                $attendance->status_masuk === 'Tepat Waktu' &&
+                $statusPulang === 'Tepat Waktu'
+            )
+                ? 'Hadir'
+                : 'Tidak Tepat';
+        }
+
         $attendance->save();
 
         return ApiResponse::format(
