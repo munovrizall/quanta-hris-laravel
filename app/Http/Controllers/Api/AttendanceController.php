@@ -378,7 +378,7 @@ class AttendanceController extends Controller
         );
     }
 
-    public function isClockedIn(Request $request)
+    public function attendanceStatus(Request $request)
     {
         $user = $request->user();
         $today = Carbon::today();
@@ -402,12 +402,17 @@ class AttendanceController extends Controller
 
         $isEligibleAttendance = !($hasApprovedLeave || $hasApprovedPermit);
 
+        // Determine clock in and clock out status
+        $isClockedIn = $attendance ? true : false;
+        $isClockedOut = $attendance && $attendance->waktu_pulang ? true : false;
+
         return ApiResponse::format(
             true,
             200,
-            'Is today checked in retrieved successfully',
+            'Attendance status retrieved successfully',
             [
-                'is_clocked_in' => $attendance ? true : false,
+                'is_clocked_in' => $isClockedIn,
+                'is_clocked_out' => $isClockedOut,
                 'is_eligible_attendance' => $isEligibleAttendance,
             ]
         );
