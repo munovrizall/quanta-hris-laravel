@@ -346,6 +346,12 @@ class AttendanceController extends Controller
             $fotoPulangPath = $file->storeAs('attendance/clock_out', $fileName, 'public');
         }
 
+        // Check if eligible for overtime (lembur)
+        // Eligible if clock out time is more than 1 hour after company's closing time
+        $jamPulangToday = Carbon::today()->setTimeFromTimeString($company->jam_pulang);
+        $diffInMinutes = $currentTime->diffInMinutes($jamPulangToday, false);
+        $isEligibleLembur = $diffInMinutes > 60; // More than 60 minutes (1 hour) after closing time
+
         // Update attendance record with new branch if different
         $attendance->cabang_id = $nearestBranch->cabang_id;
         $attendance->waktu_pulang = $currentTime;
@@ -374,6 +380,7 @@ class AttendanceController extends Controller
                     'alamat' => $nearestBranch->alamat,
                 ],
                 'distance_from_branch' => round($shortestDistance, 2) . 'm',
+                'is_eligible_lembur' => $isEligibleLembur,
             ]
         );
     }
