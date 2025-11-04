@@ -13,6 +13,50 @@ use Illuminate\Support\Facades\Validator;
 class CutiController extends Controller
 {
     /**
+     * Display leave history for the authenticated employee.
+     */
+    public function index(Request $request)
+    {
+        $user = $request->user();
+
+        if (!$user || !$user->karyawan_id) {
+            return ApiResponse::format(false, 401, 'Unauthorized', null);
+        }
+
+        $history = Cuti::where('karyawan_id', $user->karyawan_id)
+            ->orderByDesc('created_at')
+            ->get()
+            ->map(function (Cuti $cuti) {
+                $mulai = $cuti->tanggal_mulai ? Carbon::parse($cuti->tanggal_mulai) : null;
+                $selesai = $cuti->tanggal_selesai ? Carbon::parse($cuti->tanggal_selesai) : null;
+                $durasi = ($mulai && $selesai) ? ($mulai->diffInDays($selesai) + 1) : null;
+
+                return [
+                    'cuti_id' => $cuti->cuti_id,
+                    'jenis_cuti' => $cuti->jenis_cuti,
+                    'tanggal_mulai' => optional($mulai)->toDateString(),
+                    'tanggal_selesai' => optional($selesai)->toDateString(),
+                    'durasi_hari' => $durasi,
+                    'status_cuti' => $cuti->status_cuti,
+                    'alasan_penolakan' => $cuti->alasan_penolakan ?: null,
+                    'dokumen_pendukung' => $cuti->dokumen_pendukung
+                        ? asset('storage/' . $cuti->dokumen_pendukung)
+                        : null,
+                    'diproses_oleh' => $cuti->approver_id,
+                    'diproses_pada' => optional($cuti->processed_at)->toDateTimeString(),
+                    'dibuat_pada' => optional($cuti->created_at)->toDateTimeString(),
+                    'diperbarui_pada' => optional($cuti->updated_at)->toDateTimeString(),
+                ];
+            });
+
+        return ApiResponse::format(true, 200, 'Riwayat cuti berhasil diambil.', [
+            'karyawan_id' => $user->karyawan_id,
+            'total_pengajuan' => $history->count(),
+            'riwayat' => $history,
+        ]);
+    }
+
+    /**
      * Store a newly created Cuti (leave request).
      */
     public function store(Request $request)

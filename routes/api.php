@@ -45,6 +45,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('update-profile', [AuthController::class, 'updateProfile']);
 
     // Cuti routes
+    Route::get('cuti', [CutiController::class, 'index']);
     Route::post('cuti', [CutiController::class, 'store']);
     Route::get('cuti/detail', [CutiController::class, 'cutiDetail']);
 
