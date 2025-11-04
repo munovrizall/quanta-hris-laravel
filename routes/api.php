@@ -50,6 +50,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('cuti/detail', [CutiController::class, 'cutiDetail']);
 
     // Izin routes
+    Route::get('izin', [IzinController::class, 'index']);
     Route::post('izin', [IzinController::class, 'store']);
 
     // Lembur routes

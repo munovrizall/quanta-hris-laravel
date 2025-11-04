@@ -11,6 +11,45 @@ use Illuminate\Support\Facades\Validator;
 class IzinController extends Controller
 {
     /**
+     * Display permission request history for the authenticated employee.
+     */
+    public function index(Request $request)
+    {
+        $user = $request->user();
+
+        if (!$user || !$user->karyawan_id) {
+            return ApiResponse::format(false, 401, 'Unauthorized', null);
+        }
+
+        $history = Izin::where('karyawan_id', $user->karyawan_id)
+            ->orderByDesc('created_at')
+            ->get()
+            ->map(function (Izin $izin) {
+                return [
+                    'izin_id' => $izin->izin_id,
+                    'jenis_izin' => $izin->jenis_izin,
+                    'tanggal_mulai' => optional($izin->tanggal_mulai)->format('Y-m-d'),
+                    'tanggal_selesai' => optional($izin->tanggal_selesai)->format('Y-m-d'),
+                    'status_izin' => $izin->status_izin,
+                    'alasan_penolakan' => $izin->alasan_penolakan ?: null,
+                    'dokumen_pendukung' => $izin->dokumen_pendukung
+                        ? asset('storage/' . $izin->dokumen_pendukung)
+                        : null,
+                    'diproses_oleh' => $izin->approver_id,
+                    'diproses_pada' => optional($izin->processed_at)->toDateTimeString(),
+                    'dibuat_pada' => optional($izin->created_at)->toDateTimeString(),
+                    'diperbarui_pada' => optional($izin->updated_at)->toDateTimeString(),
+                ];
+            });
+
+        return ApiResponse::format(true, 200, 'Riwayat izin berhasil diambil.', [
+            'karyawan_id' => $user->karyawan_id,
+            'total_pengajuan' => $history->count(),
+            'riwayat' => $history,
+        ]);
+    }
+
+    /**
      * Store a newly created Izin (permission request).
      */
     public function store(Request $request)
@@ -83,4 +122,3 @@ class IzinController extends Controller
         return ApiResponse::format(true, 201, 'Pengajuan izin berhasil diajukan.', $data);
     }
 }
-
