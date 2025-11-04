@@ -257,6 +257,11 @@ class ViewPenggajian extends ViewRecord
       return;
     }
 
+    Log::info('notifyFinanceManagersPenggajianVerified called.', [
+      'records_updated' => $recordsUpdated,
+      'user_id' => $user->getKey(),
+    ]);
+
     $periode = $this->getPeriodeLabel();
     $verifiedBy = $user->nama_lengkap ?? $user->name ?? 'Manager HR';
 
@@ -284,6 +289,11 @@ class ViewPenggajian extends ViewRecord
     if (!$user || $user->role_id !== 'R04' || !$this->record) {
       return;
     }
+
+    Log::info('notifyAccountPaymentsPenggajianApproved called.', [
+      'records_updated' => $recordsUpdated,
+      'user_id' => $user->getKey(),
+    ]);
 
     $periode = $this->getPeriodeLabel();
     $approvedBy = $user->nama_lengkap ?? $user->name ?? 'Manager Finance';
@@ -316,6 +326,11 @@ class ViewPenggajian extends ViewRecord
     ) {
       return;
     }
+
+    Log::info('notifyStaffPenggajianRejected called.', [
+      'records_updated' => $recordsUpdated,
+      'user_id' => $user->getKey(),
+    ]);
 
     $periode = $this->getPeriodeLabel();
     $rejectedBy = $user->nama_lengkap ?? $user->name ?? 'Atasan';
@@ -351,16 +366,36 @@ class ViewPenggajian extends ViewRecord
       ->get();
 
     if ($recipients->isEmpty()) {
+      Log::warning('Penggajian notification skipped: no recipients found.', [
+        'role_id' => $roleId,
+        'title' => $title,
+      ]);
       return;
     }
 
-    Notification::make()
-      ->title($title)
-      ->body($body)
-      ->icon($icon)
-      ->iconColor($iconColor)
-      ->color($color)
-      ->sendToDatabase($recipients);
+    try {
+      $notification = Notification::make()
+        ->title($title)
+        ->body($body)
+        ->icon($icon)
+        ->iconColor($iconColor)
+        ->color($color);
+
+      $notification->sendToDatabase($recipients);
+
+      Log::info('Penggajian notification dispatched.', [
+        'role_id' => $roleId,
+        'title' => $title,
+        'recipient_ids' => $recipients->pluck('karyawan_id')->all(),
+        'recipient_count' => $recipients->count(),
+      ]);
+    } catch (\Throwable $exception) {
+      Log::error('Failed to send penggajian notification.', [
+        'role_id' => $roleId,
+        'title' => $title,
+        'error' => $exception->getMessage(),
+      ]);
+    }
   }
 
   private function getPeriodeLabel(): string
