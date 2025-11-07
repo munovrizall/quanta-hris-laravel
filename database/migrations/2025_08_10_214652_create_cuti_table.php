@@ -14,7 +14,7 @@ return new class extends Migration
         Schema::create('cuti', function (Blueprint $table) {
             $table->string('cuti_id', 6)->primary();
             $table->string('karyawan_id', 5);
-            $table->string('jenis_cuti', 100);
+            $table->string('jenis_cuti', 50);
             $table->date('tanggal_mulai');
             $table->date('tanggal_selesai');
             $table->text('keterangan');

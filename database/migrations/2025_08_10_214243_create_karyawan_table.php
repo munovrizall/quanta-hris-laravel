@@ -16,17 +16,16 @@ return new class extends Migration {
             $table->string('perusahaan_id', 5);
             $table->string('golongan_ptkp_id', 3)->nullable();
             $table->string('nik', 20)->unique();
-            $table->string('nama_lengkap', 100);
+            $table->string('nama_lengkap', 50);
             $table->date('tanggal_lahir');
             $table->enum('jenis_kelamin', ['Laki-laki', 'Perempuan']);
             $table->text('alamat');
             $table->string('nomor_telepon', 20)->nullable();
-            $table->string('email', 100)->unique();
-            $table->timestamp('email_verified_at')->nullable();
+            $table->string('email', 50)->unique();
             $table->string('password', 100);
             $table->rememberToken();
-            $table->string('jabatan', 100)->nullable();
-            $table->string('departemen', 100)->nullable();
+            $table->string('jabatan', 30)->nullable();
+            $table->string('departemen', 30)->nullable();
             $table->enum('status_kepegawaian', [
                 'Tetap',
                 'Kontrak',
@@ -37,7 +36,7 @@ return new class extends Migration {
             $table->integer('kuota_cuti_tahunan')->default(12);
             $table->double('gaji_pokok')->nullable();
             $table->string('nomor_rekening', 50)->nullable();
-            $table->string('nama_pemilik_rekening', 100)->nullable();
+            $table->string('nama_pemilik_rekening', 50)->nullable();
             $table->string('nomor_bpjs_kesehatan', 50)->nullable();
             $table->text('face_embedding')->nullable();
             $table->timestamps();
