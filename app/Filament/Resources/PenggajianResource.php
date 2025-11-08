@@ -20,7 +20,7 @@ class PenggajianResource extends Resource
 
     protected static ?string $navigationIcon = 'heroicon-o-banknotes';
 
-    protected static ?string $navigationLabel = 'Penggajian';
+    protected static ?string $navigationLabel = 'Kelola Penggajian';
 
     protected static ?string $slug = 'penggajian';
 

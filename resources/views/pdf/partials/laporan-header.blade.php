@@ -4,7 +4,7 @@
         <tr>
             <td class="w-50" style="vertical-align: top;">
                 @php
-                    $logoPath = storage_path('app/public/images/logo/smartcool_logo.png');
+                    $logoPath = storage_path('app/public/smartcool_logo.png');
                     $logoSrc = file_exists($logoPath) ? 'data:image/png;base64,' . base64_encode(file_get_contents($logoPath)) : null;
                 @endphp
                 @if($logoSrc)
