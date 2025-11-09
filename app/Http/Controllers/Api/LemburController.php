@@ -184,6 +184,7 @@ class LemburController extends Controller
 
             $entry = [
                 'tanggal' => $dateKey,
+                'absensi_id' => null,
                 'jam_masuk' => null,
                 'status_masuk' => null,
                 'jam_pulang' => null,
@@ -198,6 +199,7 @@ class LemburController extends Controller
             ];
 
             if ($record) {
+                $entry['absensi_id'] = $record->absensi_id;
                 $entry['jam_masuk'] = $record->waktu_masuk ? Carbon::parse($record->waktu_masuk)->format('H:i:s') : null;
                 $entry['status_masuk'] = $record->status_masuk;
                 $entry['jam_pulang'] = $record->waktu_pulang ? Carbon::parse($record->waktu_pulang)->format('H:i:s') : null;
