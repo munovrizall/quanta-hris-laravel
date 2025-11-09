@@ -48,8 +48,8 @@ class LemburController extends Controller
         }
 
         $company = $user->perusahaan;
-        if (!$company || !$company->jam_pulang) {
-            return ApiResponse::format(false, 404, 'Jam kerja perusahaan tidak ditemukan.', null);
+        if (!$company || !$company->jam_pulang || !$company->jam_masuk) {
+            return ApiResponse::format(false, 404, 'Jam kerja perusahaan tidak lengkap.', null);
         }
 
         $tanggalLembur = $absensi->tanggal
@@ -162,7 +162,12 @@ class LemburController extends Controller
             return $row->tanggal ? Carbon::parse($row->tanggal)->format('Y-m-d') : null;
         })->filter();
 
+        $jamMasukPerusahaan = Carbon::parse($company->jam_masuk)->format('H:i:s');
         $jamPulangPerusahaan = Carbon::parse($company->jam_pulang)->format('H:i:s');
+        $operationalMinutes = max(
+            0,
+            Carbon::parse($company->jam_masuk)->diffInMinutes(Carbon::parse($company->jam_pulang), false)
+        );
         $lemburService = new LemburService();
 
         $data = collect();
@@ -186,7 +191,9 @@ class LemburController extends Controller
                 'status_absensi' => 'Alfa',
                 'eligible_lembur' => false,
                 'durasi_lembur_terhitung' => null,
+                'durasi_kerja' => null,
                 'jam_pulang_perusahaan' => $jamPulangPerusahaan,
+                'jam_masuk_perusahaan' => $jamMasukPerusahaan,
                 'lembur_pengajuan' => null,
             ];
 
@@ -197,11 +204,27 @@ class LemburController extends Controller
                 $entry['status_pulang'] = $record->status_pulang;
                 $entry['status_absensi'] = $record->status_absensi;
 
+                $actualDurationMinutes = null;
+                if ($record->waktu_masuk && $record->waktu_pulang) {
+                    $actualDurationMinutes = Carbon::parse($record->waktu_masuk)
+                        ->diffInMinutes(Carbon::parse($record->waktu_pulang), false);
+                    $actualDurationMinutes = max(0, $actualDurationMinutes);
+                    if ($actualDurationMinutes > 0) {
+                        $entry['durasi_kerja'] = sprintf(
+                            '%02d:%02d:00',
+                            intdiv($actualDurationMinutes, 60),
+                            $actualDurationMinutes % 60
+                        );
+                    }
+                }
+
                 if ($record->waktu_pulang) {
                     $scheduledEnd = Carbon::parse($dateKey . ' ' . $company->jam_pulang);
                     $clockOut = Carbon::parse($record->waktu_pulang);
                     $diffMinutes = $scheduledEnd->diffInMinutes($clockOut, false);
-                    $entry['eligible_lembur'] = $diffMinutes >= 60;
+                    $entry['eligible_lembur'] = $diffMinutes >= 60
+                        && $actualDurationMinutes !== null
+                        && $actualDurationMinutes > $operationalMinutes;
 
                     if ($diffMinutes > 0) {
                         $hours = intdiv($diffMinutes, 60);
