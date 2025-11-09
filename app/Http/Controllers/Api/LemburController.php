@@ -100,78 +100,120 @@ class LemburController extends Controller
     }
 
     /**
-     * Dapatkan informasi kelayakan lembur berdasarkan absensi dan jam pulang > 1 jam dari jam kerja perusahaan
+     * Riwayat kelayakan lembur per tanggal (mirip struktur attendance history).
      */
-    public function eligible(Request $request)
+    public function index(Request $request)
     {
         $user = $request->user();
         if (!$user || !$user->karyawan_id) {
             return ApiResponse::format(false, 401, 'Unauthorized', null);
         }
 
-        $absensiId = $request->query('absensi_id');
-        $tanggal = $request->query('tanggal'); // optional Y-m-d
-
-        // Ambil absensi
-        if ($absensiId) {
-            $absensi = Absensi::where('absensi_id', $absensiId)
-                ->where('karyawan_id', $user->karyawan_id)
-                ->first();
-        } else {
-            $query = Absensi::where('karyawan_id', $user->karyawan_id);
-            if ($tanggal) {
-                $query->whereDate('tanggal', $tanggal);
-            } else {
-                $query->whereDate('tanggal', Carbon::today()->format('Y-m-d'));
-            }
-            $absensi = $query->orderBy('waktu_pulang', 'desc')->first();
-        }
-
-        if (!$absensi) {
-            return ApiResponse::format(false, 404, 'Data absensi tidak ditemukan.', null);
-        }
-
-        if (!$absensi->waktu_pulang) {
-            return ApiResponse::format(false, 400, 'Belum absen pulang.', null);
-        }
-
-        // Jam pulang perusahaan
         $company = $user->perusahaan;
         if (!$company || !$company->jam_pulang) {
             return ApiResponse::format(false, 404, 'Jam kerja perusahaan tidak ditemukan.', null);
         }
 
-        // Susun datetime akhir kerja pada tanggal absensi
-        $tanggalStr = $absensi->tanggal ? $absensi->tanggal->format('Y-m-d') : Carbon::parse($absensi->waktu_pulang)->format('Y-m-d');
-        $scheduledEnd = Carbon::parse($tanggalStr . ' ' . $company->jam_pulang);
-        $clockOut = Carbon::parse($absensi->waktu_pulang);
+        $from = $request->query('from');
+        $to = $request->query('to');
 
-        $diffMinutes = $scheduledEnd->diffInMinutes($clockOut, false);
-        $eligible = $diffMinutes >= 60; // melebihi sejam
-
-        $claimMinutes = max(0, $diffMinutes);
-        $hours = intdiv($claimMinutes, 60);
-        $minutes = $claimMinutes % 60;
-        $durasiClaim = sprintf('%02d:%02d:00', $hours, $minutes);
-
-        $insentif = 0;
-        if ($claimMinutes > 0) {
-            $service = new LemburService();
-            $insentif = $service->calculateInsentif($durasiClaim, $user);
+        try {
+            $startDate = $from
+                ? Carbon::createFromFormat('Y-m-d', $from)->startOfDay()
+                : Carbon::today()->subDays(30)->startOfDay();
+            $endDate = $to
+                ? Carbon::createFromFormat('Y-m-d', $to)->startOfDay()
+                : Carbon::today()->startOfDay();
+        } catch (\Throwable $e) {
+            return ApiResponse::format(false, 422, 'Format tanggal tidak valid. Gunakan Y-m-d.', null);
         }
 
-        return ApiResponse::format(true, 200, 'Kelayakan lembur dihitung.', [
-            'eligible' => $eligible,
-            'absensi' => [
-                'absensi_id' => $absensi->absensi_id,
-                'tanggal' => $tanggalStr,
-                'waktu_pulang' => Carbon::parse($absensi->waktu_pulang)->format('H:i:s'),
-                'jam_pulang_perusahaan' => Carbon::parse($company->jam_pulang)->format('H:i:s'),
-            ],
-            'durasi_lembur_diklaim' => $durasiClaim,
-            'jam_diklaim' => (int) ceil($claimMinutes / 60.0),
-            'insentif' => $insentif,
-        ]);
+        if ($startDate->greaterThan($endDate)) {
+            return ApiResponse::format(false, 422, 'Parameter "from" harus lebih awal daripada "to".', null);
+        }
+
+        $absensiRecords = Absensi::where('karyawan_id', $user->karyawan_id)
+            ->whereBetween('tanggal', [$startDate->toDateString(), $endDate->toDateString()])
+            ->get();
+
+        $lemburRecords = Lembur::where('karyawan_id', $user->karyawan_id)
+            ->whereBetween('tanggal_lembur', [$startDate->toDateString(), $endDate->toDateString()])
+            ->get()
+            ->keyBy('absensi_id');
+
+        $recordsByDate = $absensiRecords->keyBy(function ($row) {
+            return $row->tanggal ? Carbon::parse($row->tanggal)->format('Y-m-d') : null;
+        })->filter();
+
+        $jamPulangPerusahaan = Carbon::parse($company->jam_pulang)->format('H:i:s');
+        $lemburService = new LemburService();
+
+        $data = collect();
+        $currentDate = $endDate->copy();
+
+        while ($currentDate->greaterThanOrEqualTo($startDate)) {
+            $dateKey = $currentDate->format('Y-m-d');
+            $record = $recordsByDate->get($dateKey);
+
+            if (!$record && $currentDate->isWeekend()) {
+                $currentDate->subDay();
+                continue;
+            }
+
+            $entry = [
+                'tanggal' => $dateKey,
+                'jam_masuk' => null,
+                'status_masuk' => null,
+                'jam_pulang' => null,
+                'status_pulang' => null,
+                'status_absensi' => 'Alfa',
+                'eligible_lembur' => false,
+                'durasi_lembur_terhitung' => null,
+                'jam_pulang_perusahaan' => $jamPulangPerusahaan,
+                'lembur_pengajuan' => null,
+            ];
+
+            if ($record) {
+                $entry['jam_masuk'] = $record->waktu_masuk ? Carbon::parse($record->waktu_masuk)->format('H:i:s') : null;
+                $entry['status_masuk'] = $record->status_masuk;
+                $entry['jam_pulang'] = $record->waktu_pulang ? Carbon::parse($record->waktu_pulang)->format('H:i:s') : null;
+                $entry['status_pulang'] = $record->status_pulang;
+                $entry['status_absensi'] = $record->status_absensi;
+
+                if ($record->waktu_pulang) {
+                    $scheduledEnd = Carbon::parse($dateKey . ' ' . $company->jam_pulang);
+                    $clockOut = Carbon::parse($record->waktu_pulang);
+                    $diffMinutes = $scheduledEnd->diffInMinutes($clockOut, false);
+                    $entry['eligible_lembur'] = $diffMinutes >= 60;
+
+                    if ($diffMinutes > 0) {
+                        $hours = intdiv($diffMinutes, 60);
+                        $minutes = $diffMinutes % 60;
+                        $entry['durasi_lembur_terhitung'] = sprintf('%02d:%02d:00', $hours, $minutes);
+                    }
+                }
+
+                $lembur = $lemburRecords->get($record->absensi_id);
+                if ($lembur) {
+                    $upahLembur = $lembur->total_insentif;
+                    if (is_null($upahLembur) && $lembur->durasi_lembur) {
+                        $upahLembur = $lemburService->calculateInsentif($lembur->durasi_lembur, $user);
+                    }
+
+                    $entry['lembur_pengajuan'] = [
+                        'lembur_id' => $lembur->lembur_id,
+                        'status_lembur' => $lembur->status_lembur,
+                        'durasi_lembur' => $lembur->durasi_lembur,
+                        'upah_lembur' => $upahLembur ?? 0,
+                        'processed_at' => $lembur->processed_at,
+                    ];
+                }
+            }
+
+            $data->push($entry);
+            $currentDate->subDay();
+        }
+
+        return ApiResponse::format(true, 200, 'Riwayat lembur berhasil diambil.', $data);
     }
 }
-

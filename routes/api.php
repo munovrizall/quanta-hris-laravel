@@ -55,7 +55,7 @@ Route::middleware('auth:sanctum')->group(function () {
 
     // Lembur routes
     Route::post('lembur', [LemburController::class, 'store']);
-    Route::get('lembur/eligible', [LemburController::class, 'eligible']);
+    Route::get('lembur', [LemburController::class, 'index']);
 
     // Notifications
     Route::get('notifications', [NotificationController::class, 'index']);
