@@ -23,14 +23,27 @@ class LemburController extends Controller
             return ApiResponse::format(false, 401, 'Unauthorized', null);
         }
 
-        $validator = Validator::make($request->all(), [
-            'absensi_id' => 'required|exists:absensi,absensi_id',
-            'deskripsi_pekerjaan' => 'required|string',
-            'dokumen_pendukung' => 'nullable|file|mimes:jpeg,png,jpg,pdf,doc,docx|max:5120',
-        ]);
+        $validator = Validator::make(
+            $request->all(),
+            [
+                'absensi_id' => 'required|exists:absensi,absensi_id',
+                'deskripsi_pekerjaan' => 'required|string',
+                'dokumen_pendukung' => 'nullable|file|mimes:jpeg,png,jpg,pdf,doc,docx|max:5120',
+            ],
+            [
+                'absensi_id.required' => 'Absensi wajib dipilih.',
+                'absensi_id.exists' => 'Absensi tidak ditemukan di sistem.',
+                'deskripsi_pekerjaan.required' => 'Deskripsi pekerjaan tidak boleh kosong.',
+                'dokumen_pendukung.file' => 'Dokumen pendukung harus berupa file.',
+                'dokumen_pendukung.mimes' => 'Format dokumen pendukung harus jpeg, png, jpg, pdf, doc, atau docx.',
+                'dokumen_pendukung.max' => 'Ukuran dokumen pendukung maksimal 5MB.',
+            ]
+        );
 
         if ($validator->fails()) {
-            return ApiResponse::format(false, 422, 'Validation error', [
+            $firstError = $validator->errors()->first();
+
+            return ApiResponse::format(false, 422, 'Validasi gagal: ' . $firstError, [
                 'errors' => $validator->errors(),
             ]);
         }
