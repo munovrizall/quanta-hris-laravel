@@ -25,8 +25,6 @@ class LemburController extends Controller
 
         $validator = Validator::make($request->all(), [
             'absensi_id' => 'required|exists:absensi,absensi_id',
-            'tanggal_lembur' => 'required|date',
-            'durasi_lembur' => ['required', 'regex:/^\d{2}:\d{2}(:\d{2})?$/'],
             'deskripsi_pekerjaan' => 'required|string',
             'dokumen_pendukung' => 'nullable|file|mimes:jpeg,png,jpg,pdf,doc,docx|max:5120',
         ]);
@@ -45,11 +43,30 @@ class LemburController extends Controller
             return ApiResponse::format(false, 403, 'Absensi tidak valid untuk pengguna ini.', null);
         }
 
-        // Normalisasi durasi ke HH:MM:SS
-        $durasi = $request->durasi_lembur;
-        if (strlen($durasi) === 5) {
-            $durasi .= ':00';
+        if (!$absensi->waktu_pulang) {
+            return ApiResponse::format(false, 400, 'Belum absen pulang, durasi lembur tidak dapat dihitung.', null);
         }
+
+        $company = $user->perusahaan;
+        if (!$company || !$company->jam_pulang) {
+            return ApiResponse::format(false, 404, 'Jam kerja perusahaan tidak ditemukan.', null);
+        }
+
+        $tanggalLembur = $absensi->tanggal
+            ? Carbon::parse($absensi->tanggal)->format('Y-m-d')
+            : Carbon::parse($absensi->waktu_pulang)->format('Y-m-d');
+
+        $scheduledEnd = Carbon::parse($tanggalLembur . ' ' . $company->jam_pulang);
+        $clockOut = Carbon::parse($absensi->waktu_pulang);
+        $diffMinutes = $scheduledEnd->diffInMinutes($clockOut, false);
+
+        if ($diffMinutes < 1) {
+            return ApiResponse::format(false, 400, 'Durasi lembur tidak valid karena jam pulang tidak melebihi jam kerja.', null);
+        }
+
+        $hours = intdiv($diffMinutes, 60);
+        $minutes = $diffMinutes % 60;
+        $durasi = sprintf('%02d:%02d:00', $hours, $minutes);
 
         // Generate ID lembur baru (LB0001 ...), termasuk yang soft-deleted
         $last = Lembur::withTrashed()
@@ -73,7 +90,7 @@ class LemburController extends Controller
         $lembur->lembur_id = $lemburId;
         $lembur->karyawan_id = $user->karyawan_id;
         $lembur->absensi_id = $absensi->absensi_id;
-        $lembur->tanggal_lembur = $request->tanggal_lembur;
+        $lembur->tanggal_lembur = $tanggalLembur;
         $lembur->durasi_lembur = $durasi;
         $lembur->deskripsi_pekerjaan = $request->deskripsi_pekerjaan;
         $lembur->dokumen_pendukung = $dokumenPath ?? null;
