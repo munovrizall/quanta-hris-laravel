@@ -15,6 +15,7 @@ use Filament\Notifications\Notification;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 
 class CutiResource extends Resource
 {
@@ -275,12 +276,28 @@ class CutiResource extends Resource
                     ->modalSubmitActionLabel('Ya, Setujui')
                     ->action(function (Cuti $record): void {
                         try {
-                            $record->update([
-                                'status_cuti' => 'Disetujui',
-                                'approver_id' => Auth::user()?->karyawan_id ?? 'SYSTEM',
-                                'processed_at' => now(),
-                                'alasan_penolakan' => null,
-                            ]);
+                            DB::transaction(function () use ($record) {
+                                $record->update([
+                                    'status_cuti' => 'Disetujui',
+                                    'approver_id' => Auth::user()?->karyawan_id ?? 'SYSTEM',
+                                    'processed_at' => now(),
+                                    'alasan_penolakan' => null,
+                                ]);
+
+                                $durasi = (int) ($record->durasi_cuti ?? 0);
+                                if ($durasi <= 0) {
+                                    return;
+                                }
+
+                                $karyawan = $record->karyawan()->lockForUpdate()->first();
+                                if (!$karyawan) {
+                                    return;
+                                }
+
+                                $kuotaSaatIni = (int) ($karyawan->kuota_cuti_tahunan ?? 0);
+                                $karyawan->kuota_cuti_tahunan = max(0, $kuotaSaatIni - $durasi);
+                                $karyawan->save();
+                            });
 
                             Notification::make()
                                 ->title('Cuti Berhasil Disetujui')
