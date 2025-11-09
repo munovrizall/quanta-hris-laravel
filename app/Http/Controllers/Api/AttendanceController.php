@@ -498,34 +498,57 @@ class AttendanceController extends Controller
         $from = $request->query('from');
         $to = $request->query('to');
 
-        $query = Absensi::where('karyawan_id', $user->karyawan_id);
-
-        if ($from) {
-            $query->whereDate('tanggal', '>=', $from);
-        }
-        if ($to) {
-            $query->whereDate('tanggal', '<=', $to);
-        }
-        if (!$from && !$to) {
-            $query->whereDate('tanggal', '>=', Carbon::today()->subDays(30)->format('Y-m-d'));
-        }
-
-        $records = $query->orderBy('tanggal', 'desc')->get();
-
-        if ($records->isEmpty()) {
-            return ApiResponse::format(true, 200, 'No attendance records found for the specified period.', []);
+        try {
+            $startDate = $from
+                ? Carbon::createFromFormat('Y-m-d', $from)->startOfDay()
+                : Carbon::today()->subDays(30)->startOfDay();
+            $endDate = $to
+                ? Carbon::createFromFormat('Y-m-d', $to)->startOfDay()
+                : Carbon::today()->startOfDay();
+        } catch (\Throwable $e) {
+            return ApiResponse::format(false, 422, 'Format tanggal tidak valid. Gunakan Y-m-d.', null);
         }
 
-        $data = $records->map(function ($row) {
-            return [
-                'tanggal' => $row->tanggal ? Carbon::parse($row->tanggal)->format('Y-m-d') : null,
-                'jam_masuk' => $row->waktu_masuk ? Carbon::parse($row->waktu_masuk)->format('H:i:s') : null,
-                'status_masuk' => $row->status_masuk,
-                'jam_pulang' => $row->waktu_pulang ? Carbon::parse($row->waktu_pulang)->format('H:i:s') : null,
-                'status_pulang' => $row->status_pulang,
-                'status_absensi' => $row->status_absensi,
-            ];
-        });
+        if ($startDate->greaterThan($endDate)) {
+            return ApiResponse::format(false, 422, 'Parameter "from" harus lebih awal daripada "to".', null);
+        }
+
+        $records = Absensi::where('karyawan_id', $user->karyawan_id)
+            ->whereBetween('tanggal', [$startDate->toDateString(), $endDate->toDateString()])
+            ->get();
+
+        $recordsByDate = $records->keyBy(function ($row) {
+            return $row->tanggal ? Carbon::parse($row->tanggal)->format('Y-m-d') : null;
+        })->filter();
+
+        $data = collect();
+        $currentDate = $endDate->copy();
+        while ($currentDate->greaterThanOrEqualTo($startDate)) {
+            $dateKey = $currentDate->format('Y-m-d');
+            $record = $recordsByDate->get($dateKey);
+
+            if ($record) {
+                $data->push([
+                    'tanggal' => $dateKey,
+                    'jam_masuk' => $record->waktu_masuk ? Carbon::parse($record->waktu_masuk)->format('H:i:s') : null,
+                    'status_masuk' => $record->status_masuk,
+                    'jam_pulang' => $record->waktu_pulang ? Carbon::parse($record->waktu_pulang)->format('H:i:s') : null,
+                    'status_pulang' => $record->status_pulang,
+                    'status_absensi' => $record->status_absensi,
+                ]);
+            } elseif (!$currentDate->isWeekend()) {
+                $data->push([
+                    'tanggal' => $dateKey,
+                    'jam_masuk' => null,
+                    'status_masuk' => null,
+                    'jam_pulang' => null,
+                    'status_pulang' => null,
+                    'status_absensi' => 'Alfa',
+                ]);
+            }
+
+            $currentDate->subDay();
+        }
 
         return ApiResponse::format(true, 200, 'Attendance history retrieved successfully.', $data);
     }
