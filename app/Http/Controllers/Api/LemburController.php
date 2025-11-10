@@ -126,7 +126,7 @@ class LemburController extends Controller
             'created_at' => $lembur->created_at,
         ];
 
-        return ApiResponse::format(true, 201, 'Pengajuan lembur berhasil diajukan.', $data);
+        return ApiResponse::format(true, 201, 'Berhasil mengajukan lembur.', $data);
     }
 
     /**
