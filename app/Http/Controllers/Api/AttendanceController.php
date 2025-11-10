@@ -349,10 +349,34 @@ class AttendanceController extends Controller
         }
 
         // Check if eligible for overtime (lembur)
-        // Eligible if clock out time is more than 1 hour after company's closing time
-        $jamPulangToday = Carbon::today()->setTimeFromTimeString($company->jam_pulang);
-        $diffInMinutes = $currentTime->diffInMinutes($jamPulangToday, false);
-        $isEligibleLembur = $diffInMinutes > 60; // More than 60 minutes (1 hour) after closing time
+        $scheduledEnd = ($attendance->tanggal instanceof Carbon
+                ? $attendance->tanggal->copy()
+                : Carbon::parse($attendance->tanggal))
+            ->setTimeFromTimeString($company->jam_pulang);
+        $scheduledStart = ($attendance->tanggal instanceof Carbon
+                ? $attendance->tanggal->copy()
+                : Carbon::parse($attendance->tanggal))
+            ->setTimeFromTimeString($company->jam_masuk);
+
+        $operationalMinutes = max(
+            0,
+            $scheduledStart->diffInMinutes($scheduledEnd, false)
+        );
+
+        $actualDurationMinutes = null;
+        if ($attendance->waktu_masuk) {
+            $actualDurationMinutes = Carbon::parse($attendance->waktu_masuk)
+                ->diffInMinutes($currentTime, false);
+            $actualDurationMinutes = max(0, $actualDurationMinutes);
+        }
+
+        $sameDayClockOut = $currentTime->isSameDay($scheduledEnd);
+        $diffAfterClosing = $sameDayClockOut ? $scheduledEnd->diffInMinutes($currentTime, false) : -1;
+
+        $isEligibleLembur = $sameDayClockOut
+            && $diffAfterClosing >= 60
+            && $actualDurationMinutes !== null
+            && $actualDurationMinutes > $operationalMinutes;
 
         // Update attendance record with new branch if different
         $attendance->cabang_id = $nearestBranch->cabang_id;
