@@ -23,7 +23,6 @@ class KaryawanFactory extends Factory
             'nik' => $this->faker->unique()->numerify('31710########'),
             'nama_lengkap' => $this->faker->name(),
             'email' => $this->faker->unique()->safeEmail(),
-            'email_verified_at' => now(),
             'password' => Hash::make('karyawan123'),
             'tanggal_lahir' => $this->faker->dateTimeBetween('-45 years', '-22 years')->format('Y-m-d'),
             'jenis_kelamin' => $this->faker->randomElement(['Laki-laki', 'Perempuan']),

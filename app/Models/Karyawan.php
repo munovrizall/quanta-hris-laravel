@@ -58,7 +58,6 @@ class Karyawan extends Authenticable implements FilamentUser, HasName
   ];
 
   protected $casts = [
-    'email_verified_at' => 'datetime',
     'password' => 'hashed',
     'tanggal_lahir' => 'date',
     'tanggal_mulai_bekerja' => 'date',
