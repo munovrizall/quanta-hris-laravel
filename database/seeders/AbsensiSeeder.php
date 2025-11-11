@@ -30,8 +30,8 @@ class AbsensiSeeder extends Seeder
       return;
     }
 
-    // Generate data untuk periode: 2 bulan yang lalu sampai hari ini saja (tidak termasuk besok)
-    $startDate = Carbon::now()->subMonths(2)->startOfDay();
+    // Generate data untuk periode: 3 bulan yang lalu sampai hari ini saja (tidak termasuk besok)
+    $startDate = Carbon::now()->subMonths(3)->startOfDay();
     $endDate = Carbon::now()->endOfDay();
 
     // ✅ CLEAR existing absensi data untuk periode ini (untuk avoid duplikasi)
