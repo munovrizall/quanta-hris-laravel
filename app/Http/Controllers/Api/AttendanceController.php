@@ -124,6 +124,17 @@ class AttendanceController extends Controller
         $jamMasuk = Carbon::parse($company->jam_masuk);
         $statusMasuk = $currentTime->format('H:i:s') > $jamMasuk->format('H:i:s') ? 'Telat' : 'Tepat Waktu';
 
+        // Block clock in if more than 2 hours late
+        $lateMinutes = $jamMasuk->diffInMinutes($currentTime, false);
+        if ($lateMinutes > 120) {
+            return ApiResponse::format(
+                false,
+                422,
+                'Gagal absensi masuk, telat melebihi 2 jam.',
+                null
+            );
+        }
+
         // Generate new absensi_id (include soft deleted records to avoid duplicate)
         $lastAbsensi = Absensi::withTrashed()->orderBy('absensi_id', 'desc')->first();
         if ($lastAbsensi) {
