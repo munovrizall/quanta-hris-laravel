@@ -73,6 +73,7 @@ class SlipGajiApiController extends Controller
         }
 
         $detail = $this->buildSlipDetail($penggajian, $bulan, $tahun);
+
         return ApiResponse::format(true, 200, 'Detail slip gaji berhasil diambil.', $detail);
     }
 
@@ -197,6 +198,7 @@ class SlipGajiApiController extends Controller
             'lembur_pay' => $detail->total_lembur,
             'potongan_total' => $detail->total_potongan,
             'total_gaji' => $detail->gaji_bersih,
+            'penghasilan_bruto' => $detail->penghasilan_bruto,
             'penyesuaian' => $detail->penyesuaian,
             'catatan_penyesuaian' => $detail->catatan_penyesuaian,
             'pph21_detail' => [
@@ -222,4 +224,3 @@ class SlipGajiApiController extends Controller
         ];
     }
 }
-
