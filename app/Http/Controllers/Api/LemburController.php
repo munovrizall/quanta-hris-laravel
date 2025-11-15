@@ -234,12 +234,19 @@ class LemburController extends Controller
                 }
 
                 if ($record->waktu_pulang) {
+                    $isWeekendDate = $currentDate->isWeekend();
                     $scheduledEnd = Carbon::parse($dateKey . ' ' . $company->jam_pulang);
                     $clockOut = Carbon::parse($record->waktu_pulang);
                     $diffMinutes = $scheduledEnd->diffInMinutes($clockOut, false);
-                    $entry['eligible_lembur'] = $diffMinutes >= 60
-                        && $actualDurationMinutes !== null
-                        && $actualDurationMinutes > $operationalMinutes;
+
+                    if ($actualDurationMinutes !== null) {
+                        if ($isWeekendDate) {
+                            $entry['eligible_lembur'] = $actualDurationMinutes > 60;
+                        } else {
+                            $entry['eligible_lembur'] = $diffMinutes >= 60
+                                && $actualDurationMinutes > $operationalMinutes;
+                        }
+                    }
 
                     if ($diffMinutes > 0) {
                         $hours = intdiv($diffMinutes, 60);

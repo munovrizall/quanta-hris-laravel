@@ -374,14 +374,13 @@ class AttendanceController extends Controller
         }
 
         // Check if eligible for overtime (lembur)
-        $scheduledEnd = ($attendance->tanggal instanceof Carbon
-                ? $attendance->tanggal->copy()
-                : Carbon::parse($attendance->tanggal))
-            ->setTimeFromTimeString($company->jam_pulang);
-        $scheduledStart = ($attendance->tanggal instanceof Carbon
-                ? $attendance->tanggal->copy()
-                : Carbon::parse($attendance->tanggal))
-            ->setTimeFromTimeString($company->jam_masuk);
+        $attendanceDate = $attendance->tanggal instanceof Carbon
+            ? $attendance->tanggal->copy()
+            : Carbon::parse($attendance->tanggal);
+
+        $scheduledEnd = $attendanceDate->copy()->setTimeFromTimeString($company->jam_pulang);
+        $scheduledStart = $attendanceDate->copy()->setTimeFromTimeString($company->jam_masuk);
+        $isWeekendAttendance = $attendanceDate->isWeekend();
 
         $operationalMinutes = max(
             0,
@@ -398,10 +397,17 @@ class AttendanceController extends Controller
         $sameDayClockOut = $currentTime->isSameDay($scheduledEnd);
         $diffAfterClosing = $sameDayClockOut ? $scheduledEnd->diffInMinutes($currentTime, false) : -1;
 
-        $isEligibleLembur = $sameDayClockOut
-            && $diffAfterClosing >= 60
-            && $actualDurationMinutes !== null
-            && $actualDurationMinutes > $operationalMinutes;
+        // Weekend overtime is based on total working duration (> 1 hour)
+        $isEligibleLembur = false;
+        if ($actualDurationMinutes !== null) {
+            if ($isWeekendAttendance) {
+                $isEligibleLembur = $actualDurationMinutes > 60;
+            } else {
+                $isEligibleLembur = $sameDayClockOut
+                    && $diffAfterClosing >= 60
+                    && $actualDurationMinutes > $operationalMinutes;
+            }
+        }
 
         // Update attendance record with new branch if different
         $attendance->cabang_id = $nearestBranch->cabang_id;
