@@ -239,7 +239,6 @@ class LemburResource extends Resource
                     ->icon('heroicon-o-check-circle')
                     ->color('success')
                     ->visible(fn(Lembur $record): bool => $record->status_lembur === 'Diajukan')
-                    ->requiresConfirmation()
                     ->modalHeading('Yakin Setujui Lembur?')
                     ->modalDescription(
                         fn(Lembur $record): string =>
@@ -291,7 +290,6 @@ class LemburResource extends Resource
                     ->icon('heroicon-o-x-circle')
                     ->color('danger')
                     ->visible(fn(Lembur $record): bool => $record->status_lembur === 'Diajukan')
-                    ->requiresConfirmation()
                     ->modalHeading('Tolak Pengajuan Lembur')
                     ->modalDescription(
                         fn(Lembur $record): string =>
