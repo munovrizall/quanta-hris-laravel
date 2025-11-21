@@ -268,12 +268,12 @@ class CutiResource extends Resource
                     ->color('success')
                     ->visible(fn(Cuti $record): bool => $record->status_cuti === 'Diajukan')
                     ->requiresConfirmation()
-                    ->modalHeading('Setujui Pengajuan Cuti')
+                    ->modalHeading('Yakin Setujui Cuti?')
                     ->modalDescription(
                         fn(Cuti $record): string =>
                             "Apakah Anda yakin ingin menyetujui pengajuan cuti untuk {$record->karyawan->nama_lengkap} pada {$record->tanggal_mulai->translatedFormat('d F Y')} sampai {$record->tanggal_selesai->translatedFormat('d F Y')}?"
                     )
-                    ->modalSubmitActionLabel('Ya, Setujui')
+                    ->modalSubmitActionLabel('Ya')
                     ->action(function (Cuti $record): void {
                         try {
                             DB::transaction(function () use ($record) {

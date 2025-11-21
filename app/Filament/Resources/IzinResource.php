@@ -279,12 +279,12 @@ class IzinResource extends Resource
                     ->color('success')
                     ->visible(fn(Izin $record): bool => $record->status_izin === 'Diajukan')
                     ->requiresConfirmation()
-                    ->modalHeading('Setujui Pengajuan Izin')
+                    ->modalHeading('Yakin Setujui Izin?')
                     ->modalDescription(
                         fn(Izin $record): string =>
                             "Apakah Anda yakin ingin menyetujui pengajuan izin untuk {$record->karyawan->nama_lengkap} pada {$record->tanggal_mulai->translatedFormat('d F Y')} sampai {$record->tanggal_selesai->translatedFormat('d F Y')}?"
                     )
-                    ->modalSubmitActionLabel('Ya, Setujui')
+                    ->modalSubmitActionLabel('Ya')
                     ->action(function (Izin $record): void {
                         try {
                             $record->update([

@@ -240,12 +240,12 @@ class LemburResource extends Resource
                     ->color('success')
                     ->visible(fn(Lembur $record): bool => $record->status_lembur === 'Diajukan')
                     ->requiresConfirmation()
-                    ->modalHeading('Setujui Pengajuan Lembur')
+                    ->modalHeading('Yakin Setujui Lembur?')
                     ->modalDescription(
                         fn(Lembur $record): string =>
                         "Apakah Anda yakin ingin menyetujui pengajuan lembur untuk {$record->karyawan->nama_lengkap} pada tanggal {$record->tanggal_lembur->format('d F Y')}?"
                     )
-                    ->modalSubmitActionLabel('Ya, Setujui')
+                    ->modalSubmitActionLabel('Ya')
                     ->form([
                         Forms\Components\Placeholder::make('preview')
                             ->label('Preview Perhitungan Insentif')
