@@ -240,7 +240,6 @@ class LemburResource extends Resource
                     ->color('success')
                     ->visible(fn(Lembur $record): bool => $record->status_lembur === 'Diajukan')
                     ->requiresConfirmation()
-                    ->modalId('approve-lembur-modal')
                     ->modalHeading('Yakin Setujui Lembur?')
                     ->modalDescription(
                         fn(Lembur $record): string =>
@@ -293,7 +292,6 @@ class LemburResource extends Resource
                     ->color('danger')
                     ->visible(fn(Lembur $record): bool => $record->status_lembur === 'Diajukan')
                     ->requiresConfirmation()
-                    ->modalId('reject-lembur-modal')
                     ->modalHeading('Tolak Pengajuan Lembur')
                     ->modalDescription(
                         fn(Lembur $record): string =>

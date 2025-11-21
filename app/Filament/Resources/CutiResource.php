@@ -268,7 +268,6 @@ class CutiResource extends Resource
                     ->color('success')
                     ->visible(fn(Cuti $record): bool => $record->status_cuti === 'Diajukan')
                     ->requiresConfirmation()
-                    ->modalId('approve-cuti-modal')
                     ->modalHeading('Yakin Setujui Cuti?')
                     ->modalDescription(
                         fn(Cuti $record): string =>
@@ -319,7 +318,6 @@ class CutiResource extends Resource
                     ->color('danger')
                     ->visible(fn(Cuti $record): bool => $record->status_cuti === 'Diajukan')
                     ->requiresConfirmation()
-                    ->modalId('reject-cuti-modal')
                     ->modalHeading('Tolak Pengajuan Cuti')
                     ->modalDescription(
                         fn(Cuti $record): string =>
