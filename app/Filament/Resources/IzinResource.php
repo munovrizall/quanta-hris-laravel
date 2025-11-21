@@ -279,6 +279,7 @@ class IzinResource extends Resource
                     ->color('success')
                     ->visible(fn(Izin $record): bool => $record->status_izin === 'Diajukan')
                     ->requiresConfirmation()
+                    ->modalId('approve-izin-modal')
                     ->modalHeading('Yakin Setujui Izin?')
                     ->modalDescription(
                         fn(Izin $record): string =>
@@ -313,6 +314,7 @@ class IzinResource extends Resource
                     ->color('danger')
                     ->visible(fn(Izin $record): bool => $record->status_izin === 'Diajukan')
                     ->requiresConfirmation()
+                    ->modalId('reject-izin-modal')
                     ->modalHeading('Tolak Pengajuan Izin')
                     ->modalDescription(
                         fn(Izin $record): string =>
