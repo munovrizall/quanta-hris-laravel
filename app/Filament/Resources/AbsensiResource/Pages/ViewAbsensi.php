@@ -4,7 +4,7 @@ namespace App\Filament\Resources\AbsensiResource\Pages;
 
 use App\Filament\Resources\AbsensiResource;
 use Filament\Actions;
-use Filament\Resources\Pages\ViewRecord;
+use App\Filament\Resources\Pages\ViewRecord;
 use Filament\Infolists;
 use Filament\Infolists\Infolist;
 
@@ -132,3 +132,4 @@ class ViewAbsensi extends ViewRecord
       ]);
   }
 }
+

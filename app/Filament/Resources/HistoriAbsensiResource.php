@@ -105,3 +105,4 @@ class HistoriAbsensiResource extends Resource
         ];
     }
 }
+

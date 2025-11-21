@@ -5,7 +5,7 @@ namespace App\Filament\Resources\IzinResource\Pages;
 use App\Filament\Resources\IzinResource;
 use App\Models\Izin;
 use Filament\Actions;
-use Filament\Resources\Pages\CreateRecord;
+use App\Filament\Resources\Pages\CreateRecord;
 
 class CreateIzin extends CreateRecord
 {
@@ -60,3 +60,4 @@ class CreateIzin extends CreateRecord
             ->label('Batal');
     }
 }
+

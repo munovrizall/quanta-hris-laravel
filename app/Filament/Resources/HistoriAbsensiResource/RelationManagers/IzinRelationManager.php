@@ -57,3 +57,4 @@ class IzinRelationManager extends RelationManager
             ->emptyStateHeading('Tidak ada data');
     }
 }
+

@@ -9,7 +9,7 @@ use App\Services\AbsensiService;
 use App\Services\HitungGajiService;
 use Carbon\Carbon;
 use Filament\Notifications\Notification;
-use Filament\Resources\Pages\CreateRecord;
+use App\Filament\Resources\Pages\CreateRecord;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Validation\ValidationException;
@@ -196,3 +196,4 @@ class CreatePenggajian extends CreateRecord
         return 'PG' . str_pad($value, 4, '0', STR_PAD_LEFT);
     }
 }
+

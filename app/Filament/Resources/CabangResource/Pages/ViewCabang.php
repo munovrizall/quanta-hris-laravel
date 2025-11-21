@@ -4,7 +4,7 @@ namespace App\Filament\Resources\CabangResource\Pages;
 
 use App\Filament\Resources\CabangResource;
 use Filament\Actions;
-use Filament\Resources\Pages\ViewRecord;
+use App\Filament\Resources\Pages\ViewRecord;
 use Filament\Infolists;
 use Filament\Infolists\Infolist;
 
@@ -85,3 +85,4 @@ class ViewCabang extends ViewRecord
       ]);
   }
 }
+

@@ -53,3 +53,4 @@ class LemburRelationManager extends RelationManager
             ->emptyStateHeading('Tidak ada data');
     }
 }
+

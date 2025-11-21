@@ -5,7 +5,7 @@ namespace App\Filament\Resources\AbsensiResource\Pages;
 use App\Filament\Resources\AbsensiResource;
 use App\Models\Absensi;
 use Filament\Actions;
-use Filament\Resources\Pages\CreateRecord;
+use App\Filament\Resources\Pages\CreateRecord;
 
 class CreateAbsensi extends CreateRecord
 {
@@ -56,3 +56,4 @@ class CreateAbsensi extends CreateRecord
             ->label('Batal');
     }
 }
+

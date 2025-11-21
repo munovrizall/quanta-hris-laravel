@@ -36,3 +36,4 @@ class LateAttendanceChart extends ChartWidget
         ];
     }
 }
+

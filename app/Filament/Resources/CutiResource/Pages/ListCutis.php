@@ -4,7 +4,7 @@ namespace App\Filament\Resources\CutiResource\Pages;
 
 use App\Filament\Resources\CutiResource;
 use Filament\Actions;
-use Filament\Resources\Pages\ListRecords;
+use App\Filament\Resources\Pages\ListRecords;
 
 class ListCutis extends ListRecords
 {
@@ -21,3 +21,4 @@ class ListCutis extends ListRecords
         ];
     }
 }
+

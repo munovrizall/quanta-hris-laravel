@@ -3,7 +3,7 @@
 namespace App\Filament\Resources\HistoriAbsensiResource\Pages;
 
 use App\Filament\Resources\HistoriAbsensiResource;
-use Filament\Resources\Pages\ListRecords;
+use App\Filament\Resources\Pages\ListRecords;
 
 class ListHistoriAbsensis extends ListRecords
 {
@@ -16,3 +16,4 @@ class ListHistoriAbsensis extends ListRecords
         return [];
     }
 }
+

@@ -4,7 +4,7 @@ namespace App\Filament\Resources\SlipGajiResource\Pages;
 
 use App\Filament\Resources\SlipGajiResource;
 use Filament\Actions;
-use Filament\Resources\Pages\ListRecords;
+use App\Filament\Resources\Pages\ListRecords;
 
 class ListSlipGajis extends ListRecords
 {
@@ -16,3 +16,4 @@ class ListSlipGajis extends ListRecords
         ];
     }
 }
+

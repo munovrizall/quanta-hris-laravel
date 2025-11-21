@@ -4,7 +4,7 @@ namespace App\Filament\Resources\AbsensiResource\Pages;
 
 use App\Filament\Resources\AbsensiResource;
 use Filament\Actions;
-use Filament\Resources\Pages\EditRecord;
+use App\Filament\Resources\Pages\EditRecord;
 
 class EditAbsensi extends EditRecord
 {
@@ -53,3 +53,4 @@ class EditAbsensi extends EditRecord
             ->label('Batal');
     }
 }
+

@@ -236,3 +236,4 @@ class AbsensiResource extends Resource
         ];
     }
 }
+

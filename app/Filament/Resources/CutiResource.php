@@ -402,3 +402,4 @@ class CutiResource extends Resource
         ];
     }
 }
+

@@ -4,7 +4,7 @@ namespace App\Filament\Resources\KaryawanResource\Pages;
 
 use App\Filament\Resources\KaryawanResource;
 use Filament\Actions;
-use Filament\Resources\Pages\EditRecord;
+use App\Filament\Resources\Pages\EditRecord;
 
 class EditKaryawan extends EditRecord
 {
@@ -47,9 +47,15 @@ class EditKaryawan extends EditRecord
             ->label('Simpan');
     }
 
+    protected function getSavedNotificationTitle(): ?string
+    {
+        return 'Berhasil ubah karyawan';
+    }
+
     protected function getCancelFormAction(): \Filament\Actions\Action
     {
         return parent::getCancelFormAction()
             ->label('Batal');
     }
 }
+

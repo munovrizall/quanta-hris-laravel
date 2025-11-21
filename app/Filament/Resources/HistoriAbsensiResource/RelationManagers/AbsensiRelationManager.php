@@ -68,3 +68,4 @@ class AbsensiRelationManager extends RelationManager
             ->emptyStateHeading('Tidak ada data');
     }
 }
+

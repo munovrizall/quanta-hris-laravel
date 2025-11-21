@@ -4,7 +4,7 @@ namespace App\Filament\Resources\SiteResource\Pages;
 
 use App\Filament\Resources\SiteResource;
 use Filament\Actions;
-use Filament\Resources\Pages\EditRecord;
+use App\Filament\Resources\Pages\EditRecord;
 
 class EditSite extends EditRecord
 {
@@ -17,3 +17,4 @@ class EditSite extends EditRecord
         ];
     }
 }
+

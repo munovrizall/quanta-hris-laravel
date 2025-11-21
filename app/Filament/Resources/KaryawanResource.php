@@ -325,3 +325,4 @@ class KaryawanResource extends Resource
         ];
     }
 }
+

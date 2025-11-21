@@ -57,3 +57,4 @@ class CutiRelationManager extends RelationManager
             ->emptyStateHeading('Tidak ada data');
     }
 }
+

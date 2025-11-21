@@ -397,3 +397,4 @@ class IzinResource extends Resource
         ];
     }
 }
+

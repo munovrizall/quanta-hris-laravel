@@ -4,7 +4,7 @@ namespace App\Filament\Resources\AttendanceResource\Pages;
 
 use App\Filament\Resources\AttendanceResource;
 use Filament\Actions;
-use Filament\Resources\Pages\EditRecord;
+use App\Filament\Resources\Pages\EditRecord;
 
 class EditAttendance extends EditRecord
 {
@@ -17,3 +17,4 @@ class EditAttendance extends EditRecord
         ];
     }
 }
+

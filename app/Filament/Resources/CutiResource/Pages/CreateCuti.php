@@ -5,7 +5,7 @@ namespace App\Filament\Resources\CutiResource\Pages;
 use App\Filament\Resources\CutiResource;
 use App\Models\Cuti;
 use Filament\Actions;
-use Filament\Resources\Pages\CreateRecord;
+use App\Filament\Resources\Pages\CreateRecord;
 
 class CreateCuti extends CreateRecord
 {
@@ -60,3 +60,4 @@ class CreateCuti extends CreateRecord
             ->label('Batal');
     }
 }
+

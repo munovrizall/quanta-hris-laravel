@@ -5,7 +5,7 @@ namespace App\Filament\Resources\HistoriAbsensiResource\Pages;
 use App\Filament\Resources\HistoriAbsensiResource;
 use Filament\Infolists;
 use Filament\Infolists\Infolist;
-use Filament\Resources\Pages\ViewRecord;
+use App\Filament\Resources\Pages\ViewRecord;
 
 class ViewHistoriAbsensi extends ViewRecord
 {
@@ -73,3 +73,4 @@ class ViewHistoriAbsensi extends ViewRecord
             ]);
     }
 }
+

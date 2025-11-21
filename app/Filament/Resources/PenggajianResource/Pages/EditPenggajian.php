@@ -5,7 +5,7 @@ namespace App\Filament\Resources\PenggajianResource\Pages;
 use App\Filament\Resources\PenggajianResource;
 use App\Models\Penggajian;
 use Filament\Actions;
-use Filament\Resources\Pages\EditRecord;
+use App\Filament\Resources\Pages\EditRecord;
 
 class EditPenggajian extends EditRecord
 {
@@ -131,3 +131,4 @@ class EditPenggajian extends EditRecord
             ]));
     }
 }
+

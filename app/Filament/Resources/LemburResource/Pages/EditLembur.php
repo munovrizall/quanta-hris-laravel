@@ -4,7 +4,7 @@ namespace App\Filament\Resources\LemburResource\Pages;
 
 use App\Filament\Resources\LemburResource;
 use Filament\Actions;
-use Filament\Resources\Pages\EditRecord;
+use App\Filament\Resources\Pages\EditRecord;
 
 class EditLembur extends EditRecord
 {
@@ -53,3 +53,4 @@ class EditLembur extends EditRecord
             ->label('Batal');
     }
 }
+

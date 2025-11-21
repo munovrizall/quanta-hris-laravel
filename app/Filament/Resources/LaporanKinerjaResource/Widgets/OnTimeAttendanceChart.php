@@ -36,3 +36,4 @@ class OnTimeAttendanceChart extends ChartWidget
         ];
     }
 }
+

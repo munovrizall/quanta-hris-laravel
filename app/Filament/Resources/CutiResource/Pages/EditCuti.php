@@ -7,7 +7,7 @@ use App\Models\Cuti;
 use App\Models\Karyawan;
 use Carbon\Carbon;
 use Filament\Actions;
-use Filament\Resources\Pages\EditRecord;
+use App\Filament\Resources\Pages\EditRecord;
 
 class EditCuti extends EditRecord
 {
@@ -81,3 +81,4 @@ class EditCuti extends EditRecord
         }
     }
 }
+
