@@ -278,6 +278,7 @@ class IzinResource extends Resource
                     ->icon('heroicon-o-check-circle')
                     ->color('success')
                     ->visible(fn(Izin $record): bool => $record->status_izin === 'Diajukan')
+                    ->requiresConfirmation()
                     ->modalHeading('Yakin Setujui Izin?')
                     ->modalDescription(
                         fn(Izin $record): string =>
@@ -311,6 +312,7 @@ class IzinResource extends Resource
                     ->icon('heroicon-o-x-circle')
                     ->color('danger')
                     ->visible(fn(Izin $record): bool => $record->status_izin === 'Diajukan')
+                    ->requiresConfirmation()
                     ->modalHeading('Tolak Pengajuan Izin')
                     ->modalDescription(
                         fn(Izin $record): string =>
