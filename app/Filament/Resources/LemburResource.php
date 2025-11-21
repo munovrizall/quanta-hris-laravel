@@ -234,12 +234,13 @@ class LemburResource extends Resource
                     }),
             ])
             ->actions([
-                Tables\Actions\Action::make('approve_lembur')
+                Tables\Actions\Action::make('approve')
                     ->label('Setujui')
                     ->icon('heroicon-o-check-circle')
                     ->color('success')
                     ->visible(fn(Lembur $record): bool => $record->status_lembur === 'Diajukan')
                     ->requiresConfirmation()
+                    ->modalId('approve-lembur-modal')
                     ->modalHeading('Yakin Setujui Lembur?')
                     ->modalDescription(
                         fn(Lembur $record): string =>
@@ -286,12 +287,13 @@ class LemburResource extends Resource
                     }),
 
                 // ACTION BARU: Tolak Lembur
-                Tables\Actions\Action::make('reject_lembur')
+                Tables\Actions\Action::make('reject')
                     ->label('Tolak')
                     ->icon('heroicon-o-x-circle')
                     ->color('danger')
                     ->visible(fn(Lembur $record): bool => $record->status_lembur === 'Diajukan')
                     ->requiresConfirmation()
+                    ->modalId('reject-lembur-modal')
                     ->modalHeading('Tolak Pengajuan Lembur')
                     ->modalDescription(
                         fn(Lembur $record): string =>

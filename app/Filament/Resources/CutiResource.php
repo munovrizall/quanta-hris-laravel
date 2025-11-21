@@ -262,12 +262,13 @@ class CutiResource extends Resource
                     }),
             ])
             ->actions([
-                Tables\Actions\Action::make('approve_cuti')
+                Tables\Actions\Action::make('approve')
                     ->label('Setujui')
                     ->icon('heroicon-o-check-circle')
                     ->color('success')
                     ->visible(fn(Cuti $record): bool => $record->status_cuti === 'Diajukan')
                     ->requiresConfirmation()
+                    ->modalId('approve-cuti-modal')
                     ->modalHeading('Yakin Setujui Cuti?')
                     ->modalDescription(
                         fn(Cuti $record): string =>
@@ -312,12 +313,13 @@ class CutiResource extends Resource
                                 ->send();
                         }
                     }),
-                Tables\Actions\Action::make('reject_cuti')
+                Tables\Actions\Action::make('reject')
                     ->label('Tolak')
                     ->icon('heroicon-o-x-circle')
                     ->color('danger')
                     ->visible(fn(Cuti $record): bool => $record->status_cuti === 'Diajukan')
                     ->requiresConfirmation()
+                    ->modalId('reject-cuti-modal')
                     ->modalHeading('Tolak Pengajuan Cuti')
                     ->modalDescription(
                         fn(Cuti $record): string =>
