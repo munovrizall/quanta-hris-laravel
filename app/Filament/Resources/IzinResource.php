@@ -318,7 +318,7 @@ class IzinResource extends Resource
                         fn(Izin $record): string =>
                             "Apakah Anda yakin ingin menolak pengajuan izin untuk {$record->karyawan->nama_lengkap} pada {$record->tanggal_mulai->translatedFormat('d F Y')} sampai {$record->tanggal_selesai->translatedFormat('d F Y')}?"
                     )
-                    ->modalSubmitActionLabel('Ya, Tolak')
+                    ->modalSubmitActionLabel('Simpan')
                     ->form([
                         Forms\Components\Textarea::make('alasan_penolakan')
                             ->label('Alasan Penolakan')

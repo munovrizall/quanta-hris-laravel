@@ -297,7 +297,7 @@ class LemburResource extends Resource
                         fn(Lembur $record): string =>
                         "Apakah Anda yakin ingin menolak pengajuan lembur untuk {$record->karyawan->nama_lengkap} pada tanggal {$record->tanggal_lembur->format('d F Y')}?"
                     )
-                    ->modalSubmitActionLabel('Ya, Tolak')
+                    ->modalSubmitActionLabel('Simpan')
                     ->form([
                         Forms\Components\Textarea::make('alasan_penolakan')
                             ->label('Alasan Penolakan')

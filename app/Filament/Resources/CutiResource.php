@@ -323,7 +323,7 @@ class CutiResource extends Resource
                         fn(Cuti $record): string =>
                             "Apakah Anda yakin ingin menolak pengajuan cuti untuk {$record->karyawan->nama_lengkap} pada {$record->tanggal_mulai->translatedFormat('d F Y')} sampai {$record->tanggal_selesai->translatedFormat('d F Y')}?"
                     )
-                    ->modalSubmitActionLabel('Ya, Tolak')
+                    ->modalSubmitActionLabel('Simpan')
                     ->form([
                         Forms\Components\Textarea::make('alasan_penolakan')
                             ->label('Alasan Penolakan')
