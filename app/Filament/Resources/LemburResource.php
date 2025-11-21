@@ -239,7 +239,6 @@ class LemburResource extends Resource
                     ->icon('heroicon-o-check-circle')
                     ->color('success')
                     ->visible(fn(Lembur $record): bool => $record->status_lembur === 'Diajukan')
-                    ->requiresConfirmation()
                     ->modalHeading('Yakin Setujui Lembur?')
                     ->modalDescription(
                         fn(Lembur $record): string =>
@@ -291,7 +290,6 @@ class LemburResource extends Resource
                     ->icon('heroicon-o-x-circle')
                     ->color('danger')
                     ->visible(fn(Lembur $record): bool => $record->status_lembur === 'Diajukan')
-                    ->requiresConfirmation()
                     ->modalHeading('Tolak Pengajuan Lembur')
                     ->modalDescription(
                         fn(Lembur $record): string =>
@@ -349,7 +347,7 @@ class LemburResource extends Resource
                         ->label('Setujui Terpilih')
                         ->icon('heroicon-o-check-circle')
                         ->color('success')
-                        ->requiresConfirmation()
+
                         ->modalHeading('Setujui Pengajuan Lembur')
                         ->modalDescription('Apakah Anda yakin ingin menyetujui semua pengajuan lembur yang dipilih?')
                         ->modalSubmitActionLabel('Ya, Setujui Semua')
