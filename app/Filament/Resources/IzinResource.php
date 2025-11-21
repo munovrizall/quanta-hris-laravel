@@ -273,13 +273,12 @@ class IzinResource extends Resource
                     }),
             ])
             ->actions([
-                Tables\Actions\Action::make('approve')
+                Tables\Actions\Action::make('approve_izin')
                     ->label('Setujui')
                     ->icon('heroicon-o-check-circle')
                     ->color('success')
                     ->visible(fn(Izin $record): bool => $record->status_izin === 'Diajukan')
                     ->requiresConfirmation()
-                    ->modalId('approve-izin-modal')
                     ->modalHeading('Yakin Setujui Izin?')
                     ->modalDescription(
                         fn(Izin $record): string =>
@@ -308,13 +307,12 @@ class IzinResource extends Resource
                                 ->send();
                         }
                     }),
-                Tables\Actions\Action::make('reject')
+                Tables\Actions\Action::make('reject_izin')
                     ->label('Tolak')
                     ->icon('heroicon-o-x-circle')
                     ->color('danger')
                     ->visible(fn(Izin $record): bool => $record->status_izin === 'Diajukan')
                     ->requiresConfirmation()
-                    ->modalId('reject-izin-modal')
                     ->modalHeading('Tolak Pengajuan Izin')
                     ->modalDescription(
                         fn(Izin $record): string =>
