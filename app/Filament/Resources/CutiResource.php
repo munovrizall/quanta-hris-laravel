@@ -266,6 +266,7 @@ class CutiResource extends Resource
                     ->label('Setujui')
                     ->icon('heroicon-o-check-circle')
                     ->color('success')
+                    ->form([])
                     ->visible(fn(Cuti $record): bool => $record->status_cuti === 'Diajukan')
                     ->modalHeading('Yakin Setujui Cuti?')
                     ->modalDescription(

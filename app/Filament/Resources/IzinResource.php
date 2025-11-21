@@ -277,6 +277,7 @@ class IzinResource extends Resource
                     ->label('Setujui')
                     ->icon('heroicon-o-check-circle')
                     ->color('success')
+                    ->form([])
                     ->visible(fn(Izin $record): bool => $record->status_izin === 'Diajukan')
                     ->modalHeading('Yakin Setujui Izin?')
                     ->modalDescription(
