@@ -44,7 +44,7 @@ class EditAbsensi extends EditRecord
     protected function getSaveFormAction(): \Filament\Actions\Action
     {
         return parent::getSaveFormAction()
-            ->label('Simpan Perubahan');
+            ->label('Simpan');
     }
 
     protected function getCancelFormAction(): \Filament\Actions\Action
