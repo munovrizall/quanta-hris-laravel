@@ -16,7 +16,7 @@ class ListCutis extends ListRecords
     {
         return [
             Actions\CreateAction::make()
-                ->label('Tambah Cuti')
+                ->label('Tambah')
                 ->icon('heroicon-o-plus'),
         ];
     }

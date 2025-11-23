@@ -16,7 +16,7 @@ class ListCabangs extends ListRecords
     {
         return [
             Actions\CreateAction::make()
-                ->label('Tambah Cabang')
+                ->label('Tambah')
                 ->icon('heroicon-o-plus'),
         ];
     }

@@ -16,7 +16,7 @@ class ListLemburs extends ListRecords
     {
         return [
             Actions\CreateAction::make()
-                ->label('Tambah Lembur')
+                ->label('Tambah')
                 ->icon('heroicon-o-plus'),
         ];
     }

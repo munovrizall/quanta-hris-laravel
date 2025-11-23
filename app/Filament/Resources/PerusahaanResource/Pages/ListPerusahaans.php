@@ -14,7 +14,7 @@ class ListPerusahaans extends ListRecords
     {
         return [
             Actions\CreateAction::make()
-                ->label('Tambah Perusahaan')
+                ->label('Tambah')
                 ->icon('heroicon-o-plus'),
         ];
     }
