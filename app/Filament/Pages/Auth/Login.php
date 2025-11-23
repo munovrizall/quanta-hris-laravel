@@ -2,13 +2,13 @@
 
 namespace App\Filament\Pages\Auth;
 
+use Filament\Http\Responses\Auth\Contracts\LoginResponse;
 use Filament\Notifications\Notification;
 use Filament\Pages\Auth\Login as BaseLogin;
-use Illuminate\Http\RedirectResponse;
 
 class Login extends BaseLogin
 {
-    protected function authenticate(): ?RedirectResponse
+    public function authenticate(): ?LoginResponse
     {
         $response = parent::authenticate();
 
