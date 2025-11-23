@@ -279,9 +279,9 @@ class KaryawanResource extends Resource
                 Tables\Actions\DeleteAction::make()
                     ->label('Hapus')
                     ->requiresConfirmation()
-                    ->modalHeading('Hapus Karyawan')
+                    ->modalHeading('Yakin Hapus?')
                     ->modalDescription('Apakah Anda yakin ingin menghapus karyawan ini? Data akan diarsipkan dan dapat dipulihkan kembali.')
-                    ->modalSubmitActionLabel('Ya, hapus'),
+                    ->modalSubmitActionLabel('Hapus'),
                 Tables\Actions\RestoreAction::make()
                     ->label('Pulihkan')
                     ->color('success'),
