@@ -14,7 +14,7 @@ use App\Services\Pph21Service;
 use App\Services\PotonganService;
 use App\Utils\MonthHelper;
 use Filament\Actions;
-use Filament\Resources\Pages\ViewRecord;
+use App\Filament\Resources\Pages\ViewRecord;
 use Filament\Infolists;
 use Filament\Infolists\Infolist;
 use Filament\Forms;
@@ -1048,3 +1048,4 @@ class ViewPenggajian extends ViewRecord
       ->sum('total_potongan');
   }
 }
+

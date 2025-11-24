@@ -4,7 +4,7 @@ namespace App\Filament\Resources\CabangResource\Pages;
 
 use App\Filament\Resources\CabangResource;
 use Filament\Actions;
-use Filament\Resources\Pages\ListRecords;
+use App\Filament\Resources\Pages\ListRecords;
 
 class ListCabangs extends ListRecords
 {
@@ -16,8 +16,9 @@ class ListCabangs extends ListRecords
     {
         return [
             Actions\CreateAction::make()
-                ->label('Tambah Cabang')
+                ->label('Tambah')
                 ->icon('heroicon-o-plus'),
         ];
     }
 }
+

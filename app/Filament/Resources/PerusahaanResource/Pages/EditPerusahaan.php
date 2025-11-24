@@ -4,7 +4,7 @@ namespace App\Filament\Resources\PerusahaanResource\Pages;
 
 use App\Filament\Resources\PerusahaanResource;
 use Filament\Actions;
-use Filament\Resources\Pages\EditRecord;
+use App\Filament\Resources\Pages\EditRecord;
 
 class EditPerusahaan extends EditRecord
 {
@@ -27,3 +27,4 @@ class EditPerusahaan extends EditRecord
         return $this->getResource()::getUrl('index');
     }
 }
+

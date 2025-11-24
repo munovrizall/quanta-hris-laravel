@@ -170,3 +170,4 @@ class SlipGajiResource extends Resource
         return ['penggajian_id', 'verifier.nama_lengkap', 'approver.nama_lengkap'];
     }
 }
+

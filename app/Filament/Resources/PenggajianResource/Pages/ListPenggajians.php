@@ -4,7 +4,7 @@ namespace App\Filament\Resources\PenggajianResource\Pages;
 
 use App\Filament\Resources\PenggajianResource;
 use Filament\Actions;
-use Filament\Resources\Pages\ListRecords;
+use App\Filament\Resources\Pages\ListRecords;
 
 class ListPenggajians extends ListRecords
 {
@@ -21,3 +21,4 @@ class ListPenggajians extends ListRecords
         ];
     }
 }
+

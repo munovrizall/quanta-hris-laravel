@@ -69,16 +69,30 @@ class LemburController extends Controller
             ? Carbon::parse($absensi->tanggal)->format('Y-m-d')
             : Carbon::parse($absensi->waktu_pulang)->format('Y-m-d');
 
-        $scheduledEnd = Carbon::parse($tanggalLembur . ' ' . $company->jam_pulang);
+        $isWeekend = Carbon::parse($tanggalLembur)->isWeekend();
         $clockOut = Carbon::parse($absensi->waktu_pulang);
-        $diffMinutes = $scheduledEnd->diffInMinutes($clockOut, false);
+        $clockIn = $absensi->waktu_masuk ? Carbon::parse($absensi->waktu_masuk) : null;
+        $durasiMinutes = null;
 
-        if ($diffMinutes < 1) {
-            return ApiResponse::format(false, 400, 'Durasi lembur tidak valid karena jam pulang tidak melebihi jam kerja.', null);
+        if ($isWeekend) {
+            if (!$clockIn) {
+                return ApiResponse::format(false, 400, 'Durasi lembur tidak valid karena jam masuk tidak tersedia.', null);
+            }
+            $durasiMinutes = $clockIn->diffInMinutes($clockOut, false);
+        } else {
+            $scheduledEnd = Carbon::parse($tanggalLembur . ' ' . $company->jam_pulang);
+            $durasiMinutes = $scheduledEnd->diffInMinutes($clockOut, false);
         }
 
-        $hours = intdiv($diffMinutes, 60);
-        $minutes = $diffMinutes % 60;
+        if ($durasiMinutes < 1) {
+            $message = $isWeekend
+                ? 'Durasi lembur tidak valid karena jam pulang tidak melebihi jam masuk.'
+                : 'Durasi lembur tidak valid karena jam pulang tidak melebihi jam kerja.';
+            return ApiResponse::format(false, 400, $message, null);
+        }
+
+        $hours = intdiv($durasiMinutes, 60);
+        $minutes = $durasiMinutes % 60;
         $durasi = sprintf('%02d:%02d:00', $hours, $minutes);
 
         // Generate ID lembur baru (LB0001 ...), termasuk yang soft-deleted
@@ -87,7 +101,7 @@ class LemburController extends Controller
             ->orderBy('lembur_id', 'desc')
             ->first();
         $nextNumber = $last ? intval(str_replace('LB', '', $last->lembur_id)) + 1 : 1;
-        $lemburId = 'LB' . str_pad((string)$nextNumber, 4, '0', STR_PAD_LEFT);
+        $lemburId = 'LB' . str_pad((string) $nextNumber, 4, '0', STR_PAD_LEFT);
 
         // Upload dokumen pendukung: simpan path seperti clock-in
         $dokumenPath = null;
@@ -235,22 +249,28 @@ class LemburController extends Controller
 
                 if ($record->waktu_pulang) {
                     $isWeekendDate = $currentDate->isWeekend();
-                    $scheduledEnd = Carbon::parse($dateKey . ' ' . $company->jam_pulang);
                     $clockOut = Carbon::parse($record->waktu_pulang);
-                    $diffMinutes = $scheduledEnd->diffInMinutes($clockOut, false);
+                    $overtimeMinutes = null;
+
+                    if ($isWeekendDate) {
+                        $overtimeMinutes = $actualDurationMinutes;
+                    } else {
+                        $scheduledEnd = Carbon::parse($dateKey . ' ' . $company->jam_pulang);
+                        $overtimeMinutes = $scheduledEnd->diffInMinutes($clockOut, false);
+                    }
 
                     if ($actualDurationMinutes !== null) {
                         if ($isWeekendDate) {
                             $entry['eligible_lembur'] = $actualDurationMinutes > 60;
                         } else {
-                            $entry['eligible_lembur'] = $diffMinutes >= 60
+                            $entry['eligible_lembur'] = $overtimeMinutes >= 60
                                 && $actualDurationMinutes > $operationalMinutes;
                         }
                     }
 
-                    if ($diffMinutes > 0) {
-                        $hours = intdiv($diffMinutes, 60);
-                        $minutes = $diffMinutes % 60;
+                    if (!is_null($overtimeMinutes) && $overtimeMinutes > 0) {
+                        $hours = intdiv($overtimeMinutes, 60);
+                        $minutes = $overtimeMinutes % 60;
                         $entry['durasi_lembur_terhitung'] = sprintf('%02d:%02d:00', $hours, $minutes);
                     }
                 }

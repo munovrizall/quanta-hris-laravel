@@ -306,7 +306,7 @@ class EditGajiKaryawanAction
         static::handleSave($data);
       })
       ->modalHeading('Edit Gaji Karyawan')
-      ->modalSubmitActionLabel('Simpan Perubahan')
+      ->modalSubmitActionLabel('Simpan')
       ->modalCancelActionLabel('Batal')
       ->modalWidth('4xl')
       ->modalSubmitAction(fn ($action) => $action->color('cyan'))
@@ -395,3 +395,4 @@ class EditGajiKaryawanAction
     }
   }
 }
+

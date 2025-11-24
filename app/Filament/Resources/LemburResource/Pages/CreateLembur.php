@@ -5,7 +5,7 @@ namespace App\Filament\Resources\LemburResource\Pages;
 use App\Filament\Resources\LemburResource;
 use App\Models\Lembur;
 use Filament\Actions;
-use Filament\Resources\Pages\CreateRecord;
+use App\Filament\Resources\Pages\CreateRecord;
 
 class CreateLembur extends CreateRecord
 {
@@ -60,3 +60,4 @@ class CreateLembur extends CreateRecord
             ->label('Batal');
     }
 }
+

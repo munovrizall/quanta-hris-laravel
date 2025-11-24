@@ -40,6 +40,8 @@ class KaryawanResource extends Resource
                         Forms\Components\TextInput::make('nik')
                             ->label('NIK')
                             ->required()
+                            ->numeric()
+                            ->rule('integer')
                             ->maxLength(20)
                             ->unique(ignoreRecord: true),
 
@@ -69,7 +71,8 @@ class KaryawanResource extends Resource
 
                         Forms\Components\TextInput::make('nomor_telepon')
                             ->label('Nomor Telepon')
-                            ->tel()
+                            ->numeric()
+                            ->rule('integer')
                             ->maxLength(20),
                     ])
                     ->columns(2),
@@ -147,6 +150,8 @@ class KaryawanResource extends Resource
                     ->schema([
                         Forms\Components\TextInput::make('nomor_rekening')
                             ->label('Nomor Rekening')
+                            ->numeric()
+                            ->rule('integer')
                             ->maxLength(50),
 
                         Forms\Components\TextInput::make('nama_pemilik_rekening')
@@ -155,6 +160,8 @@ class KaryawanResource extends Resource
 
                         Forms\Components\TextInput::make('nomor_bpjs_kesehatan')
                             ->label('Nomor BPJS Kesehatan')
+                            ->numeric()
+                            ->rule('integer')
                             ->maxLength(50),
                     ])
                     ->columns(2),
@@ -272,9 +279,9 @@ class KaryawanResource extends Resource
                 Tables\Actions\DeleteAction::make()
                     ->label('Hapus')
                     ->requiresConfirmation()
-                    ->modalHeading('Hapus Karyawan')
+                    ->modalHeading('Yakin Hapus?')
                     ->modalDescription('Apakah Anda yakin ingin menghapus karyawan ini? Data akan diarsipkan dan dapat dipulihkan kembali.')
-                    ->modalSubmitActionLabel('Ya, hapus'),
+                    ->modalSubmitActionLabel('Hapus'),
                 Tables\Actions\RestoreAction::make()
                     ->label('Pulihkan')
                     ->color('success'),
@@ -325,3 +332,4 @@ class KaryawanResource extends Resource
         ];
     }
 }
+

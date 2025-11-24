@@ -26,6 +26,7 @@ class AttendanceController extends Controller
         $user = $request->user();
         $currentDate = Carbon::today()->format('Y-m-d');
         $currentTime = Carbon::now();
+        $isWeekend = Carbon::parse($currentDate)->isWeekend();
 
         // Check if already clocked in today
         $existingAttendance = Absensi::where('karyawan_id', $user->karyawan_id)
@@ -122,17 +123,24 @@ class AttendanceController extends Controller
 
         // Determine status_masuk
         $jamMasuk = Carbon::parse($company->jam_masuk);
-        $statusMasuk = $currentTime->format('H:i:s') > $jamMasuk->format('H:i:s') ? 'Telat' : 'Tepat Waktu';
+        if ($isWeekend) {
+            // Weekend attendance is overtime-based, treat all clock-ins as on time
+            $statusMasuk = 'Tepat Waktu';
+        } else {
+            $statusMasuk = $currentTime->format('H:i:s') > $jamMasuk->format('H:i:s') ? 'Telat' : 'Tepat Waktu';
+        }
 
         // Block clock in if more than 2 hours late
-        $lateMinutes = $jamMasuk->diffInMinutes($currentTime, false);
-        if ($lateMinutes > 120) {
-            return ApiResponse::format(
-                false,
-                422,
-                'Gagal absensi masuk, telat melebihi 2 jam.',
-                null
-            );
+        if (!$isWeekend) {
+            $lateMinutes = $jamMasuk->diffInMinutes($currentTime, false);
+            if ($lateMinutes > 120) {
+                return ApiResponse::format(
+                    false,
+                    422,
+                    'Gagal absensi masuk, telat melebihi 2 jam.',
+                    null
+                );
+            }
         }
 
         // Generate new absensi_id (include soft deleted records to avoid duplicate)
@@ -148,7 +156,7 @@ class AttendanceController extends Controller
 
         // Calculate durasi_telat if late
         $durasiTelat = null;
-        if ($statusMasuk === 'Telat') {
+        if (!$isWeekend && $statusMasuk === 'Telat') {
             // Gunakan diffInMinutes dengan parameter false untuk mendapatkan nilai absolut
             $diffInMinutes = $currentTime->copy()->startOfDay()
                 ->addSeconds($currentTime->secondsSinceMidnight())
@@ -223,6 +231,7 @@ class AttendanceController extends Controller
         $user = $request->user();
         $currentDate = Carbon::today()->format('Y-m-d');
         $currentTime = Carbon::now();
+        $isWeekend = Carbon::parse($currentDate)->isWeekend();
 
         // Get today's attendance
         $attendance = Absensi::where('karyawan_id', $user->karyawan_id)
@@ -330,25 +339,30 @@ class AttendanceController extends Controller
 
         // Get company operational hours
         $jamPulang = Carbon::parse($company->jam_pulang);
-        $statusPulang = $currentTime->format('H:i:s') < $jamPulang->format('H:i:s') ? 'Pulang Cepat' : 'Tepat Waktu';
-
-        // Calculate durasi_pulang_cepat if early
         $durasiPulangCepat = null;
-        if ($statusPulang === 'Pulang Cepat') {
-            // Gunakan diffInMinutes dengan parameter false untuk mendapatkan nilai absolut
-            $diffInMinutes = $currentTime->copy()->startOfDay()
-                ->addSeconds($currentTime->secondsSinceMidnight())
-                ->diffInMinutes(
-                    $jamPulang->copy()->startOfDay()->addSeconds($jamPulang->secondsSinceMidnight()),
-                    false
-                );
+        if ($isWeekend) {
+            // Weekend attendance does not evaluate early departures
+            $statusPulang = 'Tepat Waktu';
+        } else {
+            $statusPulang = $currentTime->format('H:i:s') < $jamPulang->format('H:i:s') ? 'Pulang Cepat' : 'Tepat Waktu';
 
-            // Pastikan nilai positif
-            $diffInMinutes = abs($diffInMinutes);
+            // Calculate durasi_pulang_cepat if early
+            if ($statusPulang === 'Pulang Cepat') {
+                // Gunakan diffInMinutes dengan parameter false untuk mendapatkan nilai absolut
+                $diffInMinutes = $currentTime->copy()->startOfDay()
+                    ->addSeconds($currentTime->secondsSinceMidnight())
+                    ->diffInMinutes(
+                        $jamPulang->copy()->startOfDay()->addSeconds($jamPulang->secondsSinceMidnight()),
+                        false
+                    );
 
-            $hours = floor($diffInMinutes / 60);
-            $minutes = $diffInMinutes % 60;
-            $durasiPulangCepat = sprintf('%02d:%02d:00', $hours, $minutes);
+                // Pastikan nilai positif
+                $diffInMinutes = abs($diffInMinutes);
+
+                $hours = floor($diffInMinutes / 60);
+                $minutes = $diffInMinutes % 60;
+                $durasiPulangCepat = sprintf('%02d:%02d:00', $hours, $minutes);
+            }
         }
 
         // Handle foto_pulang upload

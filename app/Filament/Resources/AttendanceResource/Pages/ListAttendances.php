@@ -4,7 +4,7 @@ namespace App\Filament\Resources\AttendanceResource\Pages;
 
 use App\Filament\Resources\AttendanceResource;
 use Filament\Actions;
-use Filament\Resources\Pages\ListRecords;
+use App\Filament\Resources\Pages\ListRecords;
 
 class ListAttendances extends ListRecords
 {
@@ -17,3 +17,4 @@ class ListAttendances extends ListRecords
         ];
     }
 }
+

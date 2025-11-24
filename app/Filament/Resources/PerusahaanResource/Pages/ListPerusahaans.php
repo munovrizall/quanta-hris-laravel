@@ -4,7 +4,7 @@ namespace App\Filament\Resources\PerusahaanResource\Pages;
 
 use App\Filament\Resources\PerusahaanResource;
 use Filament\Actions;
-use Filament\Resources\Pages\ListRecords;
+use App\Filament\Resources\Pages\ListRecords;
 
 class ListPerusahaans extends ListRecords
 {
@@ -14,8 +14,9 @@ class ListPerusahaans extends ListRecords
     {
         return [
             Actions\CreateAction::make()
-                ->label('Tambah Perusahaan')
+                ->label('Tambah')
                 ->icon('heroicon-o-plus'),
         ];
     }
 }
+

@@ -5,7 +5,7 @@ namespace App\Filament\Resources\KaryawanResource\Pages;
 use App\Filament\Resources\KaryawanResource;
 use App\Models\Karyawan;
 use Filament\Actions;
-use Filament\Resources\Pages\CreateRecord;
+use App\Filament\Resources\Pages\CreateRecord;
 
 class CreateKaryawan extends CreateRecord
 {
@@ -43,6 +43,11 @@ class CreateKaryawan extends CreateRecord
             ->label('Simpan');
     }
 
+    protected function getCreatedNotificationTitle(): ?string
+    {
+        return 'Berhasil tambah karyawan';
+    }
+
     protected function getCreateAnotherFormAction(): \Filament\Actions\Action
     {
         return parent::getCreateAnotherFormAction()
@@ -55,3 +60,4 @@ class CreateKaryawan extends CreateRecord
             ->label('Batal');
     }
 }
+

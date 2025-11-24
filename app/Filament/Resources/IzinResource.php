@@ -277,14 +277,14 @@ class IzinResource extends Resource
                     ->label('Setujui')
                     ->icon('heroicon-o-check-circle')
                     ->color('success')
+                    ->form([])
                     ->visible(fn(Izin $record): bool => $record->status_izin === 'Diajukan')
-                    ->requiresConfirmation()
-                    ->modalHeading('Setujui Pengajuan Izin')
+                    ->modalHeading('Yakin Setujui Izin?')
                     ->modalDescription(
                         fn(Izin $record): string =>
                             "Apakah Anda yakin ingin menyetujui pengajuan izin untuk {$record->karyawan->nama_lengkap} pada {$record->tanggal_mulai->translatedFormat('d F Y')} sampai {$record->tanggal_selesai->translatedFormat('d F Y')}?"
                     )
-                    ->modalSubmitActionLabel('Ya, Setujui')
+                    ->modalSubmitActionLabel('Ya')
                     ->action(function (Izin $record): void {
                         try {
                             $record->update([
@@ -312,13 +312,12 @@ class IzinResource extends Resource
                     ->icon('heroicon-o-x-circle')
                     ->color('danger')
                     ->visible(fn(Izin $record): bool => $record->status_izin === 'Diajukan')
-                    ->requiresConfirmation()
                     ->modalHeading('Tolak Pengajuan Izin')
                     ->modalDescription(
                         fn(Izin $record): string =>
                             "Apakah Anda yakin ingin menolak pengajuan izin untuk {$record->karyawan->nama_lengkap} pada {$record->tanggal_mulai->translatedFormat('d F Y')} sampai {$record->tanggal_selesai->translatedFormat('d F Y')}?"
                     )
-                    ->modalSubmitActionLabel('Ya, Tolak')
+                    ->modalSubmitActionLabel('Simpan')
                     ->form([
                         Forms\Components\Textarea::make('alasan_penolakan')
                             ->label('Alasan Penolakan')
@@ -397,3 +396,4 @@ class IzinResource extends Resource
         ];
     }
 }
+

@@ -4,7 +4,7 @@ namespace App\Filament\Resources\LemburResource\Pages;
 
 use App\Filament\Resources\LemburResource;
 use Filament\Actions;
-use Filament\Resources\Pages\ListRecords;
+use App\Filament\Resources\Pages\ListRecords;
 
 class ListLemburs extends ListRecords
 {
@@ -16,8 +16,9 @@ class ListLemburs extends ListRecords
     {
         return [
             Actions\CreateAction::make()
-                ->label('Tambah Lembur')
+                ->label('Tambah')
                 ->icon('heroicon-o-plus'),
         ];
     }
 }
+

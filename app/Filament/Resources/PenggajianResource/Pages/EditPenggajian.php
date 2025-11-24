@@ -5,7 +5,7 @@ namespace App\Filament\Resources\PenggajianResource\Pages;
 use App\Filament\Resources\PenggajianResource;
 use App\Models\Penggajian;
 use Filament\Actions;
-use Filament\Resources\Pages\EditRecord;
+use App\Filament\Resources\Pages\EditRecord;
 
 class EditPenggajian extends EditRecord
 {
@@ -118,7 +118,7 @@ class EditPenggajian extends EditRecord
     protected function getSaveFormAction(): \Filament\Actions\Action
     {
         return parent::getSaveFormAction()
-            ->label('Simpan Perubahan');
+            ->label('Simpan');
     }
 
     protected function getCancelFormAction(): \Filament\Actions\Action
@@ -131,3 +131,4 @@ class EditPenggajian extends EditRecord
             ]));
     }
 }
+

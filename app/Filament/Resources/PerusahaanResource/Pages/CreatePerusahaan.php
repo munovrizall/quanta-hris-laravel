@@ -5,7 +5,7 @@ namespace App\Filament\Resources\PerusahaanResource\Pages;
 use App\Filament\Resources\PerusahaanResource;
 use App\Models\Perusahaan;
 use Filament\Actions;
-use Filament\Resources\Pages\CreateRecord;
+use App\Filament\Resources\Pages\CreateRecord;
 
 class CreatePerusahaan extends CreateRecord
 {
@@ -55,3 +55,4 @@ class CreatePerusahaan extends CreateRecord
             ->label('Batal');
     }
 }
+

@@ -4,7 +4,7 @@ namespace App\Filament\Resources\SiteResource\Pages;
 
 use App\Filament\Resources\SiteResource;
 use Filament\Actions;
-use Filament\Resources\Pages\ListRecords;
+use App\Filament\Resources\Pages\ListRecords;
 
 class ListSites extends ListRecords
 {
@@ -17,3 +17,4 @@ class ListSites extends ListRecords
         ];
     }
 }
+

@@ -5,7 +5,7 @@ namespace App\Filament\Resources\LaporanKinerjaResource\Pages;
 use App\Filament\Resources\LaporanKinerjaResource;
 use App\Filament\Resources\LaporanKinerjaResource\Widgets\LateAttendanceChart;
 use App\Filament\Resources\LaporanKinerjaResource\Widgets\OnTimeAttendanceChart;
-use Filament\Resources\Pages\ListRecords;
+use App\Filament\Resources\Pages\ListRecords;
 
 class ListLaporanKinerjas extends ListRecords
 {
@@ -30,3 +30,4 @@ class ListLaporanKinerjas extends ListRecords
         return [];
     }
 }
+

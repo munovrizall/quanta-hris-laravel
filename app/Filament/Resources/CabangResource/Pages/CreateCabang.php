@@ -5,7 +5,7 @@ namespace App\Filament\Resources\CabangResource\Pages;
 use App\Filament\Resources\CabangResource;
 use App\Models\Cabang;
 use Filament\Actions;
-use Filament\Resources\Pages\CreateRecord;
+use App\Filament\Resources\Pages\CreateRecord;
 
 class CreateCabang extends CreateRecord
 {
@@ -55,3 +55,4 @@ class CreateCabang extends CreateRecord
             ->label('Batal');
     }
 }
+

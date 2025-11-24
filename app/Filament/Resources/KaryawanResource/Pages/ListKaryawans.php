@@ -4,7 +4,7 @@ namespace App\Filament\Resources\KaryawanResource\Pages;
 
 use App\Filament\Resources\KaryawanResource;
 use Filament\Actions;
-use Filament\Resources\Pages\ListRecords;
+use App\Filament\Resources\Pages\ListRecords;
 
 class ListKaryawans extends ListRecords
 {
@@ -16,8 +16,9 @@ class ListKaryawans extends ListRecords
     {
         return [
             Actions\CreateAction::make()
-                ->label('Tambah Karyawan')
+                ->label('Tambah')
                 ->icon('heroicon-o-plus'),
         ];
     }
 }
+

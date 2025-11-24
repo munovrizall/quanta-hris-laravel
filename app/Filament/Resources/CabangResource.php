@@ -173,9 +173,9 @@ class CabangResource extends Resource
                 Tables\Actions\DeleteAction::make()
                     ->label('Hapus')
                     ->requiresConfirmation()
-                    ->modalHeading('Hapus Cabang')
+                    ->modalHeading('Yakin Hapus?')
                     ->modalDescription('Apakah Anda yakin ingin menghapus cabang ini? Data akan diarsipkan dan dapat dipulihkan kembali.')
-                    ->modalSubmitActionLabel('Ya, hapus'),
+                    ->modalSubmitActionLabel('Hapus'),
                 Tables\Actions\RestoreAction::make()
                     ->label('Pulihkan')
                     ->color('success'),
@@ -226,3 +226,4 @@ class CabangResource extends Resource
         ];
     }
 }
+

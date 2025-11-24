@@ -142,3 +142,4 @@ class ViewRekapitulasiAbsensi extends Page
         ];
     }
 }
+

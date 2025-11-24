@@ -266,14 +266,14 @@ class CutiResource extends Resource
                     ->label('Setujui')
                     ->icon('heroicon-o-check-circle')
                     ->color('success')
+                    ->form([])
                     ->visible(fn(Cuti $record): bool => $record->status_cuti === 'Diajukan')
-                    ->requiresConfirmation()
-                    ->modalHeading('Setujui Pengajuan Cuti')
+                    ->modalHeading('Yakin Setujui Cuti?')
                     ->modalDescription(
                         fn(Cuti $record): string =>
                             "Apakah Anda yakin ingin menyetujui pengajuan cuti untuk {$record->karyawan->nama_lengkap} pada {$record->tanggal_mulai->translatedFormat('d F Y')} sampai {$record->tanggal_selesai->translatedFormat('d F Y')}?"
                     )
-                    ->modalSubmitActionLabel('Ya, Setujui')
+                    ->modalSubmitActionLabel('Ya')
                     ->action(function (Cuti $record): void {
                         try {
                             DB::transaction(function () use ($record) {
@@ -317,13 +317,12 @@ class CutiResource extends Resource
                     ->icon('heroicon-o-x-circle')
                     ->color('danger')
                     ->visible(fn(Cuti $record): bool => $record->status_cuti === 'Diajukan')
-                    ->requiresConfirmation()
                     ->modalHeading('Tolak Pengajuan Cuti')
                     ->modalDescription(
                         fn(Cuti $record): string =>
                             "Apakah Anda yakin ingin menolak pengajuan cuti untuk {$record->karyawan->nama_lengkap} pada {$record->tanggal_mulai->translatedFormat('d F Y')} sampai {$record->tanggal_selesai->translatedFormat('d F Y')}?"
                     )
-                    ->modalSubmitActionLabel('Ya, Tolak')
+                    ->modalSubmitActionLabel('Simpan')
                     ->form([
                         Forms\Components\Textarea::make('alasan_penolakan')
                             ->label('Alasan Penolakan')
@@ -402,3 +401,4 @@ class CutiResource extends Resource
         ];
     }
 }
+

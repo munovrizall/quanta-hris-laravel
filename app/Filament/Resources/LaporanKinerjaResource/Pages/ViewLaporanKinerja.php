@@ -99,3 +99,4 @@ class ViewLaporanKinerja extends Page
         ];
     }
 }
+

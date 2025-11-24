@@ -2,6 +2,7 @@
 
 namespace App\Providers\Filament;
 
+use App\Filament\Pages\Auth\Login as CustomLogin;
 use App\Filament\Resources\RoleResource;
 use App\Filament\Widgets\ActivityOverview;
 use App\Filament\Widgets\CutiTodayOverview;
@@ -32,7 +33,7 @@ class AdminPanelProvider extends PanelProvider
             ->default()
             ->id('admin')
             ->path('admin')
-            ->login()
+            ->login(CustomLogin::class)
             ->brandName('Quanta HRIS')
             ->font('Poppins')
             ->authGuard('web')

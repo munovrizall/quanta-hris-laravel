@@ -46,3 +46,4 @@ class PayrollCostTrendChart extends ChartWidget
         ];
     }
 }
+

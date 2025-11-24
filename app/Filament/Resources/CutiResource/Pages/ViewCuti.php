@@ -4,7 +4,7 @@ namespace App\Filament\Resources\CutiResource\Pages;
 
 use App\Filament\Resources\CutiResource;
 use Filament\Actions;
-use Filament\Resources\Pages\ViewRecord;
+use App\Filament\Resources\Pages\ViewRecord;
 use Filament\Infolists;
 use Filament\Infolists\Infolist;
 
@@ -119,3 +119,4 @@ class ViewCuti extends ViewRecord
       ]);
   }
 }
+

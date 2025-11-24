@@ -4,7 +4,7 @@ namespace App\Filament\Resources\IzinResource\Pages;
 
 use App\Filament\Resources\IzinResource;
 use Filament\Actions;
-use Filament\Resources\Pages\EditRecord;
+use App\Filament\Resources\Pages\EditRecord;
 
 class EditIzin extends EditRecord
 {
@@ -44,7 +44,7 @@ class EditIzin extends EditRecord
     protected function getSaveFormAction(): \Filament\Actions\Action
     {
         return parent::getSaveFormAction()
-            ->label('Simpan Perubahan');
+            ->label('Simpan');
     }
 
     protected function getCancelFormAction(): \Filament\Actions\Action
@@ -53,3 +53,4 @@ class EditIzin extends EditRecord
             ->label('Batal');
     }
 }
+

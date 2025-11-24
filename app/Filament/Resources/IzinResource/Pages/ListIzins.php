@@ -4,7 +4,7 @@ namespace App\Filament\Resources\IzinResource\Pages;
 
 use App\Filament\Resources\IzinResource;
 use Filament\Actions;
-use Filament\Resources\Pages\ListRecords;
+use App\Filament\Resources\Pages\ListRecords;
 
 class ListIzins extends ListRecords
 {
@@ -16,8 +16,9 @@ class ListIzins extends ListRecords
     {
         return [
             Actions\CreateAction::make()
-                ->label('Tambah Izin')
+                ->label('Tambah')
                 ->icon('heroicon-o-plus'),
         ];
     }
 }
+

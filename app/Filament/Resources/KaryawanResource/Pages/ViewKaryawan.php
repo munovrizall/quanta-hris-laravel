@@ -4,7 +4,7 @@ namespace App\Filament\Resources\KaryawanResource\Pages;
 
 use App\Filament\Resources\KaryawanResource;
 use Filament\Actions;
-use Filament\Resources\Pages\ViewRecord;
+use App\Filament\Resources\Pages\ViewRecord;
 use Filament\Infolists;
 use Filament\Infolists\Infolist;
 
@@ -140,3 +140,4 @@ class ViewKaryawan extends ViewRecord
             ]);
     }
 }
+
