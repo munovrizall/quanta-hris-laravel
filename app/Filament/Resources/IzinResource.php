@@ -178,7 +178,7 @@ class IzinResource extends Resource
         return $table
             ->columns([
                 Tables\Columns\TextColumn::make('izin_id')
-                    ->label('ID Izin')
+                    ->label('ID')
                     ->searchable()
                     ->sortable()
                     ->badge()
