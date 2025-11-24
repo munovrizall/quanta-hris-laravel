@@ -112,7 +112,7 @@ class AbsensiResource extends Resource
         return $table
             ->columns([
                 Tables\Columns\TextColumn::make('absensi_id')
-                    ->label('ID Absensi')
+                    ->label('ID')
                     ->searchable()
                     ->sortable()
                     ->badge()

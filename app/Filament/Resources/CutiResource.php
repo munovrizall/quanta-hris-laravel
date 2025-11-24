@@ -171,7 +171,7 @@ class CutiResource extends Resource
         return $table
             ->columns([
                 Tables\Columns\TextColumn::make('cuti_id')
-                    ->label('ID Cuti')
+                    ->label('ID')
                     ->searchable()
                     ->sortable()
                     ->badge()
