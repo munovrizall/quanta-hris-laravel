@@ -15,9 +15,10 @@ class LemburService
    *
    * @param string $durasiLembur Format HH:MM:SS
    * @param Karyawan $karyawan
+   * @param bool $isHariLibur Tandai true untuk tanggal merah/weekend
    * @return float
    */
-  public function calculateInsentif(string $durasiLembur, Karyawan $karyawan): float
+  public function calculateInsentif(string $durasiLembur, Karyawan $karyawan, bool $isHariLibur = false): float
   {
     if (!$durasiLembur || !$karyawan) {
       Log::warning("LemburService: Invalid input - durasi atau karyawan kosong");
@@ -40,7 +41,8 @@ class LemburService
       $jamDihitung = (int) ceil($totalMenit / 60.0);
 
       $gajiPokok = (float) ($karyawan->gaji_pokok ?? 0);
-      $upahSebulan = $gajiPokok;
+      $tunjanganTetap = (float) ($karyawan->tunjangan_tetap ?? 0);
+      $upahSebulan = $gajiPokok + $tunjanganTetap;
 
       if ($upahSebulan <= 0) {
         Log::warning("LemburService: Upah sebulan <= 0 untuk karyawan {$karyawan->karyawan_id}");
@@ -51,19 +53,33 @@ class LemburService
 
       $totalUpahLembur = 0;
 
-      if ($jamDihitung >= 1) {
-        $totalUpahLembur += (1 * 1.5 * $upahPerJam);
-      }
+      if ($isHariLibur) {
+        $jamPertama = min($jamDihitung, 8);
+        $totalUpahLembur += ($jamPertama * 2 * $upahPerJam);
 
-      if ($jamDihitung > 1) {
-        $sisaJam = $jamDihitung - 1;
-        $totalUpahLembur += ($sisaJam * 2 * $upahPerJam);
+        if ($jamDihitung > 8) {
+          $totalUpahLembur += (1 * 3 * $upahPerJam);
+        }
+
+        if ($jamDihitung > 9) {
+          $sisa = $jamDihitung - 9;
+          $totalUpahLembur += ($sisa * 4 * $upahPerJam);
+        }
+      } else {
+        if ($jamDihitung >= 1) {
+          $totalUpahLembur += (1 * 1.5 * $upahPerJam);
+        }
+
+        if ($jamDihitung > 1) {
+          $sisaJam = $jamDihitung - 1;
+          $totalUpahLembur += ($sisaJam * 2 * $upahPerJam);
+        }
       }
 
       // ROUND TO INTEGER - NO DECIMALS
       $result = round($totalUpahLembur);
 
-      Log::info("LemburService: Karyawan {$karyawan->karyawan_id} - Durasi: {$durasiLembur} ({$totalMenit} menit -> {$jamDihitung} jam), Upah/jam: " . number_format($upahPerJam, 0) . ", Total: " . number_format($result, 0));
+      Log::info("LemburService: Karyawan {$karyawan->karyawan_id} - Durasi: {$durasiLembur} ({$totalMenit} menit -> {$jamDihitung} jam), Upah/jam: " . number_format($upahPerJam, 0) . ", Hari Libur: " . ($isHariLibur ? 'Ya' : 'Tidak') . ", Total: " . number_format($result, 0));
 
       return $result;
 
@@ -94,7 +110,8 @@ class LemburService
       $totalSesi = $lemburRecords->count();
 
       foreach ($lemburRecords as $lembur) {
-        $insentif = $this->calculateInsentif($lembur->durasi_lembur, $karyawan);
+        $isHariLibur = Carbon::parse($lembur->tanggal_lembur)->isWeekend();
+        $insentif = $this->calculateInsentif($lembur->durasi_lembur, $karyawan, $isHariLibur);
         $totalInsentif += $insentif;
 
         // Hitung total jam
@@ -129,7 +146,8 @@ class LemburService
       return 0;
     }
 
-    return $this->calculateInsentif($lembur->durasi_lembur, $lembur->karyawan);
+    $isHariLibur = $lembur->tanggal_lembur ? Carbon::parse($lembur->tanggal_lembur)->isWeekend() : false;
+    return $this->calculateInsentif($lembur->durasi_lembur, $lembur->karyawan, $isHariLibur);
   }
 
   /**

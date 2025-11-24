@@ -279,7 +279,10 @@ class LemburController extends Controller
                 if ($lembur) {
                     $upahLembur = $lembur->total_insentif;
                     if (is_null($upahLembur) && $lembur->durasi_lembur) {
-                        $upahLembur = $lemburService->calculateInsentif($lembur->durasi_lembur, $user);
+                        $isWeekendLembur = $lembur->tanggal_lembur
+                            ? Carbon::parse($lembur->tanggal_lembur)->isWeekend()
+                            : false;
+                        $upahLembur = $lemburService->calculateInsentif($lembur->durasi_lembur, $user, $isWeekendLembur);
                     }
 
                     $entry['lembur_pengajuan'] = [

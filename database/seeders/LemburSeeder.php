@@ -142,7 +142,8 @@ class LemburSeeder extends Seeder
 
                     if ($karyawan && $karyawan->gaji_pokok > 0) {
                         // *** GUNAKAN SERVICE untuk konsistensi ***
-                        $totalInsentif = $lemburService->calculateInsentif($durasiLembur, $karyawan);
+                        $isHariLibur = $absensi->tanggal ? Carbon::parse($absensi->tanggal)->isWeekend() : false;
+                        $totalInsentif = $lemburService->calculateInsentif($durasiLembur, $karyawan, $isHariLibur);
 
                         $this->command->info("Lembur {$lemburRecord['lembur_id']}: Durasi {$durasiLembur}, Insentif " . $lemburService->formatRupiah($totalInsentif));
                     } else {
