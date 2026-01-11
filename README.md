@@ -28,6 +28,16 @@ If you are looking for the mobile application code, please check:
     -   **Leave & Permits:** Employees can request time off (Cuti/Izin) easily.
     -   **Overtime:** The system detects overtime work automatically.
 
+## Screenshots
+
+|                  Dashboard                   |             Employee Management              |
+| :------------------------------------------: | :------------------------------------------: |
+| ![Dashboard](docs/screenshots/dashboard.png) | ![Employees](docs/screenshots/employees.png) |
+
+|            Attendance & Geolocation            |            Payroll & Payslips            |
+| :--------------------------------------------: | :--------------------------------------: |
+| ![Attendance](docs/screenshots/attendance.png) | ![Payroll](docs/screenshots/payroll.png) |
+
 ## Tech Stack
 
 -   **Framework:** Laravel 12
