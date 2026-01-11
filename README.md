@@ -91,13 +91,15 @@ Follow these steps to run the project on your computer:
 
 After running `migrate --seed`, you can use these accounts to log in:
 
-| Role            | Email                       | Password        |
-| :-------------- | :-------------------------- | :-------------- |
-| **Admin**       | `admin@smartcool.id`        | `admin123`      |
-| **CEO**         | `ceo@smartcool.id`          | `ceo123`        |
-| **Manager HRD** | `manager.hrd1@smartcool.id` | `managerhrd123` |
-| **Staff HRD**   | `staff.hrd1@smartcool.id`   | `staffhrd123`   |
-| **User (IT)**   | `rizal@smartcool.id`        | `rizal123`      |
+| Role                | Email                           | Password            |
+| :------------------ | :------------------------------ | :------------------ |
+| **Admin**           | `admin@smartcool.id`            | `admin123`          |
+| **CEO**             | `ceo@smartcool.id`              | `ceo123`            |
+| **Manager HRD**     | `manager.hrd1@smartcool.id`     | `managerhrd123`     |
+| **Staff HRD**       | `staff.hrd1@smartcool.id`       | `staffhrd123`       |
+| **Manager Finance** | `manager.finance@smartcool.id`  | `managerfinance123` |
+| **Account Payment** | `account.payment11@smartcool.id`| `accountpayment123` |
+| **Employee**        | `rizal@smartcool.id`            | `rizal123`          | 
 
 ## Production Deployment (Docker)
 
