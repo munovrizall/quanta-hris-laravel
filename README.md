@@ -42,7 +42,7 @@ Follow these steps to run the project on your computer:
 1.  **Clone the Repository**
 
     ```bash
-    git clone https://github.com/your-repo/quanta-hris-laravel.git
+    git clone https://github.com/munovrizall/quanta-hris-laravel.git
     cd quanta-hris-laravel
     ```
 
@@ -57,7 +57,6 @@ Follow these steps to run the project on your computer:
 
     ```bash
     composer install
-    npm install
     ```
 
 4.  **Generate Key**
@@ -109,16 +108,16 @@ If you want to deploy to a live server using Docker:
 2.  **Run Setup Commands**
 
     ```bash
-    docker-compose exec app composer install --optimize-autoloader --no-dev
-    docker-compose exec app php artisan migrate --force
-    docker-compose exec app php artisan config:cache
-    docker-compose exec app php artisan route:cache
-    docker-compose exec app php artisan view:cache
+    docker compose exec app composer install --optimize-autoloader --no-dev
+    docker compose exec app php artisan migrate --force
+    docker compose exec app php artisan config:cache
+    docker compose exec app php artisan route:cache
+    docker compose exec app php artisan view:cache
     ```
 
 3.  **Fix Permissions**
     ```bash
-    docker-compose exec app chmod -R 775 storage bootstrap/cache
+    docker compose exec app chmod -R 775 storage bootstrap/cache
     ```
 
 ## Important Configuration
