@@ -32,11 +32,11 @@ If you are looking for the mobile application code, please check:
 
 |                  Dashboard                   |             Employee Management              |
 | :------------------------------------------: | :------------------------------------------: |
-| ![Dashboard](docs/screenshots/dashboard.png) | ![Employees](docs/screenshots/employees.png) |
+| <img src="https://github.com/user-attachments/assets/3be1d0d7-5d28-4fb2-822b-ca5ecaf85404" alt="Dashboard Screen" width="800" /> | <img src="https://github.com/user-attachments/assets/14731b51-450e-4f5b-ae3c-c8f2e05aa16f" alt="Employee Screen" width="800" /> |
 
 |            Attendance & Geolocation            |            Payroll & Payslips            |
 | :--------------------------------------------: | :--------------------------------------: |
-| ![Attendance](docs/screenshots/attendance.png) | ![Payroll](docs/screenshots/payroll.png) |
+| <img src="https://github.com/user-attachments/assets/1a55b143-1b20-4e83-ab56-b0faa676b00f" alt="Attendance Screen" width="800" /> | <img src="https://github.com/user-attachments/assets/1b73480b-8fe7-4a57-ab41-3add88ebcc88" alt="Attendance Screen" width="800" /> |
 
 ## Tech Stack
 
