@@ -82,13 +82,7 @@ Follow these steps to run the project on your computer:
     php artisan migrate --seed
     ```
 
-6.  **Build Assets**
-
-    ```bash
-    npm run build
-    ```
-
-7.  **Run Server**
+6.  **Run Server**
     ```bash
     php artisan serve
     ```
